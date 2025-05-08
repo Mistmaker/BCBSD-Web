@@ -1,0 +1,228 @@
+<c-row ngPreserveWhitespaces>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header>
+
+        <c-row>
+          <c-col xs="6">
+            <strong>Mantenimiento de Vehículos del CBSD</strong>
+          </c-col>
+          <c-col xs="6">
+            <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+              <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+            </div>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="text-body-secondary small">
+          Nota: Llene los campos requeridos (*) acorde a la información de la matrícula del vehículo y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
+        </p>
+
+        <form #formulario="ngForm" (ngSubmit)="onSubmit1(formulario)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+          <c-col md="4">
+            <label cLabel class="required-label" for="placa">Placa</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-id-card"></i> </span>
+              <input cFormControl id="placa" name="placa" [(ngModel)]="vehiculo.vehiculo_placa" required type="text" maxlength="7" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese la placa</c-form-feedback>
+            </c-input-group>
+          </c-col>
+          <c-col md="4">
+            <label cLabel class="required-label" for="ton">Tonelaje</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-weight-hanging"></i> </span>
+              <input aria-describedby="inputGroupPrepend" cFormControl [(ngModel)]="vehiculo.vehiculo_toneladas" id="ton" name="ton" required type="number" min="0.1" step="0.01" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese el tonelaje</c-form-feedback>
+            </c-input-group>
+          </c-col>
+          <c-col md="4">
+            <label cLabel class="required-label" for="tipo">Tipo</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText> <i class="fa fa-truck"></i> </span>
+              <select cSelect id="tipo" name="tipo" [(ngModel)]="vehiculo.vehiculo_tipo" required>
+                <option value="">Elija...</option>
+                <option value="AMBULANCIA">AMBULANCIA</option>
+                <option value="AUTOBOMBA">AUTOBOMBA</option>
+                <option value="AUTOMOVIL">AUTOMOVIL</option>
+                <option value="BUS">BUS</option>
+                <option value="CAMION">CAMION</option>
+                <option value="CAMIONETA">CAMIONETA</option>
+                <option value="CANASTILLA">CANASTILLA</option>
+                <option value="JEEP">JEEP</option>
+                <option value="MOTOCICLETA">MOTOCICLETA</option>
+                <option value="SUV">SUV</option>
+                <option value="TANQUERO">TANQUERO</option>
+                <option value="TRAILER">TRAILER</option>
+              </select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Escoja un tipo de vehículo</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          
+          <c-col md="4">
+            <label cLabel for="proposito">Clase de servicio</label>
+            <select cSelect id="proposito" name="proposito" [(ngModel)]="vehiculo.vehiculo_proposito">
+              <option value="COMERCIAL [A,U,Z]">COMERCIAL [A,U,Z]</option>
+              <option value="GUBERNAMENTAL [E]">GUBERNAMENTAL [E]</option>
+              <option value="OFICIAL [X]">OFICIAL [X]</option>
+              <option value="MUNICIPAL [M]">MUNICIPAL [M]</option>
+              <option value="PARTICULAR">PARTICULAR</option>
+            </select>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="sigla">Sigla</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-spell-check"></i> </span>
+              <input cFormControl id="sigla" name="sigla" [(ngModel)]="vehiculo.vehiculo_sigla" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="color1">Color Primario</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-fill-drip"></i> </span>
+              <input cFormControl id="color1" name="color1" [(ngModel)]="vehiculo.vehiculo_color1" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="color2">Color Secundario</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-fill-drip"></i> </span>
+              <input cFormControl id="color2" name="color2" [(ngModel)]="vehiculo.vehiculo_color2" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="marca">Marca</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-tag"></i> </span>
+              <input cFormControl id="marca" name="marca" [(ngModel)]="vehiculo.vehiculo_marca" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="modelo">Modelo</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-truck"></i> </span>
+              <input cFormControl id="modelo" name="modelo" [(ngModel)]="vehiculo.vehiculo_modelo" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="chasis"># Chasis</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-fingerprint"></i> </span>
+              <input cFormControl id="chasis" name="chasis" [(ngModel)]="vehiculo.vehiculo_chasis" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="motor"># Motor</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-fingerprint"></i> </span>
+              <input cFormControl id="motor" name="motor" [(ngModel)]="vehiculo.vehiculo_motor" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="ramv">RAMV</label>
+            <input cFormControl id="ramv" name="ramv" [(ngModel)]="vehiculo.vehiculo_ramv" type="text" />
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel class="required-label" for="combustible">Combustible</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-gas-pump"></i> </span>
+              <select cSelect id="combustible" name="combustible" [(ngModel)]="vehiculo.vehiculo_combustible" required>
+                <option value="">Seleccione...</option>
+                <option value="DIESEL">DIESEL</option>
+                <option value="GASOLINA">GASOLINA</option>
+                <option value="HÍBRIDO">HÍBRIDO</option>
+                <option value="ELÉCTRICO">ELÉCTRICO</option>
+              </select>
+              <c-form-feedback [valid]="false">Seleccione tipo de combustible</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="avaluo">Avalúo</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-dollar-sign"></i> </span>
+              <input cFormControl id="avaluo" name="avaluo" [(ngModel)]="vehiculo.vehiculo_avaluo" type="number" min="0" step="0.01" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="anio">Año</label>
+            <input cFormControl id="anio" name="anio" [(ngModel)]="vehiculo.vehiculo_anio" type="number" min="1900" />
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="pais">País de origen</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-globe-americas"></i> </span>
+              <input cFormControl id="pais" name="pais" [(ngModel)]="vehiculo.vehiculo_pais" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="corroceria">Tipo Carrocería</label>
+            <input cFormControl id="corroceria" name="corroceria" [(ngModel)]="vehiculo.vehiculo_corroceria" type="text" />
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="pasajeros"># Pasajeros</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-user-friends"></i> </span>
+              <input cFormControl id="pasajeros" name="pasajeros" [(ngModel)]="vehiculo.vehiculo_pasajeros" type="number" min="1" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="cilindraje">Cilindraje</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-tachometer-alt"></i> </span>
+              <input cFormControl id="cilindraje" name="cilindraje" [(ngModel)]="vehiculo.vehiculo_cilindraje" type="number" min="0.1" step="0.01" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="anioMatricula">Último año de matrícula</label>
+            <input cFormControl id="anioMatricula" name="anioMatricula" [(ngModel)]="vehiculo.vehiculo_anio_matricula" type="number" min="1900" />
+          </c-col>
+
+          
+          
+
+          <!-- <c-col md="4">
+            <label cLabel for="fingreso">Fecha Ingreso</label>
+            <input cFormControl id="fingreso" name="fingreso" [(ngModel)]="vehiculo.vehiculo_fingreso" type="date" />
+          </c-col> -->
+
+          <!-- <c-col xs="12">
+            <c-form-check>
+              <input cFormCheckInput id="invalidCheck" name="invalidCheck" required type="checkbox" />
+              <label cFormCheckLabel for="invalidCheck">Agree to terms and conditions</label>
+            </c-form-check>
+            <c-form-feedback [valid]="false">You must agree before submitting.</c-form-feedback>
+          </c-col> -->
+          <c-col xs="12">
+            <button cButton class="me-1" color="primary" type="submit">
+              <i class="fa-solid fa-save"></i> Guadar
+            </button>
+            <!-- <button (click)="onReset1()" cButton color="secondary" type="reset">
+              <i class="fa-solid fa-broom"></i> Limpiar y Nuevo registro
+            </button> -->
+          </c-col>
+        </form>
+
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

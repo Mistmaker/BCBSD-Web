@@ -1,0 +1,55 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header>
+
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Listado de Vehículos del CBSD</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Vehiculos del CBSD con su estado, para editarlos hacer clic en el icono <i class="fa-solid fa-2x fa-pencil" style="color: #5856d6;"></i>
+                </p>
+                <table cTable>
+                    <thead>
+                        <tr>
+                            <th scope="col">UNIDADES</th>
+                            <th scope="col">CUSTODIO</th>
+                            <th scope="col">INFORMACIÓN</th>
+                            <th scope="col">DETALLE</th>
+                            <th scope="col">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let vehiculo of vehiculos">
+                            <th scope="row">
+                                <a><i class="fa-solid fa-pencil"></i></a><span class="ng-binding">{{ vehiculo.vehiculo_placa }}</span>
+                                <div>
+                                    <i class="fa-solid fa-pencil"></i><span class="ng-binding">{{ vehiculo.vehiculo_tipo }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-pencil"></i><span class="ng-binding">{{ vehiculo.vehiculo_combustible }}</span>
+                                </div>
+                            </th>
+                            <td>Mark</td>
+                            <td>Otto</td>
+                            <td>&#64;mdo</td>
+                            <td>
+                                <a cButton routerLink="./{{vehiculo.vehiculo_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

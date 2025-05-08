@@ -1,0 +1,17 @@
+// .required-label::after {
+//     content: ' (*)';
+//     color: red;
+//     font-weight: bold;
+//   }
+
+
+label:has(+ input[required]),
+label:has(+ select[required]),
+label:has(+ c-input-group > select[required]),
+label:has(+ c-input-group > input[required]) {
+  &::after {
+    content: ' (*)';
+    color: red;
+    font-weight: bold;
+  }
+}
