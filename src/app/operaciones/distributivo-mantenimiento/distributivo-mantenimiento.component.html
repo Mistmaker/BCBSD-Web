@@ -1,0 +1,187 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header>
+
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Registro de Distributivo</strong>
+                        <!-- <strong *ngIf="!intervencion.intervencion_id">Registro de salida - Ordenes de Movilización del CBSD</strong>} -->
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
+                </p>
+
+                <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+
+                    <c-col md="6" *ngIf="distributivo.distributivo_id">
+                        <label cLabel class="required-label" for="id">&nbsp;</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="id" name="id" [(ngModel)]="distributivo.distributivo_id" readonly type="text" />
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="codigo">Codigo</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="codigo" name="codigo" [(ngModel)]="distributivo.distributivo_codigo" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el codigo</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="fechainicio">Fecha de inicio</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="fechainicio" name="fechainicio" required [(ngModel)]="distributivo.distributivo_periodo_inicio" type="date" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha correcta!</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col xs="12">
+                        <c-card class="mb-3">
+                            <c-card-header ngPreserveWhitespaces>
+                                <strong>Asignación</strong> <small>de grupos por estación</small>
+                            </c-card-header>
+                            <c-card-body>
+                                <c-tabs>
+                                    <c-tabs-list variant="pills">
+                                        <button cTab *ngFor="let grupo of distributivo.grupos" [itemKey]="grupo.estacion_id">
+                                            {{ grupo.estacion_nombre }}
+                                        </button>
+                                    </c-tabs-list>
+                                    <c-tabs-content>
+                                        <c-tab-panel *ngFor="let grupo of distributivo.grupos" [itemKey]="grupo.estacion_id" class="p-3">
+                                            <c-row>
+                                                <c-col md="4" *ngFor="let peloton of grupo.pelotones">
+                                                    <c-alert color="secondary" variant="solid">
+                                                        <c-row>
+                                                            <c-col xs="8">
+                                                                <strong>{{ peloton.dist_pelo_id }}. {{ peloton.peloton_nombre }}</strong>
+                                                            </c-col>
+                                                            <c-col xs="4">
+                                                                <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                                                                    <button [cModalToggle]="scrollableLongContentModal.id" (click)="seleccionarGrupo(peloton.dist_pelo_id)" class="justify-content-md-end" cButton color="light" size="sm"><i class="fa-solid fa-search"></i></button>
+                                                                </div>
+
+                                                            </c-col>
+                                                            <ul cListGroup>
+                                                                <li cListGroupItem [active]="true">Cras justo odio</li>
+                                                                <li cListGroupItem>Dapibus ac facilisis in</li>
+                                                                <li cListGroupItem [disabled]="true">Morbi leo risus</li>
+                                                                <li cListGroupItem [disabled]="false">Porta ac consectetur ac</li>
+                                                                <li cListGroupItem>Vestibulum at eros</li>
+                                                              </ul>
+                                                        </c-row>
+                                                    </c-alert>
+                                                </c-col>
+                                            </c-row>
+                                        </c-tab-panel>
+                                    </c-tabs-content>
+                                </c-tabs>
+                            </c-card-body>
+                        </c-card>
+                    </c-col>
+
+
+                    <!-- <c-col md="6">
+                        <label cLabel for="solicita">Encargado Emergencia</label>
+                        <ng-select name="solicita" id="solicita" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="distributivo.fk_usuario_id" placeholder="Buscar encargado..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+
+                            <ng-template ng-label-tmp let-item="item">
+                                {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                            </ng-template>
+
+                            <ng-template ng-option-tmp let-item="item">
+                                <div>
+                                    <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                                </div>
+                            </ng-template>
+                        </ng-select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un solicitante</c-form-feedback>
+                    </c-col> -->
+
+
+
+
+                    <c-col xs="12">
+                        <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </c-col>
+                </form>
+
+                <div>
+                    {{ distributivo | json}}
+                </div>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>
+
+<!-- FORMULARIOS MODALES -->
+<c-modal #scrollableLongContentModal id="scrollableLongContentModal" scrollable>
+    <c-modal-header>
+        <h5 cModalTitle>Asignacion de personal a grupo {{tmpGrupoSeleccionado}} </h5>
+        <button [cModalToggle]="scrollableLongContentModal.id" cButtonClose> </button>
+    </c-modal-header>
+    <c-modal-body>
+        <ng-container>
+
+            <c-card-body>
+                <!-- <p class="text-medium-emphasis small">
+                    Listado de productos existentes (activas o inactivas)
+                </p> -->
+                <c-col md="12">
+                    <label cLabel for="cargo">Cargo</label>
+                    <select cSelect id="cargo" name="cargo" required [(ngModel)]="tmpCargoSeleccionado">
+                        <option value="">--Seleccione--</option>
+                        <option *ngFor="let cargo of cargoEstaciones" [value]="cargo">{{ cargo }} </option>
+                    </select>
+                    <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                    <c-form-feedback [valid]="false">Seleccione un tipo de emergencia</c-form-feedback>
+                </c-col>
+
+                <c-col md="12">
+                    <label cLabel for="tmpPersonal">Personal</label>
+                    <ng-select name="tmpPersonal" id="tmpPersonal" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="tmpPersonalSelccionado" placeholder="Buscar encargado..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+
+                        <ng-template ng-label-tmp let-item="item">
+                            {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                        </ng-template>
+
+                        <ng-template ng-option-tmp let-item="item">
+                            <div>
+                                <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                                <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                            </div>
+                        </ng-template>
+                    </ng-select>
+                    <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                    <c-form-feedback [valid]="false">Seleccione un solicitante</c-form-feedback>
+                </c-col>
+
+
+            </c-card-body>
+
+        </ng-container>
+    </c-modal-body>
+    <c-modal-footer>
+        <button [cModalToggle]="scrollableLongContentModal.id" cButton color="secondary">
+            Cerrar
+        </button>
+        <!-- <button cButton color="primary">Save changes</button> -->
+    </c-modal-footer>
+</c-modal>

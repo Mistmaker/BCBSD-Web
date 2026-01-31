@@ -8,17 +8,27 @@
                         <strong>Listado de Vehículos del CBSD</strong>
                     </c-col>
                     <c-col xs="6">
+                        <!-- <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="./nuevo" *ngIf="authService.ExisteRol(3)" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                        </div> -->
                         <div class="d-grid gap-1 d-md-flex justify-content-md-end">
-                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" *ngIf="authService.ExisteRol(3)" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
                         </div>
                     </c-col>
                 </c-row>
             </c-card-header>
             <c-card-body>
                 <p class="text-body-secondary small">
-                    Nota: Vehiculos del CBSD con su estado, para editarlos hacer clic en el icono <i class="fa-solid fa-2x fa-pencil" style="color: #5856d6;"></i>
+                    Nota: Vehiculos del BCBSD con su estado, para editarlos hacer clic en el icono <i class="fa-solid fa-2x fa-pencil" style="color: #5856d6;"></i>
                 </p>
-                <table cTable>
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar vehiculo por sigla, placa, motor, etc..." name="filtroBusqueda" id="filtroBusqueda" />
+                    </c-input-group>
+                </div>
+                <table [striped]="true" cTable [responsive]="true">
                     <thead>
                         <tr>
                             <th scope="col">UNIDADES</th>
@@ -29,19 +39,55 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let vehiculo of vehiculos">
+                        <tr *ngFor="let vehiculo of vehiculos | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
                             <th scope="row">
-                                <a><i class="fa-solid fa-pencil"></i></a><span class="ng-binding">{{ vehiculo.vehiculo_placa }}</span>
                                 <div>
-                                    <i class="fa-solid fa-pencil"></i><span class="ng-binding">{{ vehiculo.vehiculo_tipo }}</span>
+                                    <i class="fa-solid fa-barcode"></i><span class="ng-binding"> {{ vehiculo.vehiculo_sigla }}</span>
                                 </div>
                                 <div>
-                                    <i class="fa-solid fa-pencil"></i><span class="ng-binding">{{ vehiculo.vehiculo_combustible }}</span>
+                                    <a><i class="fa-solid fa-money-check"></i></a><span class="ng-binding"> {{ vehiculo.vehiculo_placa }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-truck"></i><span class="ng-binding"> {{ vehiculo.vehiculo_tipo }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-gas-pump"></i><span class="ng-binding"> {{ vehiculo.vehiculo_combustible }}</span>
                                 </div>
                             </th>
-                            <td>Mark</td>
-                            <td>Otto</td>
-                            <td>&#64;mdo</td>
+                            <td>
+                                <div>
+                                    <i class="fa-solid fa-calendar"></i><span class="ng-binding"> {{ vehiculo.vehiculo_anio }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-palette"></i><span class="ng-binding"> C1: {{ vehiculo.vehiculo_color1 }} - C2: {{ vehiculo.vehiculo_color2 }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-tag"></i><span class="ng-binding"> {{ vehiculo.vehiculo_marca }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-user"></i><span class="ng-binding"> {{ vehiculo.custodio_nombre }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <i class="fa-solid fa-truck"></i><span class="ng-binding"> {{ vehiculo.vehiculo_modelo }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-vector-square"></i><span class="ng-binding"> {{ vehiculo.vehiculo_chasis }}</span>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> {{ vehiculo.vehiculo_motor }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <!-- <i class="fa-solid fa-bell"></i><span class="ng-binding"> {{ vehiculo.vehiculo_estado }}</span> -->
+                                    <c-badge color="{{ vehiculo.vehiculo_estado != 'ACTIVO' ? 'warning' : 'success' }}"> {{ vehiculo.vehiculo_estado }}</c-badge>
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-calendar"></i><span class="ng-binding"> {{ vehiculo.vehiculo_registro }}</span>
+                                </div>
+                            </td>
                             <td>
                                 <a cButton routerLink="./{{vehiculo.vehiculo_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a>
                             </td>

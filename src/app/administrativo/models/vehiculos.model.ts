@@ -28,4 +28,6 @@ export class VehiculosModel {
     vehiculo_anio_matricula!: number; 
     vehiculo_ramv!: string; 
     vehiculo_sigla!: string; 
+
+    custodio_nombre!: string;
 }

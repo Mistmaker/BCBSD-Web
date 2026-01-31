@@ -1,0 +1,105 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header>
+
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Usuarios del CBSD</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Usuarios con su estado, para editarlos hacer clic en el icono <i class="fa-solid fa-2x fa-pencil" style="color: #5856d6;"></i>
+                </p>
+
+
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar orden por usuario..." name="filtroBusqueda" id="filtroBusqueda" />
+                    </c-input-group>
+                </div>
+
+                <!-- [(ngModel)]="filtroBusqueda" -->
+                <table [striped]="true" cTable [responsive]="true">
+                    <thead>
+                        <tr>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let usuario of usuarios | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
+                            <td scope="row">
+                                {{ usuario.usuario_login }}
+                            </td>
+                            <td>
+                                <c-badge color="{{ usuario.usuario_estado != 'ACTIVO' ? 'warning' : 'success' }}"> {{ usuario.usuario_estado }}</c-badge>
+                            </td>
+
+                            <td>
+                                <a cButton routerLink="./{{usuario.usuario_id}}" color="warning" size="sm"><i class="fa-solid fa-pencil"></i> </a>
+                                <button [cModalToggle]="scrollableLongContentModal.id" (click)="cargarPrivilegios(usuario.usuario_id)" color="primary" size="sm" cButton><i class="fa-solid fa-lock"></i> Privilegios</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>
+
+
+<!-- FORMULARIOS MODALES PRIVILEGIOS-->
+<c-modal #scrollableLongContentModal id="scrollableLongContentModal" scrollable size="lg">
+    <c-modal-header>
+        <h5 cModalTitle>Privilegios de usuario</h5>
+        <button [cModalToggle]="scrollableLongContentModal.id" cButtonClose> </button>
+    </c-modal-header>
+    <c-modal-body *ngIf="!cargandoPrivilegios">
+        <div *ngFor="let modulo of privilegios" class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <strong><i class="fa fa-folder-open"></i> {{ modulo.modulo_nombre }}</strong>
+            </div>
+
+            <div class="card-body bg-light">
+                <div *ngFor="let submod of modulo.submodulos" class="mb-3 ps-3 border-start border-secondary">
+                    <h6 class="text-secondary mb-2"><i class="fa fa-layer-group"></i> {{ submod.submodulo_nombre }}</h6>
+
+                    <div class="row">
+                        <div class="col-md-4" *ngFor="let rol of submod.roles">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" [(ngModel)]="rol.asignado" [name]="'rol_' + rol.rol_id" />
+                                <label class="form-check-label">
+                                    <i class="fa fa-key"></i> {{ rol.rol_nombre }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mt-3">
+            <button cButton color="success" (click)="guardarPrivilegios()">
+                <i class="fa fa-save me-1"></i> Guardar Cambios
+            </button>
+        </div>
+    </c-modal-body>
+    <c-modal-footer>
+        <button [cModalToggle]="scrollableLongContentModal.id" cButton color="secondary">
+            Cerrar
+        </button>
+        <!-- <button cButton color="primary">Save changes</button> -->
+    </c-modal-footer>
+</c-modal>

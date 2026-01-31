@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { DefaultLayoutComponent } from './layout';
+import { AuthGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -16,7 +17,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes)
+        loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes), canActivate: [AuthGuard]
       },
       {
         path: 'theme',
@@ -55,10 +56,22 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/routes').then((m) => m.routes)
       },
       {
+        path: 'adm',
+        loadChildren:() => import('./admin/admin-routing.module').then(m => m.AdminRoutingModule), canActivate: [AuthGuard]
+      },
+      {
         path: 'admin',
-        loadChildren:() => import('./administrativo/administrativo-routing.module').then(m => m.AdministrativoRoutingModule)
+        loadChildren:() => import('./administrativo/administrativo-routing.module').then(m => m.AdministrativoRoutingModule), canActivate: [AuthGuard]
+      },
+      {
+        path: 'sbj',
+        loadChildren:() => import('./subjefatura/subjefatura-routing.module').then(m => m.SubjefaturaRoutingModule), canActivate: [AuthGuard]
+      },
+      {
+        path: 'operaciones',
+        loadChildren:() => import('./operaciones/operaciones-routing.module').then(m => m.OperacionesRoutingModule), canActivate: [AuthGuard]
       }
-    ]
+    ], canActivate: [AuthGuard]
   },
   {
     path: '404',

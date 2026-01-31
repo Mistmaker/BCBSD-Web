@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 
 import {
+  BadgeComponent,
   BorderDirective,
   ButtonDirective,
   CardBodyComponent,
@@ -28,9 +29,14 @@ import {
   TabsComponent,
   TabsContentComponent,
   TabsListComponent,
-  TableDirective
+  TableDirective,
+  InputGroupComponent,
+  InputGroupTextDirective
 } from '@coreui/angular';
 import { IconDirective } from '@coreui/icons-angular';
+import { AuthService } from '../../../auth/auth.service';
+import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
+import { FormsModule } from '@angular/forms';
 
 type CardColor = {
   color: string
@@ -39,7 +45,7 @@ type CardColor = {
 
 @Component({
   selector: 'app-vehiculos-listado',
-  imports: [CommonModule, IconDirective, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent, TableDirective ],
+  imports: [BadgeComponent,CommonModule, IconDirective, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent, TableDirective, FiltroGeneralPipe, InputGroupComponent, InputGroupTextDirective, FormsModule ],
   templateUrl: './vehiculos-listado.component.html',
   styleUrl: './vehiculos-listado.component.scss'
 })
@@ -61,11 +67,12 @@ export class VehiculosListadoComponent implements OnInit {
   
   tabs = ['Active', 'List', 'Disabled']
 
+  filtroBusqueda = '';
   vehiculos: VehiculosModel[] = [];
   errorMessage: string = '';
   page: number = 1;
 
-  constructor(private _vehiculosService: VehiculosService) { }
+  constructor(private _vehiculosService: VehiculosService, public authService: AuthService) { }
 
   ngOnInit(): void {
     this.cargarDatos();

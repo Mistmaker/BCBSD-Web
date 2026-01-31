@@ -1,0 +1,237 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header>
+
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Registro de Intervenciones de Emergencias</strong>
+                        <!-- <strong *ngIf="!intervencion.intervencion_id">Registro de salida - Ordenes de Movilización del CBSD</strong>} -->
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
+                </p>
+
+                <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+
+                    <!-- <c-col md="4">
+              <label cLabel class="required-label" for="codigo">Código</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                <input cFormControl id="codigo" name="codigo" [(ngModel)]="intervencion.orden_codigo" disabled="true" readonly type="text" />
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese el código</c-form-feedback>
+              </c-input-group>
+            </c-col> -->
+
+                    <!-- <c-col md="4">
+              <label cLabel for="unidad">Unidad</label>
+              <select cSelect id="unidad" name="unidad" required [(ngModel)]="intervencion.fk_unidad_id">
+                <option value="">--Seleccione--</option>
+                <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.vehiculo_id">{{ vehiculo.vehiculo_sigla }} / {{ vehiculo.vehiculo_placa }}</option>
+              </select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Seleccione una unidad</c-form-feedback>
+            </c-col> -->
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="horaSalida">Fecha y Hora de intervención</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="horaSalida" name="horaSalida" required [(ngModel)]="intervencion.intervencion_fecha" type="datetime-local" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha y hora correcta!</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="destino">Dirección</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="destino" name="destino" [(ngModel)]="intervencion.intervencion_direccion" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el destino</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="provincia">Provincia</label>
+                        <select cSelect id="provincia" name="provincia" (change)="buscarCantones(provincia_id)" required [(ngModel)]="provincia_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let provincia of provincias" [value]="provincia.state_id">{{ provincia.state_name }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una provincia</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4" *ngIf="provincia_id">
+                        <label cLabel for="canton">Cantón</label>
+                        <select cSelect id="canton" name="canton" (change)="buscarParroquias(canton_id)" required [(ngModel)]="canton_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let canton of cantones" [value]="canton.town_id">{{ canton.town_name }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un cantón</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4" *ngIf="canton_id">
+                        <label cLabel for="parroquia">Parroquia</label>
+                        <select cSelect id="parroquia" name="parroquia" required [(ngModel)]="intervencion.fk_parroquia_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let parroquia of parroquias" [value]="parroquia.parish_id">{{ parroquia.parish_name }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una parroquia</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel for="unidad">Unidad</label>
+
+                        <ng-select name="unidad" style="width: 100%;" id="unidad" [items]="vehiculos" bindLabel="vehiculo_sigla" bindValue="vehiculo_id" [(ngModel)]="intervencion.fk_unidad_id" placeholder="Buscar vehiculo..." [searchable]="true" [clearable]="true" required #vehiculoSelect="ngModel" [ngClass]="{ 'is-invalid': vehiculoSelect.invalid && vehiculoSelect.touched }">
+
+                            <ng-template ng-label-tmp let-item="item">
+                                {{ item.vehiculo_sigla }} {{ item.vehiculo_marca }} - {{ item.vehiculo_tipo }} (Placa: {{ item.vehiculo_placa }})
+                            </ng-template>
+
+                            <ng-template ng-option-tmp let-item="item">
+                                <div>
+                                    <strong>{{ item.vehiculo_sigla }} {{ item.vehiculo_marca }} - {{ item.vehiculo_tipo }} (Placa: {{ item.vehiculo_placa }})</strong><br />
+                                    <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                                </div>
+                            </ng-template>
+                        </ng-select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un vehiculo</c-form-feedback>
+                        <!-- <div class="invalid-feedback d-block" *ngIf="conductorSelect.invalid && conductorSelect.touched">
+                Seleccione un conductor válido
+              </div> -->
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel for="solicita">Encargado Emergencia</label>
+                        <ng-select name="solicita" id="solicita" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="intervencion.fk_personal_id" placeholder="Buscar encargado..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+
+                            <ng-template ng-label-tmp let-item="item">
+                                {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                            </ng-template>
+
+                            <ng-template ng-option-tmp let-item="item">
+                                <div>
+                                    <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                                    <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                                </div>
+                            </ng-template>
+                        </ng-select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un solicitante</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="estacion">Estacion</label>
+                        <select cSelect id="estacion" name="estacion" required [(ngModel)]="intervencion.fk_estacion_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let estacion of estaciones" [value]="estacion.estacion_id">{{ estacion.estacion_nombre }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una estacion</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="tipo_incidente">Tipo Incidente</label>
+                        <select cSelect id="tipo_incidente" name="tipo_incidente" (change)="obtenerDependientes(intervencion.fk_incidencia_id)" required [(ngModel)]="intervencion.fk_incidencia_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let incidencia of tiposIncidencias" [value]="incidencia.incidencia_id">{{ incidencia.incidencia_descripcion }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un tipo de emergencia</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="emergencia">Tipo Emergencia</label>
+                        <select cSelect id="emergencia" name="emergencia" required [(ngModel)]="intervencion.fk_emergencia_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let emergencia of emergencias" [value]="emergencia.emergencia_id">{{ emergencia.emergencia_descripcion }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un tipo de emergencia</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="causa">Causa</label>
+                        <select cSelect id="causa" name="causa" required [(ngModel)]="intervencion.fk_causa_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let causa of causas" [value]="causa.causa_id">{{ causa.causa_descripcion }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una causa</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="naturaleza">Naturaleza</label>
+                        <select cSelect id="naturaleza" name="naturaleza" [(ngModel)]="intervencion.fk_naturaleza_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let naturaleza of naturalezas" [value]="naturaleza.naturaleza_id">{{ naturaleza.naturaleza_descripcion }} </option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una naturaleza</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="beneficiarios">Beneficiarios</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="beneficiarios" name="beneficiarios" [(ngModel)]="intervencion.incidencia_beneficiarios" required type="number" min="0" step="1" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese un número válido</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="4">
+                        <label cLabel for="fallecidos">Fallecidos</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <input cFormControl id="fallecidos" name="fallecidos" [(ngModel)]="intervencion.incidencia_fallecidos" required type="number" min="0" step="1" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese un número válido</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <!-- <c-col md="12">
+                        <label cLabel for="observaciones">Observaciones</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                            <textarea cFormControl id="observaciones" name="observaciones" [(ngModel)]="intervencion.orden_observaciones"></textarea>
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una observación</c-form-feedback>
+                        </c-input-group>
+                    </c-col> -->
+
+                    <c-col md="12">
+                        <c-alert color="info">
+                            Seleccione la ubicación del incidente en el mapa, el marcador se agregará automáticamente.
+                        </c-alert>
+                        <div id="map"></div>
+                    </c-col>
+
+
+                    <c-col xs="12">
+                        <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </c-col>
+                </form>
+
+                <div>
+                    {{ intervencion | json}}
+                </div>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

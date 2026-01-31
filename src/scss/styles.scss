@@ -21,3 +21,39 @@
 // We use those styles to show code examples, you should remove them in your application.
 @use "examples";
 
+@import "@ng-select/ng-select/themes/default.theme.css";
+
+
+label:has(+ input[required]),
+label:has(+ select[required]),
+label:has(+ ng-select[required]),
+label:has(+ c-input-group > select[required]),
+label:has(+ c-input-group > input[required]) {
+  &::after {
+    content: ' (*)';
+    color: red;
+    font-weight: bold;
+  }
+}
+
+c-input-group span i {
+  color: #5856d6; // azul violeta elegante
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+c-input-group span i:hover {
+  transform: scale(1.5);
+  transition: transform 0.2s;
+}
+
+button[cButton] i,
+a[cButton] i {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+button[cButton]:hover i,
+a[cButton]:hover i {
+  transform: scale(1.4);
+  color: #e51e1e; // Azul animado opcional
+}

@@ -33,11 +33,15 @@ import {
 } from '@coreui/angular';
 
 import Swal from 'sweetalert2';
+import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
+import { PersonalModel } from '../../../tthh/models/personal.model';
+import { PersonalService } from '../../../tthh/services/personal.service';
 
 @Component({
   selector: 'app-vehiculos-mantenimiento',
   imports: [ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective
+    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,
+    NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent
   ],
   templateUrl: './vehiculos-mantenimiento.component.html',
   styleUrl: './vehiculos-mantenimiento.component.scss'
@@ -46,11 +50,12 @@ import Swal from 'sweetalert2';
 export class VehiculosMantenimientoComponent implements OnInit {
 
   vehiculo: VehiculosModel = new VehiculosModel();
+  personal: PersonalModel[] = [];
   errorMessage: string = '';
   customStylesValidated = false;
   browserDefaultsValidated = false;
   tooltipValidated = false;
-  
+
   Toast = Swal.mixin({
     toast: true,
     position: "top-end",
@@ -63,7 +68,7 @@ export class VehiculosMantenimientoComponent implements OnInit {
     }
   });
 
-  constructor(private _vehiculosService: VehiculosService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private _vehiculosService: VehiculosService, private _personalService: PersonalService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
     // this.cargarDatos();
@@ -80,6 +85,17 @@ export class VehiculosMantenimientoComponent implements OnInit {
         complete: () => console.info('complete')
       })
     }
+    this._personalService.getAll().subscribe({
+      next: (data) => {
+        this.personal = data;
+
+      },
+      error: (e) => {
+        console.error(e);
+        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+      },
+      complete: () => console.info('complete')
+    })
   }
 
   cargarDatos() {
@@ -101,7 +117,7 @@ export class VehiculosMantenimientoComponent implements OnInit {
     this._vehiculosService.save(this.vehiculo).subscribe({
       next: (data) => {
         console.log(data)
-        Swal.fire('Listo',data.msg,'success')
+        Swal.fire('Listo', data.msg, 'success')
         this.router.navigate(['../'], { relativeTo: this.route });
       },
       error: (e) => {

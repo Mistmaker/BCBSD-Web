@@ -62,6 +62,29 @@
             </c-input-group>
           </c-col>
 
+          <c-col md="12">
+            <label cLabel for="custodio">Custodio</label>
+            <ng-select name="custodio" id="custodio" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="vehiculo.custodio_id" placeholder="Buscar solicitante..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+
+              <ng-template ng-label-tmp let-item="item">
+                {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+              </ng-template>
+
+              <ng-template ng-option-tmp let-item="item">
+                <div>
+                  <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                  <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                </div>
+              </ng-template>
+            </ng-select>
+            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+            <c-form-feedback [valid]="false">Seleccione un solicitante</c-form-feedback>
+
+            <!-- <div class="invalid-feedback d-block" *ngIf="conductorSelect.invalid && conductorSelect.touched">
+              Seleccione un conductor válido
+            </div> -->
+          </c-col>
+
           
           <c-col md="4">
             <label cLabel for="proposito">Clase de servicio</label>

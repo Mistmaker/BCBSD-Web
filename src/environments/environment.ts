@@ -1,3 +1,3 @@
 export const environment = {
-    API_URL: 'http://localhost/cbsd-api/'
+    API_URL: 'https://api.cbsd.gob.ec/'
 };

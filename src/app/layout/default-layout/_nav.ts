@@ -44,7 +44,41 @@ export const navItems: INavData[] = [
         url: '/admin/vehiculos',
         icon: 'nav-icon-bullet'
       },
+      {
+        name: 'Ordenes de Movilización',
+        url: '/admin/ordenes-movilizacion',
+        icon: 'nav-icon-bullet'
+      },
       
+    ]
+  },
+  {
+    name: 'Subjefatura',
+    url: '/sbj',
+    icon: 'fa fa-shield-alt',
+    children: [
+      {
+        name: 'Dashboard',
+        url: '/sbj/dashboard',
+        icon: 'fa fa-chart-pie'
+      },
+      {
+        name: 'Intervenciones',
+        url: '/sbj/intervenciones',
+        icon: 'fa fa-fire'
+      },
+    ]
+  },
+  {
+    name: 'Operaciones',
+    url: '/operaciones',
+    icon: 'fa fa-shield',
+    children: [
+      {
+        name: 'Distributivo',
+        url: '/operaciones/distributivo',
+        icon: 'fa fa-fire'
+      },
     ]
   },
   {
