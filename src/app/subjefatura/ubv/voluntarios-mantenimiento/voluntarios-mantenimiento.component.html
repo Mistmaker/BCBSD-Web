@@ -1,0 +1,113 @@
+<c-row ngPreserveWhitespaces>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411;color: white;">
+        <c-row>
+          <c-col xs="6">
+            <strong>{{ voluntario.voluntario_id ? 'Editar Voluntario' : 'Registrar Voluntario' }}</strong>
+          </c-col>
+          <c-col xs="6">
+            <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+              <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+            </div>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="text-body-secondary small">
+          Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios.
+        </p>
+
+        <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+          <c-col md="6">
+            <label cLabel class="required-label" for="nombres">Nombres</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-user"></i></span>
+              <input cFormControl id="nombres" name="nombres" [(ngModel)]="voluntario.voluntario_nombres" required type="text" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese los nombres</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel class="required-label" for="apellidos">Apellidos</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-user"></i></span>
+              <input cFormControl id="apellidos" name="apellidos" [(ngModel)]="voluntario.voluntario_apellidos" required type="text" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese los apellidos</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel class="required-label" for="cedula">Cédula</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-id-card"></i></span>
+              <input cFormControl id="cedula" name="cedula" [(ngModel)]="voluntario.voluntario_doc_identidad" required type="text" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese la cédula</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="telefono">Teléfono</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-phone"></i></span>
+              <input cFormControl id="telefono" name="telefono" [(ngModel)]="voluntario.voluntario_telefono" type="text" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese un teléfono válido</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="correo">Correo</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-envelope"></i></span>
+              <input cFormControl id="correo" name="correo" [(ngModel)]="voluntario.voluntario_correo" type="email" />
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Ingrese un correo válido</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="tipoSangre">Tipo de sangre</label>
+            <select cSelect required id="tipoSangre" name="tipoSangre" [(ngModel)]="voluntario.voluntario_tiposangre">
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="promocion">Promoción</label>
+            <select cSelect required id="promocion" name="promocion" [(ngModel)]="voluntario.voluntario_promocion">
+              <option value="PRIMERA">PRIMERA</option>
+              <option value="SEGUNDA">SEGUNDA</option>
+              <option value="TERCERA">TERCERA</option>
+              <option value="CUARTA">CUARTA</option>
+              <option value="QUINTA">QUINTA</option>
+            </select>
+          </c-col>
+
+          <c-col md="6" *ngIf="voluntario.voluntario_id">
+            <label cLabel for="estado">Estado</label>
+            <select cSelect required id="estado" name="estado" [(ngModel)]="voluntario.voluntario_estado">
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="SUSPENDIDO">SUSPENDIDO</option>
+              <option value="PASIVO">PASIVO</option>
+            </select>
+          </c-col>
+
+          <c-col xs="12">
+            <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+          </c-col>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

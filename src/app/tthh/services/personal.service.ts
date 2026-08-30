@@ -12,7 +12,7 @@ export class PersonalService {
   constructor(private http: HttpClient) { }
 
   getAll() {
-    return this.http.get<PersonalModel[]>(`${environment.API_URL}/servicios/tthh/getPersonal.php`)
+    return this.http.get<PersonalModel[]>(`${environment.API_URL}/servicios/tthh/getPersonalOperativo.php`)
   }
 
   getById(id: number) {

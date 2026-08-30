@@ -30,6 +30,13 @@ export class PelotonesModel {
     peloton_registro!: string;
     peloton_estado!: string;
     fk_usuario_id!: number;
+
+    cargos: Cargos[] = [];
+}
+
+export class Cargos {
+    cargo_nombre!: string;
+    puestos: any[] = [];
 }
 
 export class DistPeloModel {
@@ -50,4 +57,6 @@ export class TropasModel {
     tropa_cargo!: string;
     tropa_cargo_otro!: string;
     tropa_detalle!: string;
+
+    tropa_nombre_completo!: string;
 }

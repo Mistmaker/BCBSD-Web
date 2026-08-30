@@ -2,6 +2,7 @@ export class VehiculosModel {
     vehiculo_id!: number; 
     fk_usuario_id!: number; 
     fk_estacion_id!: number; 
+    fk_direccion_id!: number; 
     fk_marca_id!: number; 
     vehiculo_registro!: string; 
     vehiculo_estado!: string; 
@@ -28,6 +29,9 @@ export class VehiculosModel {
     vehiculo_anio_matricula!: number; 
     vehiculo_ramv!: string; 
     vehiculo_sigla!: string; 
+    vehiculo_area!: string; 
 
     custodio_nombre!: string;
+    estacion_nombre!: string;
+    direccion_nombre!: string;
 }

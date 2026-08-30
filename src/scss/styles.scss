@@ -26,11 +26,13 @@
 
 label:has(+ input[required]),
 label:has(+ select[required]),
+label:has(+ textarea[required]),
 label:has(+ ng-select[required]),
 label:has(+ c-input-group > select[required]),
+label:has(+ c-input-group > textarea[required]),
 label:has(+ c-input-group > input[required]) {
-  &::after {
-    content: ' (*)';
+  &::before {
+    content: '(*) ';
     color: red;
     font-weight: bold;
   }
@@ -57,3 +59,7 @@ a[cButton]:hover i {
   transform: scale(1.4);
   color: #e51e1e; // Azul animado opcional
 }
+
+// color rojo bomberil (escudo)
+$institucional_primario: #bf0411;
+

@@ -1,0 +1,123 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>{{ documento.documento_id ? 'Editar Documento' : 'Registrar Documento' }}</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios.
+                </p>
+
+                <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="numeroDocumento">Número de Documento</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-file"></i></span>
+                            <input cFormControl id="numeroDocumento" name="numeroDocumento" [(ngModel)]="documento.documento_numero_documento" placeholder="BCBSD-XX-202X-XXX-M" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el número de documento</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="numeroFolio">Número de Folio</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-file"></i></span>
+                            <input cFormControl id="numeroFolio" name="numeroFolio" [(ngModel)]="documento.documento_numero_folio" placeholder="001" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el número de folio</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="fechaDocumento">Fecha de Documento</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-file"></i></span>
+                            <input cFormControl id="fechaDocumento" name="fechaDocumento" [(ngModel)]="documento.documento_fecha_documento" placeholder="BCBSD-XX-202X-XXX-M" required type="date" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese la fecha del documento</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="tipoDocumento">Tipo de Documento</label>
+                        <select cSelect id="tipoDocumento" name="tipoDocumento" required [(ngModel)]="documento.documento_tipo_documento_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let tipo of tiposDocumento" [value]="tipo.tipodocumento_id">{{ tipo.tipodocumento_tipo }}</option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un tipo de documento</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="direccionOrigen">Dirección de Origen</label>
+                        <select cSelect id="direccionOrigen" name="direccionOrigen" required [(ngModel)]="documento.documento_direccion_origen_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let direccion of direcciones" [value]="direccion.direccion_id">{{ direccion.direccion_nombre_direccion }}</option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una dirección de origen</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="remitente">Remitente</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-file"></i></span>
+                            <input cFormControl id="remitente" name="remitente" [(ngModel)]="documento.documento_remitente" placeholder="Director" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el Remitente</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="direccionDestino">Dirección de Destino</label>
+                        <select cSelect id="direccionDestino" name="direccionDestino" required [(ngModel)]="documento.documento_direccion_destino_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let direccion of direcciones" [value]="direccion.direccion_id">{{ direccion.direccion_nombre_direccion }}</option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione una dirección de destino</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="destinatario">Destinatario</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-file"></i></span>
+                            <input cFormControl id="destinatario" name="destinatario" [(ngModel)]="documento.documento_destinatario" placeholder="Director" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el Remitente</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="asunto">Asunto</label>
+                        <textarea cFormControl id="asunto" name="asunto" [(ngModel)]="documento.documento_asunto" required rows="3"></textarea>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese el asunto</c-form-feedback>
+                    </c-col>
+                    
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="ubicacion">Ubicacion Física</label>
+                        <input cFormControl id="ubicacion" name="ubicacion" [(ngModel)]="documento.documento_ubicacion_fisica" placeholder="Percha 2 Fila 3 Caja 1 Folder 1" required type="text" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese la ubicación</c-form-feedback>
+                    </c-col>
+
+                    <c-col xs="12">
+                        <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </c-col>
+                </form>
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

@@ -1,0 +1,65 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Listado de Asignaciones</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Para editar una asignación, haga clic en el icono <i class="fa-solid fa-pencil" style="color: #5856d6;"></i>.
+                </p>
+
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-search"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar asignación por voluntario, estacion, etc." />
+                    </c-input-group>
+                </div>
+
+                <table [striped]="true" cTable [responsive]="true">
+                    <thead>
+                        <tr>
+                            <th scope="col">Voluntario</th>
+                            <!-- <th scope="col">Unidad</th> -->
+                            <th scope="col">Estación</th>
+                            <th scope="col">Fecha Inicio</th>
+                            <!-- <th scope="col">Fecha Fin</th> -->
+                            <th scope="col">Estado</th>
+                            <th scope="col">Menú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let asignacion of asignaciones | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
+                            <td>{{ asignacion.voluntario_nombre_completo }}</td>
+                            <!-- <td>{{ asignacion.unidad_nombre }}</td> -->
+                            <td>{{ asignacion.estacion_nombre }}</td>
+                            <td>{{ asignacion.asignacion_fecha_inicio }}</td>
+                            <!-- <td>{{ asignacion.asignacion_fecha_fin }}</td> -->
+                            <td>
+                                <c-badge color="{{ asignacion.asignacion_estado != 'FINALIZADA' ? 'success' : 'danger' }}"> {{ asignacion.asignacion_estado }}</c-badge>
+                            </td>
+                            <td *ngIf="voluntario_id">
+                                <a *ngIf="asignacion.asignacion_estado=='ACTIVO' && voluntario_id == asignacion.fk_voluntario_id" cButton routerLink="./{{asignacion.asignacion_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a> 
+                                <button *ngIf="asignacion.asignacion_estado=='ACTIVO' && voluntario_id == asignacion.fk_voluntario_id" cButton (click)="eliminarAsignacion(asignacion.asignacion_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                            <td *ngIf="!voluntario_id">
+                                <a *ngIf="asignacion.asignacion_estado=='ACTIVO'" cButton routerLink="./{{asignacion.asignacion_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a> 
+                                <button *ngIf="asignacion.asignacion_estado=='ACTIVO'" cButton (click)="eliminarAsignacion(asignacion.asignacion_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

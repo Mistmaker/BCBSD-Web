@@ -1,7 +1,7 @@
 <c-row ngPreserveWhitespaces>
     <c-col xs="12">
         <c-card class="mb-4">
-            <c-card-header>
+            <c-card-header style="background-color: #bf0411;color: white;">
 
                 <c-row>
                     <c-col xs="6">
@@ -66,6 +66,58 @@
                                         <c-tab-panel *ngFor="let grupo of distributivo.grupos" [itemKey]="grupo.estacion_id" class="p-3">
                                             <c-row>
                                                 <c-col md="4" *ngFor="let peloton of grupo.pelotones">
+                                                    <c-card class="mb-3">
+                                                        <c-card-header ngPreserveWhitespaces>
+                                                            <strong>{{ peloton.dist_pelo_id }}.</strong> <small>{{ peloton.peloton_nombre }}</small>
+                                                        </c-card-header>
+                                                        <c-card-body>
+
+                                                            <c-card class="mb-3" *ngFor="let cargo of peloton.cargos ; let i = index">
+                                                                <c-card-header ngPreserveWhitespaces>
+                                                                    <c-row>
+                                                                        <c-col xs="10">
+                                                                            <small> {{ i }} {{ cargo.cargo_nombre }}</small>
+                                                                            <!-- <strong *ngIf="!intervencion.intervencion_id">Registro de salida - Ordenes de Movilización del CBSD</strong>} -->
+                                                                        </c-col>
+                                                                        <!-- <c-col xs="2">
+                                                                            <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                                                                                <button [cModalToggle]="scrollableLongContentModal.id" (click)="seleccionarGrupo(peloton.dist_pelo_id)" class="justify-content-md-end" cButton color="primary" size="sm"><i class="fa-solid fa-search"></i></button>
+                                                                            </div>
+                                                                        </c-col> -->
+                                                                    </c-row>
+                                                                </c-card-header>
+                                                                <c-card-body>
+                                                                    <ul cListGroup *ngFor="let personal of cargo.puestos">
+                                                                        <li cListGroupItem color="secondary" style="margin-bottom: 3px; font-size: 11px;">{{ personal.tropa_nombre_completo }}
+
+                                                                            <button cButton color="danger" size="sm" class="float-end" (click)="removerAsignacion(personal, cargo, grupo.estacion_id)">
+                                                                                <i style="color: white;" class="fa-solid fa-trash fa-xs"></i>
+                                                                            </button>
+                                                                        </li>
+
+                                                                    </ul>
+                                                                    <hr>
+                                                                    <!-- agregar input text para buscar personal, mediante lista y asignarlo al arreglo correspondiente -->
+                                                                    <ng-select name="tmpPersonal" id="tmpPersonal" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" (change)="asignarPersonal($event,cargo,cargo.cargo_nombre,peloton.dist_pelo_id)" [(ngModel)]="tmpPersonalSelccionado" placeholder="Buscar encargado..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+
+                                                                        <ng-template ng-label-tmp let-item="item">
+                                                                            {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                                                                        </ng-template>
+
+                                                                        <ng-template ng-option-tmp let-item="item">
+                                                                            <div>
+                                                                                <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                                                                                <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                                                                            </div>
+                                                                        </ng-template>
+                                                                    </ng-select>
+                                                                </c-card-body>
+                                                            </c-card>
+
+                                                        </c-card-body>
+                                                    </c-card>
+                                                </c-col>
+                                                <!-- <c-col md="4" *ngFor="let peloton of grupo.pelotones">
                                                     <c-alert color="secondary" variant="solid">
                                                         <c-row>
                                                             <c-col xs="8">
@@ -77,16 +129,13 @@
                                                                 </div>
 
                                                             </c-col>
-                                                            <ul cListGroup>
+                                                            <ul cListGroup *ngFor="let grupo of distributivo.grupos">
                                                                 <li cListGroupItem [active]="true">Cras justo odio</li>
                                                                 <li cListGroupItem>Dapibus ac facilisis in</li>
-                                                                <li cListGroupItem [disabled]="true">Morbi leo risus</li>
-                                                                <li cListGroupItem [disabled]="false">Porta ac consectetur ac</li>
-                                                                <li cListGroupItem>Vestibulum at eros</li>
-                                                              </ul>
+                                                            </ul>
                                                         </c-row>
                                                     </c-alert>
-                                                </c-col>
+                                                </c-col> -->
                                             </c-row>
                                         </c-tab-panel>
                                     </c-tabs-content>
@@ -132,19 +181,18 @@
 </c-row>
 
 <!-- FORMULARIOS MODALES -->
-<c-modal #scrollableLongContentModal id="scrollableLongContentModal" scrollable>
+<c-modal #scrollableLongContentModal id="scrollableLongContentModal" alignment="center" size="lg" scrollable>
     <c-modal-header>
         <h5 cModalTitle>Asignacion de personal a grupo {{tmpGrupoSeleccionado}} </h5>
         <button [cModalToggle]="scrollableLongContentModal.id" cButtonClose> </button>
     </c-modal-header>
     <c-modal-body>
         <ng-container>
-
             <c-card-body>
                 <!-- <p class="text-medium-emphasis small">
                     Listado de productos existentes (activas o inactivas)
                 </p> -->
-                <c-col md="12">
+                <!-- <c-col md="12">
                     <label cLabel for="cargo">Cargo</label>
                     <select cSelect id="cargo" name="cargo" required [(ngModel)]="tmpCargoSeleccionado">
                         <option value="">--Seleccione--</option>
@@ -152,9 +200,9 @@
                     </select>
                     <c-form-feedback [valid]="true">Ok!</c-form-feedback>
                     <c-form-feedback [valid]="false">Seleccione un tipo de emergencia</c-form-feedback>
-                </c-col>
+                </c-col> -->
 
-                <c-col md="12">
+                <c-col md="12" style="height: 300px;">
                     <label cLabel for="tmpPersonal">Personal</label>
                     <ng-select name="tmpPersonal" id="tmpPersonal" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="tmpPersonalSelccionado" placeholder="Buscar encargado..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
 

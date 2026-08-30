@@ -1,0 +1,107 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>{{ evento.evento_id ? 'Editar evento' : 'Registrar evento' }}</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios.
+                </p>
+
+                <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+
+
+                    <c-col md="4">
+                        <label cLabel for="estado">Estado</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-star"></i></span>
+                            <select cSelect id="estado" name="estado" required [(ngModel)]="evento.evento_estado">
+                                <option value="GENERADO">EVENTO INICIADO</option>
+                                <option value="FINALIZADO">EVENTO FINALIZADO</option>
+                            </select>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="motivo">Motivo</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-align-left"></i></span>
+                            <input cFormControl id="motivo" name="motivo" [(ngModel)]="evento.evento_motivo" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese un motivo</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="descripcion">Descripción</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-align-left"></i></span>
+                            <textarea cFormControl id="descripcion" name="descripcion" [(ngModel)]="evento.evento_descripcion" required rows="4"></textarea>
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una descripción</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="3">
+                        <label cLabel class="required-label" for="fechaInicio">Fecha de Inicio</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
+                            <input cFormControl id="fechaInicio" name="fechaInicio" [(ngModel)]="evento.evento_fecha_inicio" required type="date" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha de inicio</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+                    
+                    <c-col md="3">
+                        <label cLabel class="required-label" for="horaInicio">Hora de Inicio</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-clock"></i></span>
+                            <input cFormControl id="horaInicio" name="horaInicio" [(ngModel)]="evento.evento_hora_inicio" required type="time" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una hora de inicio</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="3">
+                        <label cLabel class="required-label" for="fechaFinalizacion">Fecha de Finalización</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
+                            <input cFormControl id="fechaFinalizacion" name="fechaFinalizacion" [(ngModel)]="evento.evento_fecha_finalizacion" required type="date" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha de finalización</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+                    
+                    <c-col md="3">
+                        <label cLabel class="required-label" for="horaFinalizacion">Hora de Finalización</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-clock"></i></span>
+                            <input cFormControl id="horaFinalizacion" name="horaFinalizacion" [(ngModel)]="evento.evento_hora_finalizacion" required type="time" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha de finalización</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col xs="12">
+                        <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </c-col>
+
+                    <c-col xs="12">
+                        {{ evento | json }}
+                    </c-col>
+
+                </form>
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

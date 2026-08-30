@@ -16,7 +16,21 @@ const routes: Routes = [
     data: {
       title: 'Distributivo'
     }, canActivate: [AuthGuard]
-  }
+  },
+  {
+    path: 'partes',
+    loadComponent: () => import('./parte-listado/parte-listado.component').then(m => m.ParteListadoComponent),
+    data: {
+      title: 'Parte de Auxilio'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'partes/:id',
+    loadComponent: () => import('./parte-mantenimiento/parte-mantenimiento.component').then(m => m.ParteMantenimientoComponent),
+    data: {
+      title: 'Parte de Auxilio'
+    }, canActivate: [AuthGuard]
+  },
 ];
 
 @NgModule({

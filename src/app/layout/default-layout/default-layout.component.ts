@@ -51,40 +51,57 @@ function isOverflown(element: HTMLElement) {
 export class DefaultLayoutComponent {
   public navItems = [...navItems];
 
-  constructor(private _authService: AuthService){
+  constructor(private _authService: AuthService) {
 
     const user = this._authService.getUsuario();
 
-    console.log(user.usuario.menus);
+    // console.log(user);
 
-    // this.navItems = []
-    this.navItems = [...user.usuario.menus]
+    this.navItems = []
+    // this.navItems = [...user.usuario.menus]
 
+    if (user.usuario.voluntario_id) {
+      this.navItems = [...user.usuario.menus]
+    } else {
+      this._authService.getMenus(user.usuario.usuario_id, user.usuario.voluntario_id).subscribe({
+        next: (data: any[]) => {
+          // console.log(data);
+          this.navItems = [...data];
+          if (user.usuario.usuario_id === 113) { // solo para el usuario administrador, se agrega el menu de administrador
+            this.navItems.push(
+              {
+                name: 'Administrador',
+                url: '/adm',
+                iconComponent: { name: 'cil-notes' },
+                children: [
+                  {
+                    name: 'Dashboard',
+                    url: '/adm/dashboard',
+                    icon: 'nav-icon-bullet'
+                  },
+                  {
+                    name: 'Usuarios',
+                    url: '/adm/usuarios',
+                    icon: 'nav-icon-bullet'
+                  },
+                  {
+                    name: 'Perfiles',
+                    url: '/adm/perfiles',
+                    icon: 'nav-icon-bullet'
+                  },
 
-    this.navItems.push(
-      {
-        name: 'Administrador',
-        url: '/adm',
-        iconComponent: { name: 'cil-notes' },
-        children: [
-          {
-            name: 'Dashboard',
-            url: '/adm/dashboard',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Usuarios',
-            url: '/adm/usuarios',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Perfiles',
-            url: '/adm/perfiles',
-            icon: 'nav-icon-bullet'
-          },
-          
-        ]
-      }
-    );
+                ]
+              }
+            );
+          }
+        },
+        error: (e: any) => {
+          console.error(e);
+        },
+        complete: () => console.info('complete')
+      })
+
+    }
+
   }
 }

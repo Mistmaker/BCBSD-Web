@@ -3,11 +3,11 @@
     <c-row class="justify-content-center">
       <c-col lg="10" xl="8">
         <c-card-group>
-          <c-card [ngStyle]="{'minWidth.%': 44}" class="text-white bg-danger py-5">
+          <c-card [ngStyle]="{'minWidth.%': 44}" style="background-color: #bf0411;" class="text-white py-5">
             <c-card-body class="text-center">
               <div>
                 <img src="assets/images/logo.png" style="width: 40%;" alt="Logo-Cbsd">
-                <h2>Cuerpo de Bomberos Santo Domingo</h2>
+                <h2>Benemérito Cuerpo de Bomberos Santo Domingo</h2>
                 <p>
                   Plataforma web para la gestión institucional y trámites internos
                 </p>
@@ -26,13 +26,13 @@
                   <span cInputGroupText>
                     <svg cIcon name="cilUser"></svg>
                   </span>
-                  <input autoComplete="username" id="usuario" [(ngModel)]="usuario" name="usuario" cFormControl placeholder="Username" />
+                  <input autoComplete="username" id="usuario" [(ngModel)]="usuario" name="usuario" cFormControl placeholder="Usuario" />
                 </c-input-group>
                 <c-input-group class="mb-4">
                   <span cInputGroupText>
                     <svg cIcon name="cilLockLocked"></svg>
                   </span>
-                  <input id="password" [(ngModel)]="password" name="password" autoComplete="current-password" cFormControl placeholder="Password" type="password" />
+                  <input id="password" [(ngModel)]="password" name="password" autoComplete="current-password" cFormControl placeholder="Contraseña" type="password" />
                 </c-input-group>
                 <c-row>
                   <c-col xs="6">
@@ -40,11 +40,30 @@
                       Ingresar
                     </button>
                   </c-col>
-                  <!-- <c-col class="text-right" xs="6">
+                  <c-col class="text-right" xs="6">
                     <button cButton class="px-0" color="link">
-                      Forgot password?
+                      ¿Olvidó su contraseña?
                     </button>
-                  </c-col> -->
+                  </c-col>
+                  <br>
+                  <br>
+                  <br>
+                  <br>
+
+                  <c-row>
+                    <!-- <c-col class="d-grid gap-2" xs="12">
+                      <a cButton class="px-0" color="link" routerLink="../voluntarios">
+                        Acceso para el Personal Operativo (Bomberos)
+                      </a>
+                    </c-col> -->
+                    <c-col class="d-grid gap-2" xs="12">
+                      <a cButton class="px-0" style="font-size: 13px;" color="link" routerLink="../voluntarios">
+                        Acceso para Bomberos Voluntarios
+                      </a>
+                    </c-col>
+                  </c-row>
+
+
                 </c-row>
               </form>
             </c-card-body>

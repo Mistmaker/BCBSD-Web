@@ -1,0 +1,92 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header  style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>{{ actividad.actividad_id ? 'Editar Actividad' : 'Registrar Actividad' }}</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios.
+                </p>
+
+                <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+                    
+
+                    <c-col md="4">
+                        <label cLabel for="estado">Estado</label>
+                        <c-input-group class="has-validation">
+                          <span cInputGroupText><i class="fa fa-fire-extinguisher"></i></span>
+                          <select cSelect id="estado" name="estado" required [(ngModel)]="actividad.actividad_estado">
+                            <option value="INICIADA">ACTIVIDAD INICIADA</option>
+                            <option value="FINALIZADA">ACTIVIDAD FINALIZADA</option>
+                          </select>
+                        </c-input-group>
+                      </c-col>
+
+                    <c-col md="4" *ngIf="actividad.actividad_estado">
+                        <label cLabel class="required-label" for="fechaEntrega">Fecha de Inicio</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
+                            <input cFormControl id="fechaEntrega" name="fechaEntrega" [(ngModel)]="actividad.actividad_fecha_inicio" required type="datetime-local" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha de entrega</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="4" *ngIf="actividad.actividad_estado == 'FINALIZADA'">
+                        <label cLabel class="required-label" for="fechaFinalizacion">Fecha de Finalización</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
+                            <input cFormControl id="fechaFinalizacion" name="fechaFinalizacion" [(ngModel)]="actividad.actividad_fecha_finalizacion" required type="datetime-local" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una fecha de finalización</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="actividad">Actividad</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-tasks"></i></span>
+                            <input cFormControl id="actividad" name="actividad" [(ngModel)]="actividad.actividad_actividad" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese el nombre de la actividad</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="12">
+                        <label cLabel class="required-label" for="descripcion">Descripción</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-align-left"></i></span>
+                            <textarea cFormControl id="descripcion" name="descripcion" [(ngModel)]="actividad.actividad_descripcion" required rows="4"></textarea>
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese una descripción</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
+                    <c-col md="6">
+                        <label cLabel class="required-label" for="voluntario">Voluntario</label>
+                        <select cSelect id="voluntario" name="voluntario" required disabled="{{ !voluntarioSelectEnabled ? 'true' : 'false' }}" [(ngModel)]="actividad.fk_voluntario_id">
+                            <option value="">--Seleccione--</option>
+                            <option *ngFor="let voluntario of voluntarios" [value]="voluntario.id">{{ voluntario.nombre }}</option>
+                        </select>
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Seleccione un voluntario</c-form-feedback>
+                    </c-col>
+
+                    <c-col xs="12">
+                        <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+                    </c-col>
+                </form>
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

@@ -38,6 +38,62 @@ const routes: Routes = [
       title: 'Hojas de Ruta APH - Registro'
     }, canActivate: [AuthGuard]
   },
+  {
+    path: 'ubv-voluntarios',
+    loadComponent: () => import('./ubv/voluntarios-listado/voluntarios-listado.component').then(m => m.VoluntariosListadoComponent),
+    data: {
+      title: 'Listado de Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-voluntarios/:id',
+    loadComponent: () => import('./ubv/voluntarios-mantenimiento/voluntarios-mantenimiento.component').then(m => m.VoluntariosMantenimientoComponent),
+    data: {
+      title: 'Mantenimiento de Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-actividades',
+    loadComponent: () => import('./ubv/actividades-listado/actividades-listado.component').then(m => m.ActividadesListadoComponent),
+    data: {
+      title: 'Listado de Actividades - Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-actividades/:id',
+    loadComponent: () => import('./ubv/actividades-mantenimiento/actividades-mantenimiento.component').then(m => m.ActividadesMantenimientoComponent),
+    data: {
+      title: 'Actividades de Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-asignacion',
+    loadComponent: () => import('./ubv/asignacion-listado/asignacion-listado.component').then(m => m.AsignacionListadoComponent),
+    data: {
+      title: 'Asignacion de Guardias - Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-asignacion/:id',
+    loadComponent: () => import('./ubv/asignacion-mantenimiento/asignacion-mantenimiento.component').then(m => m.AsignacionMantenimientoComponent),
+    data: {
+      title: 'Asignacion de Guardia de Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-eventos',
+    loadComponent: () => import('./ubv/eventos-listado/eventos-listado.component').then(m => m.EventosListadoComponent),
+    data: {
+      title: 'Eventos - Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ubv-eventos/:id',
+    loadComponent: () => import('./ubv/eventos-mantenimiento/eventos-mantenimiento.component').then(m => m.EventosMantenimientoComponent),
+    data: {
+      title: 'Eventos de Bomberos Voluntarios del BCBSD'
+    }, canActivate: [AuthGuard]
+  },
 ];
 
 @NgModule({

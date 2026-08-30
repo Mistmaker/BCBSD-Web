@@ -1,0 +1,75 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Listado de Voluntarios</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Para editar un voluntario, haga clic en el icono <i class="fa-solid fa-pencil" style="color: #5856d6;"></i>.
+                </p>
+
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-search"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar voluntario por nombre, cédula, etc." />
+                    </c-input-group>
+                </div>
+
+                <table [striped]="true" cTable [responsive]="true">
+                    <thead>
+                        <tr>
+                            <!-- <th scope="col">ID</th> -->
+                            <th scope="col">Cédula</th>
+                            <th scope="col">Nombres</th>
+                            <th scope="col">Apellidos</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Menú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let voluntario of voluntarios | filtroGeneral: filtroBusqueda">
+                            <!-- <td>{{ voluntario.voluntario_id }}</td> -->
+                            <td>{{ voluntario.voluntario_doc_identidad }}</td>
+                            <td>{{ voluntario.voluntario_nombres }}</td>
+                            <td>{{ voluntario.voluntario_apellidos }}</td>
+                            <td>{{ voluntario.voluntario_telefono }}</td>
+                            <td>{{ voluntario.voluntario_correo }}</td>
+                            <td>
+                                <c-badge color="{{ voluntario.voluntario_estado != 'ACTIVO' ? 'warning' : 'success' }}"> {{ voluntario.voluntario_estado }}</c-badge>
+                            </td>
+                            <td>
+                                <a cButton routerLink="./{{voluntario.voluntario_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a>
+                                <button cButton (click)="eliminarVoluntario(voluntario.voluntario_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i></button>
+
+                                <!-- <c-button-group aria-label="Button group with nested dropdown" role="group">
+                                    <c-dropdown variant="btn-group">
+                                        <button cButton color="secondary" cDropdownToggle>
+                                            <i class="fa-solid fa-list"></i>
+                                        </button>
+                                        <ul cDropdownMenu>
+                                            <li><a cDropdownItem routerLink="./{{voluntario.voluntario_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
+                                            <li><button cDropdownItem (click)="eliminarVoluntario(voluntario.voluntario_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i> Eliminar</button></li>
+                                        </ul>
+                                    </c-dropdown>
+                                </c-button-group> -->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>

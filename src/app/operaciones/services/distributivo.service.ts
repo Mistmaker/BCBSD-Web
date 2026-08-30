@@ -24,7 +24,7 @@ export class DistributivoService {
   }
 
   getEstaciones() {
-    return this.http.get<EstacionesModel[]>(`${environment.API_URL}/servicios/operaciones/getEstaciones.php`)
+    return this.http.get<EstacionesModel[]>(`${environment.API_URL}/servicios/subjefatura/estadisticas/getEstaciones.php`)
   }
 
   save(distributivo: DistributivoModel) {

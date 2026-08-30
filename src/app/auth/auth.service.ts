@@ -13,6 +13,10 @@ export class AuthService {
   login(credentials: { usuario: string; password: string }) {
     return this.http.post<any>(`${environment.API_URL}/servicios/auth/login.php`, credentials);
   }
+  
+  loginVoluntarios(credentials: { usuario: string; password: string }) {
+    return this.http.post<any>(`${environment.API_URL}/servicios/auth/loginVoluntarios.php`, credentials);
+  }
 
   setSession(usuario: any) {
     localStorage.setItem('usuario', JSON.stringify(usuario));
@@ -33,6 +37,10 @@ export class AuthService {
       complete: () => console.info('complete')
     })
     // return userRoles.usuario.roles;
+  }
+
+  getMenus(usuario_id: number, voluntario_id: number = 0): any {
+    return this.http.get<any[]>(`${environment.API_URL}/servicios/auth/getMenuUsuario.php?id=${usuario_id}&id_vol=${voluntario_id}`);
   }
 
   ExisteRol(rol_id: number): boolean {

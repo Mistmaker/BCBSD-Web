@@ -13,6 +13,10 @@ export class VehiculosService {
   getAll() {
     return this.http.get<VehiculosModel[]>(`${environment.API_URL}/servicios/administrativo/mant-vehicular/getVehiculos.php`)
   }
+
+  getAllAsignados() {
+    return this.http.get<VehiculosModel[]>(`${environment.API_URL}/servicios/administrativo/mant-vehicular/getVehiculos.php?id=asignados`)
+  }
   
   getById(id: number) {
     return this.http.get<VehiculosModel>(`${environment.API_URL}/servicios/administrativo/mant-vehicular/getVehiculos.php?id=${id}`)

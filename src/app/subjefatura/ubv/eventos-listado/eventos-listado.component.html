@@ -1,0 +1,132 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Calendario de Eventos</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <!-- <button cButton color="success" size="sm" [cModalToggle]="scrollableLongContentModal.id"><i class="fa-solid fa-download"></i></button> -->
+                            <button cButton color="secondary" size="sm" (click)="cambiarVista()"><i class="fa-solid" [ngClass]="{'fa-list': vistaCalendario, 'fa-calendar': !vistaCalendario}"></i></button>
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Para editar una actividad, haga clic en el icono <i class="fa-solid fa-pencil" style="color: #5856d6;"></i>.
+                </p>
+
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-search"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar actividad por nombre, descripción, etc." />
+                    </c-input-group>
+                </div>
+
+                <full-calendar [options]="calendarOptions" *ngIf="vistaCalendario">
+                    <!-- <ng-template #eventContent let-arg>
+                        <b>{{ arg.timeText }}</b> <br>
+                        <i>{{ arg.event.title }}</i> <br>
+                        <i>{{ arg.event.extendedProps['department'] }}</i>
+                    </ng-template> -->
+                    <ng-template #eventContent let-arg>
+                        <div class="custom-day-cell" [cModalToggle]="scrollableLongContentModal.id">
+                            <span>{{ arg.dayNumberText }}</span>
+                            <!-- Add custom row data here -->
+                            <i>{{ arg.event.title }}</i> <br>
+                            <i>{{ arg.event.extendedProps['department'] }}</i>
+                        </div>
+                    </ng-template>
+                </full-calendar>
+
+                <table [striped]="true" cTable [responsive]="true" *ngIf="!vistaCalendario">
+                    <thead>
+                        <tr>
+                            <th scope="col">Evento</th>
+                            <th scope="col">Fecha Inicio</th>
+                            <th scope="col">Hora Inicio</th>
+                            <th scope="col">Fecha Finalización</th>
+                            <th scope="col">Hora Finalizacion</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Menú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let evento of eventos | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
+                            <td>{{ evento.evento_motivo }}</td>
+                            <td>{{ evento.evento_fecha_inicio }}</td>
+                            <td>{{ evento.evento_hora_inicio }}</td>
+                            <td>{{ evento.evento_fecha_finalizacion }}</td>
+                            <td>{{ evento.evento_hora_finalizacion }}</td>
+                            <td>
+                                <c-badge color="{{ evento.evento_estado != 'FINALIZADO' ? 'danger' : 'success' }}"> EVENTO <br> {{ evento.evento_estado }}</c-badge>
+                            </td>
+                            <td>
+                                <a *ngIf="evento.evento_estado=='GENERADO'" cButton routerLink="./{{evento.evento_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a>
+                                <!-- <button *ngIf="evento.evento_estado=='INICIADA'" cButton (click)="eliminarevento(evento.actividad_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i></button> -->
+                            </td>
+                            <!-- <td>
+                                <c-button-group aria-label="Button group with nested dropdown" role="group">
+                                    <c-dropdown variant="btn-group">
+                                        <button cButton color="secondary" cDropdownToggle>
+                                            <i class="fa-solid fa-list"></i>
+                                        </button>
+                                        <ul cDropdownMenu>
+                                            <li><a cDropdownItem routerLink="./{{actividad.actividad_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
+                                            <li><button cDropdownItem (click)="eliminarActividad(actividad.actividad_id)" color="danger" size="sm"><i class="fa-solid fa-trash"></i> Eliminar</button></li>
+                                        </ul>
+                                    </c-dropdown>
+                                </c-button-group>
+                            </td> -->
+                        </tr>
+                    </tbody>
+                </table>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>
+
+<!-- FORMULARIOS MODALES -->
+<c-modal #scrollableLongContentModal id="scrollableLongContentModal" alignment="center" size="lg" scrollable>
+    <c-modal-header style="background-color: #bf0411;color: white;">
+        <h5 cModalTitle>Detalles del Evento</h5>
+        <button [cModalToggle]="scrollableLongContentModal.id" cButtonClose> </button>
+    </c-modal-header>
+    <c-modal-body>
+        <ng-container>
+            <c-card-body>
+                <p class="text-medium-emphasis small">
+                    A continuación se detalla la información del evento seleccionado.
+                </p>
+                <c-row>
+
+                    <c-col md="12">
+                        <p><b>Evento:</b> {{evento.evento_motivo}}</p> 
+                        <p style="word-wrap: break-word;"><b>Descripción:</b> {{evento.evento_descripcion}}</p> 
+                        <p><b>Fecha y Hora de Inicio:</b> {{evento.evento_fecha_inicio}} {{evento.evento_hora_inicio}}</p> 
+                        <p><b>Fecha y Hora de Finalización:</b> {{evento.evento_fecha_finalizacion}} {{evento.evento_hora_finalizacion}}</p> 
+                    </c-col>
+
+
+                </c-row>
+
+
+            </c-card-body>
+
+        </ng-container>
+    </c-modal-body>
+    <c-modal-footer>
+        <!-- <button cButton color="primary" (click)="generarReporte()">Generar Reporte</button> -->
+
+        <button [cModalToggle]="scrollableLongContentModal.id" cButton color="secondary">
+            Cerrar
+        </button>
+        <!-- <button cButton color="primary">Save changes</button> -->
+    </c-modal-footer>
+</c-modal>

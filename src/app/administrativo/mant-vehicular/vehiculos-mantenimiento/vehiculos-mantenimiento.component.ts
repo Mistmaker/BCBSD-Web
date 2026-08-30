@@ -1,3 +1,4 @@
+import { EstacionesModel } from './../../../subjefatura/models/estadisticas.model';
 import { VehiculosModel } from './../../models/vehiculos.model';
 import { VehiculosService } from './../../services/vehiculos.service';
 import { Component, OnInit } from '@angular/core';
@@ -36,6 +37,9 @@ import Swal from 'sweetalert2';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
+import { DistributivoService } from '../../../operaciones/services/distributivo.service';
+import { DireccionesModel } from '../../../tthh/models/direcciones.model';
+import { DireccionesService } from '../../../tthh/services/direcciones.service';
 
 @Component({
   selector: 'app-vehiculos-mantenimiento',
@@ -51,6 +55,8 @@ export class VehiculosMantenimientoComponent implements OnInit {
 
   vehiculo: VehiculosModel = new VehiculosModel();
   personal: PersonalModel[] = [];
+  estaciones: EstacionesModel[] = [];
+  direcciones: DireccionesModel[] = [];
   errorMessage: string = '';
   customStylesValidated = false;
   browserDefaultsValidated = false;
@@ -68,7 +74,7 @@ export class VehiculosMantenimientoComponent implements OnInit {
     }
   });
 
-  constructor(private _vehiculosService: VehiculosService, private _personalService: PersonalService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private _vehiculosService: VehiculosService, private _distributivoService: DistributivoService, private _personalService: PersonalService, private _direccionesService: DireccionesService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
     // this.cargarDatos();
@@ -96,6 +102,27 @@ export class VehiculosMantenimientoComponent implements OnInit {
       },
       complete: () => console.info('complete')
     })
+    this._distributivoService.getEstaciones().subscribe({
+      next: (data) => {
+        this.estaciones = data;
+      },
+      error: (e) => {
+        console.error(e);
+        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+      },
+      complete: () => console.info('complete')
+    })
+    this._direccionesService.getAll().subscribe({
+      next: (data) => {
+        this.direcciones = data;
+      },
+      error: (e) => {
+        console.error(e);
+        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+      },
+      complete: () => console.info('complete')
+    })
+
   }
 
   cargarDatos() {

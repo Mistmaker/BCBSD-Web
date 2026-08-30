@@ -20,7 +20,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.2.2",
-    "@angular/cdk": "^19.2.3",
+    "@angular/cdk": "^19.2.19",
     "@angular/common": "^19.2.2",
     "@angular/compiler": "^19.2.2",
     "@angular/core": "^19.2.2",
@@ -36,6 +36,9 @@
     "@coreui/icons": "^3.0.1",
     "@coreui/icons-angular": "~5.4.5",
     "@coreui/utils": "^2.0.2",
+    "@fullcalendar/angular": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
     "@ng-select/ng-select": "^14.9.0",
     "chart.js": "^4.4.8",
     "leaflet": "^1.9.4",

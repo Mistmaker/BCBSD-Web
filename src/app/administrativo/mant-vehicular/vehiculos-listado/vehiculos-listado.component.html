@@ -1,7 +1,7 @@
 <c-row ngPreserveWhitespaces>
     <c-col xs="12">
         <c-card class="mb-4">
-            <c-card-header>
+            <c-card-header style="background-color: #bf0411;color: white;">
 
                 <c-row>
                     <c-col xs="6">
@@ -77,6 +77,17 @@
                                 </div>
                                 <div>
                                     <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> {{ vehiculo.vehiculo_motor }}</span>
+                                </div>
+                                <div>
+                                    <c-badge *ngIf="!vehiculo.vehiculo_area" color="{{ vehiculo.vehiculo_area == null ? 'danger' : 'success' }}"> VEHICULO NO ASINGNADO! </c-badge>
+                                    <c-badge *ngIf="vehiculo.vehiculo_area" color="{{ vehiculo.vehiculo_area == 'ADMINISTRATIVO' ? 'primary' : 'warning' }}"> USO {{ vehiculo.vehiculo_area }}</c-badge>
+                                    <!-- <c-badge color="{{ vehiculo.vehiculo_area != 'ACTIVO' ? 'warning' : 'success' }}"> {{ vehiculo.vehiculo_area }}</c-badge> -->
+                                </div>
+                                <div *ngIf="vehiculo.vehiculo_area=='ADMINISTRATIVO'">
+                                    <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> {{ vehiculo.direccion_nombre }}</span>
+                                </div>
+                                <div *ngIf="vehiculo.vehiculo_area=='OPERATIVO'">
+                                    <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> Estacion: {{ vehiculo.estacion_nombre }}</span>
                                 </div>
                             </td>
                             <td>

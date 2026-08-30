@@ -146,6 +146,10 @@ export class SbjDashboardComponent implements AfterViewInit {
         this.totalB = data.total_b;
         this.totalF = data.total_f;
 
+        this.horaCritica = data.hora_critica;
+        this.diaCritico = data.dia_critico;
+        this.mesCritico = data.mes_critico;
+
       },
       error: (e) => {
         console.error(e);

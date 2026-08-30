@@ -70,7 +70,11 @@ export const routes: Routes = [
       {
         path: 'operaciones',
         loadChildren:() => import('./operaciones/operaciones-routing.module').then(m => m.OperacionesRoutingModule), canActivate: [AuthGuard]
-      }
+      },
+      {
+        path: 'archivo',
+        loadChildren:() => import('./archivo/archivo-routing.module').then(m => m.ArchivoRoutingModule), canActivate: [AuthGuard]
+      },
     ], canActivate: [AuthGuard]
   },
   {
@@ -99,6 +103,13 @@ export const routes: Routes = [
     loadComponent: () => import('./views/pages/register/register.component').then(m => m.RegisterComponent),
     data: {
       title: 'Register Page'
+    }
+  },
+  {
+    path: 'voluntarios',
+    loadComponent: () => import('./views/pages/login-voluntarios/login-voluntarios.component').then(m => m.LoginVoluntariosComponent),
+    data: {
+      title: 'Login Page'
     }
   },
   { path: '**', redirectTo: 'dashboard' }

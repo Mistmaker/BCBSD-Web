@@ -1,7 +1,7 @@
 <c-row ngPreserveWhitespaces>
     <c-col xs="12">
         <c-card class="mb-4">
-            <c-card-header>
+            <c-card-header style="background-color: #bf0411;color: white;">
 
                 <c-row>
                     <c-col xs="6">
@@ -48,17 +48,17 @@
                                 {{ distributivo.distributivo_registro }}
                             </td>
                             <td>
-                                <c-button-group aria-label="Button group with nested dropdown" role="group">
+                                <a cButton routerLink="./{{distributivo.distributivo_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a> 
+                                <!-- <c-button-group aria-label="Button group with nested dropdown" role="group">
                                     <c-dropdown variant="btn-group">
                                         <button cButton color="secondary" cDropdownToggle>
                                             <i class="fa-solid fa-list"></i>
                                         </button>
                                         <ul cDropdownMenu>
                                             <li><a cDropdownItem *ngIf="distributivo.distributivo_estado!='ESTACION'" routerLink="./{{distributivo.distributivo_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
-                                            <!-- <li><a cDropdownItem [href]="imprimir(+intervencion.intervencion_id)" target="_blank" color="secondary" size="sm"><i class="fa-solid fa-print"></i> Imprimir</a></li> -->
                                         </ul>
                                     </c-dropdown>
-                                </c-button-group>
+                                </c-button-group> -->
 
 
                             </td>

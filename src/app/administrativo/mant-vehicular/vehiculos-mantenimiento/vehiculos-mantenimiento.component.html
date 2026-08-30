@@ -1,7 +1,7 @@
 <c-row ngPreserveWhitespaces>
   <c-col xs="12">
     <c-card class="mb-4">
-      <c-card-header>
+      <c-card-header style="background-color: #bf0411;color: white;">
 
         <c-row>
           <c-col xs="6">
@@ -62,6 +62,47 @@
             </c-input-group>
           </c-col>
 
+          <c-col md="4">
+            <label cLabel for="estado">Estado</label>
+            <select cSelect required id="estado" name="estado" [(ngModel)]="vehiculo.vehiculo_estado">
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="SUSPENDIDO">SUSPENDIDO</option>
+              <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+            </select>
+          </c-col>
+
+          <c-col md="4">
+            <label cLabel for="modalidad">Modalidad</label>
+            <select cSelect id="modalidad" name="modalidad" [(ngModel)]="vehiculo.vehiculo_area">
+              <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+              <option value="OPERATIVO">OPERATIVO</option>
+            </select>
+          </c-col>
+
+          <c-col md="3" *ngIf="vehiculo.vehiculo_area == 'OPERATIVO'">
+            <label cLabel for="estacion">Estacion</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-fire-extinguisher"></i></span>
+              <select cSelect id="estacion" name="estacion" [(ngModel)]="vehiculo.fk_estacion_id">
+                <option value="0">-Todas las Estaciones-</option>
+                <option *ngFor="let estacion of estaciones" [value]="estacion.estacion_id">{{ estacion.estacion_nombre }} </option>
+              </select>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="3" *ngIf="vehiculo.vehiculo_area == 'ADMINISTRATIVO'">
+            <label cLabel for="direccion">Direccion/Unidad</label>
+            <c-input-group class="has-validation">
+              <span cInputGroupText><i class="fa fa-building"></i></span>
+              <select cSelect id="direccion" name="direccion" [(ngModel)]="vehiculo.fk_direccion_id">
+                <option value="0">-Todas las Direcciones / Unidades-</option>
+                <option *ngFor="let direccion of direcciones" [value]="direccion.direccion_id">{{ direccion.direccion_nombre }} </option>
+              </select>
+            </c-input-group>
+          </c-col>
+
+
+
           <c-col md="12">
             <label cLabel for="custodio">Custodio</label>
             <ng-select name="custodio" id="custodio" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="vehiculo.custodio_id" placeholder="Buscar solicitante..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
@@ -85,7 +126,7 @@
             </div> -->
           </c-col>
 
-          
+
           <c-col md="4">
             <label cLabel for="proposito">Clase de servicio</label>
             <select cSelect id="proposito" name="proposito" [(ngModel)]="vehiculo.vehiculo_proposito">
@@ -220,8 +261,6 @@
             <input cFormControl id="anioMatricula" name="anioMatricula" [(ngModel)]="vehiculo.vehiculo_anio_matricula" type="number" min="1900" />
           </c-col>
 
-          
-          
 
           <!-- <c-col md="4">
             <label cLabel for="fingreso">Fecha Ingreso</label>
@@ -242,6 +281,10 @@
             <!-- <button (click)="onReset1()" cButton color="secondary" type="reset">
               <i class="fa-solid fa-broom"></i> Limpiar y Nuevo registro
             </button> -->
+          </c-col>
+
+          <c-col xs="12">
+            {{ vehiculo | json }}
           </c-col>
         </form>
 
