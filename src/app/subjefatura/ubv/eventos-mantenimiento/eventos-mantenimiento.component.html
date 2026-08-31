@@ -32,6 +32,16 @@
                         </c-input-group>
                     </c-col>
 
+                    <c-col md="8">
+                        <label cLabel class="required-label" for="lugar">Lugar</label>
+                        <c-input-group class="has-validation">
+                            <span cInputGroupText><i class="fa fa-align-left"></i></span>
+                            <input cFormControl id="lugar" name="lugar" [(ngModel)]="evento.evento_lugar" required type="text" />
+                            <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                            <c-form-feedback [valid]="false">Ingrese un lugar</c-form-feedback>
+                        </c-input-group>
+                    </c-col>
+
                     <c-col md="12">
                         <label cLabel class="required-label" for="motivo">Motivo</label>
                         <c-input-group class="has-validation">

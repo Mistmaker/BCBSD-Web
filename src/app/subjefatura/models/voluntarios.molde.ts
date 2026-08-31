@@ -84,6 +84,7 @@ export class VoluntariosEventos {
     evento_hora_inicio!: string;
     evento_fecha_finalizacion!: string;
     evento_hora_finalizacion!: string;
+    evento_lugar!: string;
     evento_motivo!: string;
     evento_descripcion!: string;
 }
