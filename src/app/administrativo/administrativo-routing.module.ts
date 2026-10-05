@@ -38,6 +38,20 @@ const routes: Routes = [
       title: 'Generación de ordenes'
     }, canActivate: [AuthGuard]
   },
+  {
+    path: 'ordenes-abastecimiento',
+    loadComponent: () => import('./ordenes-abastecimiento/ordenes-abastecimiento-lista/ordenes-abastecimiento-lista.component').then(m => m.OrdenesAbastecimientoListaComponent),
+    data: {
+      title: 'Ordenes de Abastecimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ordenes-abastecimiento/:id',
+    loadComponent: () => import('./ordenes-abastecimiento/ordenes-abastecimiento-mantenimiento/ordenes-abastecimiento-mantenimiento.component').then(m => m.OrdenesAbastecimientoMantenimientoComponent),
+    data: {
+      title: 'Generación de Abastecimiento'
+    }, canActivate: [AuthGuard]
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

@@ -1,0 +1,279 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+      <c-card class="mb-4">
+        <c-card-header style="background-color: #bf0411;color: white;">
+  
+          <c-row>
+            <c-col xs="6">
+              <strong *ngIf="orden.orden_codigo">Registro de arribo - Ordenes de Abastecimiento del CBSD</strong>
+              <strong *ngIf="!orden.orden_codigo">Registro de salida - Ordenes de Abastecimiento del CBSD</strong>
+            </c-col>
+            <c-col xs="6">
+              <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
+              </div>
+            </c-col>
+          </c-row>
+        </c-card-header>
+        <c-card-body>
+          <p class="text-body-secondary small">
+            Nota: Llene los campos requeridos (*) acorde a la información requerida y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
+          </p>
+  
+          <form #form="ngForm" (ngSubmit)="onSubmit(form)" [validated]="customStylesValidated" cForm class="row g-3 needs-validation">
+  
+            <!-- <c-col md="4">
+              <label cLabel class="required-label" for="codigo">Código</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                <input cFormControl id="codigo" name="codigo" [(ngModel)]="orden.orden_codigo" disabled="true" readonly type="text" />
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese el código</c-form-feedback>
+              </c-input-group>
+            </c-col> -->
+  
+            <!-- <c-col md="4">
+              <label cLabel for="unidad">Unidad</label>
+              <select cSelect id="unidad" name="unidad" required [(ngModel)]="orden.fk_unidad_id">
+                <option value="">--Seleccione unidad--</option>
+                <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.vehiculo_id">{{ vehiculo.vehiculo_sigla }} / {{ vehiculo.vehiculo_placa }}</option>
+              </select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Seleccione una unidad</c-form-feedback>
+            </c-col> -->
+  
+            <c-col md="12">
+              <label cLabel for="unidad">Unidad</label>
+  
+              <ng-select name="unidad" style="width: 100%;" id="unidad" [items]="vehiculos" bindLabel="vehiculo_sigla" bindValue="vehiculo_id" (change)="obtenerKilometraje($event)" [(ngModel)]="orden.fk_unidad_id" placeholder="Buscar vehiculo..." [searchable]="true" [clearable]="true" required #vehiculoSelect="ngModel" [ngClass]="{ 'is-invalid': vehiculoSelect.invalid && vehiculoSelect.touched }" [disabled]="orden.orden_id">
+  
+                <ng-template ng-label-tmp let-item="item">
+                  {{ item.vehiculo_sigla }} {{ item.vehiculo_marca }} - {{ item.vehiculo_tipo }} (Placa: {{ item.vehiculo_placa }})
+                </ng-template>
+  
+                <ng-template ng-option-tmp let-item="item">
+                  <div>
+                    <strong>{{ item.vehiculo_sigla }} {{ item.vehiculo_marca }} - {{ item.vehiculo_tipo }} (Placa: {{ item.vehiculo_placa }})</strong><br />
+                    <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                  </div>
+                </ng-template>
+              </ng-select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Seleccione un vehiculo</c-form-feedback>
+              <!-- <div class="invalid-feedback d-block" *ngIf="conductorSelect.invalid && conductorSelect.touched">
+                Seleccione un conductor válido
+              </div> -->
+            </c-col>
+  
+            <c-col md="12">
+              <label cLabel for="solicita">Solicitante</label>
+              <ng-select name="solicita" id="solicita" [items]="personal" bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="orden.personal_solicita" placeholder="Buscar solicitante..." [searchable]="true" [clearable]="true" required #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }" [disabled]="orden.orden_id">
+  
+                <ng-template ng-label-tmp let-item="item">
+                  {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                </ng-template>
+  
+                <ng-template ng-option-tmp let-item="item">
+                  <div>
+                    <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                    <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                  </div>
+                </ng-template>
+              </ng-select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Seleccione un solicitante</c-form-feedback>
+  
+              <!-- <div class="invalid-feedback d-block" *ngIf="conductorSelect.invalid && conductorSelect.touched">
+                Seleccione un conductor válido
+              </div> -->
+            </c-col>
+  
+            <c-col md="12">
+              <label cLabel for="conductor">Operador</label>
+              <ng-select name="conductor" id="conductor" [items]="conductores" bindLabel="nombre_completo" bindValue="conductor_id" [(ngModel)]="orden.operador_id" placeholder="Buscar conductor..." [searchable]="true" [clearable]="true" required #conductorSelect="ngModel" [ngClass]="{ 'is-invalid': conductorSelect.invalid && conductorSelect.touched }" [disabled]="orden.orden_id">
+  
+                <ng-template ng-label-tmp let-item="item">
+                  {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
+                </ng-template>
+  
+                <ng-template ng-option-tmp let-item="item">
+                  <div>
+                    <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
+                    <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small>
+                  </div>
+                </ng-template>
+              </ng-select>
+              <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+              <c-form-feedback [valid]="false">Seleccione un operador</c-form-feedback>
+  
+              <!-- <div class="invalid-feedback d-block" *ngIf="conductorSelect.invalid && conductorSelect.touched">
+                Seleccione un conductor válido
+              </div> -->
+            </c-col>
+  
+  
+  
+  
+            <!-- <c-col md="4">
+              <label cLabel class="required-label" for="destino">Destino</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                <input cFormControl id="destino" name="destino" [(ngModel)]="orden.orden_destino" required type="text" [disabled]="orden.orden_id" />
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese el destino</c-form-feedback>
+              </c-input-group>
+            </c-col>
+  
+            <c-col md="8">
+              <label cLabel class="required-label" for="motivo">Motivo de salida</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                <textarea cFormControl id="motivo" name="motivo" rows="1" [(ngModel)]="orden.orden_motivo_salida" required [disabled]="orden.orden_id"></textarea>
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese el motivo de salida</c-form-feedback>
+              </c-input-group>
+            </c-col> -->
+  
+            <c-col md="6">
+  
+              <c-card color="primary" textColor="white" class="mb-3">
+                <c-card-header>Datos de Salida</c-card-header>
+                <c-card-body class="bg-gradient">
+                  <c-col md="12">
+                    <label cLabel class="required-label" for="tipo">Hora Salida</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText> <i class="fa fa-truck"></i> </span>
+                      <select cSelect id="tipo" name="tipo" [(ngModel)]="orden.orden_hora_salida_tipo" required [disabled]="orden.orden_id">
+                        <option value="SISTEMA">Definida por el sistema</option>
+                        <option value="MANUAL">Definida por el usuario</option>
+                      </select>
+                    </c-input-group>
+                  </c-col>
+                  <c-col md="12" *ngIf="orden.orden_hora_salida_tipo != 'SISTEMA' || orden.orden_id">
+                    <label cLabel class="required-label" for="horaSalida">Hora de salida</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                      <input cFormControl id="horaSalida" name="horaSalida" [(ngModel)]="orden.orden_hora_salida" [required]="orden.orden_hora_salida_tipo != 'SISTEMA'" [disabled]="orden.orden_hora_salida_tipo == 'SISTEMA'" type="datetime-local" />
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Ingrese la hora de salida</c-form-feedback>
+                    </c-input-group>
+                  </c-col>
+  
+                  <c-col md="12">
+                    <label cLabel class="required-label" for="kmSalida">Kilometraje salida</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                      <input cFormControl id="kmSalida" name="kmSalida" [(ngModel)]="orden.orden_kilometraje_salida" required type="number" min="0" step="1" [disabled]="orden.orden_id" />
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Ingrese un kilometraje de salida correcto (sin decimales)</c-form-feedback>
+                    </c-input-group>
+                  </c-col>
+                </c-card-body>
+              </c-card>
+  
+            </c-col>
+
+            <c-col md="6">
+  
+                <c-card color="primary" textColor="white" class="mb-3">
+                  <c-card-header>Datos de Entrada</c-card-header>
+                  <c-card-body class="bg-gradient">
+                    <c-col md="12">
+                      <label cLabel class="required-label" for="tipo">Hora Entrada</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText> <i class="fa fa-truck"></i> </span>
+                        <select cSelect id="tipo" name="tipo" [(ngModel)]="orden.orden_hora_salida_tipo" required [disabled]="orden.orden_id">
+                          <option value="SISTEMA">Definida por el sistema</option>
+                          <option value="MANUAL">Definida por el usuario</option>
+                        </select>
+                      </c-input-group>
+                    </c-col>
+                    <c-col md="12" *ngIf="orden.orden_hora_salida_tipo != 'SISTEMA' || orden.orden_id">
+                      <label cLabel class="required-label" for="horaSalida">Hora de Entrada</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                        <input cFormControl id="horaSalida" name="horaSalida" [(ngModel)]="orden.orden_hora_salida" [required]="orden.orden_hora_salida_tipo != 'SISTEMA'" [disabled]="orden.orden_hora_salida_tipo == 'SISTEMA'" type="datetime-local" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese la hora de Entrada</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+    
+                    <c-col md="12">
+                      <label cLabel class="required-label" for="kmSalida">Kilometraje Entrada</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                        <input cFormControl id="kmSalida" name="kmSalida" [(ngModel)]="orden.orden_kilometraje_salida" required type="number" min="0" step="1" [disabled]="orden.orden_id" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese un kilometraje de entrada correcto (sin decimales)</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+                  </c-card-body>
+                </c-card>
+    
+              </c-col>
+  
+            <c-col md="6" *ngIf="orden.orden_codigo">
+  
+              <c-card color="dark" textColor="white" class="mb-3">
+                <c-card-header>Datos de Arribo</c-card-header>
+                <c-card-body class="bg-gradient">
+  
+                  <c-col md="12">
+                    <label cLabel class="required-label" for="tipo_e">Hora Arribo</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText> <i class="fa fa-truck"></i> </span>
+                      <select cSelect id="tipo_e" name="tipo_e" [(ngModel)]="orden.orden_hora_entrada_tipo" required>
+                        <option value="SISTEMA">Definida por el sistema</option>
+                        <option value="MANUAL">Definida por el usuario</option>
+                      </select>
+                    </c-input-group>
+                  </c-col>
+  
+                  <c-col md="12" *ngIf="orden.orden_codigo && orden.orden_hora_entrada_tipo != 'SISTEMA'">
+                    <label cLabel for="horaEntrada">Hora de entrada</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                      <input cFormControl id="horaEntrada" name="horaEntrada" [(ngModel)]="orden.orden_hora_entrada" [required]="orden.orden_hora_entrada_tipo != 'SISTEMA'" [disabled]="orden.orden_hora_entrada_tipo == 'SISTEMA'" type="datetime-local" />
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Ingrese la hora de entrada</c-form-feedback>
+                    </c-input-group>
+                  </c-col>
+  
+                  <c-col md="12" *ngIf="orden.orden_codigo">
+                    <label cLabel for="kmEntrada">Kilometraje entrada</label>
+                    <c-input-group class="has-validation">
+                      <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                      <input cFormControl id="kmEntrada" name="kmEntrada" [(ngModel)]="orden.orden_kilometraje_entrada" required type="number" min="0" step="1" />
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Ingrese un kilometraje de entrada correcto (sin decimales)</c-form-feedback>
+                    </c-input-group>
+                  </c-col>
+                </c-card-body>
+              </c-card>
+  
+            </c-col>
+  
+            <c-col md="12">
+              <label cLabel for="observaciones">Observaciones</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                <textarea cFormControl id="observaciones" name="observaciones" [(ngModel)]="orden.orden_observaciones"></textarea>
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese una observación</c-form-feedback>
+              </c-input-group>
+            </c-col>
+  
+  
+            <c-col xs="12">
+              <button cButton color="primary" type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+            </c-col>
+          </form>
+  
+          <div>
+            {{ orden | json}}
+          </div>
+  
+        </c-card-body>
+      </c-card>
+    </c-col>
+  </c-row>
