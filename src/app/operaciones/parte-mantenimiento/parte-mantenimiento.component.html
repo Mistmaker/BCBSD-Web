@@ -8,18 +8,18 @@
           </c-col>
           <c-col xs="6">
             <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+              <a cButton routerLink="../" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir y Cancelar</a>
             </div>
           </c-col>
         </c-row>
       </c-card-header>
       <c-card-body>
         <p class="text-body-secondary small">
-          Nota: Llene los campos requeridos (*) acorde a la información del parte de auxilio y presione el botón guardar
-          <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
+          Nota: Llene los campos requeridos (*) acorde a la información del parte de auxilio y presione el botón guardar <i class="fa-solid fa-2x fa-save" style="color: #5856d6;"></i> para aplicar los cambios
         </p>
 
         <form #formulario="ngForm" (ngSubmit)="onSubmit(formulario)" [validated]="customStylesValidated" cForm
-          class="row g-3 needs-validation">
+              class="row g-3 needs-validation">
 
           <div>
             <c-alert *ngIf="errorMessage" color="danger" class="mt-3">
@@ -31,7 +31,7 @@
           <c-col md="4">
             <label cLabel class="required-label" for="parte_numero">Número de Parte</label>
             <input cFormControl id="parte_numero" name="parte_numero" [(ngModel)]="parte.parte_numero" type="text"
-              required />
+                   required />
           </c-col>
 
           <c-col md="4">
@@ -47,7 +47,7 @@
           <c-col md="4">
             <label cLabel for="parte_fecha">Fecha</label>
             <input cFormControl id="parte_fecha" name="parte_fecha" [(ngModel)]="parte.parte_fecha" type="date"
-              required />
+                   required />
           </c-col>
 
           <c-col md="4">
@@ -84,7 +84,7 @@
           <c-col md="4">
             <label cLabel for="parte_forma_aviso">Forma de Aviso</label>
             <select cSelect id="parte_forma_aviso" name="parte_forma_aviso" [(ngModel)]="parte.parte_forma_aviso"
-              required>
+                    required>
               <option value="" disabled selected>Seleccione forma de aviso</option>
               <option value="TELEFONO">Teléfono</option>
               <option value="CENTRAL_RADIO">Central de Radio</option>
@@ -95,9 +95,9 @@
           <c-col md="8">
             <label cLabel for="parte.fk_personal_id">Despachador</label>
             <ng-select name="parte.fk_personal_id" id="parte.fk_personal_id" [items]="personal"
-              bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="parte.fk_personal_id"
-              placeholder="Buscar despachador..." [searchable]="true" [clearable]="true" required
-              #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
+                       bindLabel="nombre_completo" bindValue="ppersonal_id" [(ngModel)]="parte.fk_personal_id"
+                       placeholder="Buscar despachador..." [searchable]="true" [clearable]="true" required
+                       #personalSelect="ngModel" [ngClass]="{ 'is-invalid': personalSelect.invalid && personalSelect.touched }">
 
               <ng-template ng-label-tmp let-item="item">
                 {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{
@@ -118,39 +118,39 @@
           <c-col md="4">
             <label cLabel for="parte_codigo_salida">Código de Salida</label>
             <input cFormControl id="parte_codigo_salida" name="parte_codigo_salida"
-              [(ngModel)]="parte.parte_codigo_salida" type="text" required />
+                   [(ngModel)]="parte.parte_codigo_salida" type="text" required />
           </c-col>
 
           <c-col md="4">
             <label cLabel for="parte_hora_aviso">Aviso</label>
             <input cFormControl id="parte_hora_aviso" name="parte_hora_aviso" [(ngModel)]="parte.parte_hora_aviso"
-              type="time" required />
+                   type="time" required />
           </c-col>
           <c-col md="4">
             <label cLabel for="parte_hora_salida">Salida</label>
             <input cFormControl id="parte_hora_salida" name="parte_hora_salida" [(ngModel)]="parte.parte_hora_salida"
-              type="time" required />
+                   type="time" required />
           </c-col>
           <c-col md="4">
             <label cLabel for="parte_hora_arribo">Arribo</label>
             <input cFormControl id="parte_hora_arribo" name="parte_hora_arribo" [(ngModel)]="parte.parte_hora_arribo"
-              type="time" required />
+                   type="time" required />
           </c-col>
           <c-col md="4">
             <label cLabel for="parte_hora_finalizacion">Finalización</label>
             <input cFormControl id="parte_hora_finalizacion" name="parte_hora_finalizacion"
-              [(ngModel)]="parte.parte_hora_finalizacion" type="time" required />
+                   [(ngModel)]="parte.parte_hora_finalizacion" type="time" required />
           </c-col>
           <c-col md="4">
             <label cLabel for="parte_hora_retorno">Retorno</label>
             <input cFormControl id="parte_hora_retorno" name="parte_hora_retorno" [(ngModel)]="parte.parte_hora_retorno"
-              type="time" required />
+                   type="time" required />
           </c-col>
 
           <c-col md="4">
             <label cLabel for="parte_apoyo_requerido">Apoyo Requerido</label>
             <select cSelect id="parte_apoyo_requerido" name="parte_apoyo_requerido"
-              [(ngModel)]="parte.parte_apoyo_requerido" required>
+                    [(ngModel)]="parte.parte_apoyo_requerido" required>
               <option value="" disabled selected>Seleccione estado</option>
               <option value="SI">Si</option>
               <option value="NO">No</option>
@@ -173,7 +173,7 @@
             <c-col md="4" *ngIf="parte.parte_apoyo === 'OTROS'">
               <label cLabel for="parte_apoyo_otros">Descripción del Apoyo</label>
               <input cFormControl id="parte_apoyo_otros" name="parte_apoyo_otros" [(ngModel)]="parte.parte_apoyo_otros"
-                type="text" required />
+                     type="text" required />
             </c-col>
 
           </div>

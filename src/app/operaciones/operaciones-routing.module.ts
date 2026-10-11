@@ -31,6 +31,20 @@ const routes: Routes = [
       title: 'Parte de Auxilio'
     }, canActivate: [AuthGuard]
   },
+  {
+    path: 'estaciones',
+    loadComponent: () => import('./estaciones-listado/estaciones-listado.component').then(m => m.EstacionesListadoComponent),
+    data: {
+      title: 'Estaciones'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'estaciones/:id',
+    loadComponent: () => import('./estaciones-mantenimiento/estaciones-mantenimiento.component').then(m => m.EstacionesMantenimientoComponent),
+    data: {
+      title: 'Estación'
+    }, canActivate: [AuthGuard]
+  },
 ];
 
 @NgModule({

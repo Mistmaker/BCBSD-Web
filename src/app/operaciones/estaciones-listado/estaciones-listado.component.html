@@ -1,0 +1,72 @@
+<c-row ngPreserveWhitespaces>
+    <c-col xs="12">
+        <c-card class="mb-4">
+            <c-card-header style="background-color: #bf0411;color: white;">
+
+                <c-row>
+                    <c-col xs="6">
+                        <strong>Estaciones del BCBSD</strong>
+                    </c-col>
+                    <c-col xs="6">
+                        <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+                            <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                        </div>
+                    </c-col>
+                </c-row>
+            </c-card-header>
+            <c-card-body>
+                <p class="text-body-secondary small">
+                    Nota: Estaciones con su estado, para editarlas hacer clic en el icono <i class="fa-solid fa-2x fa-pencil" style="color: #5856d6;"></i>
+                </p>
+
+                <div class="mb-3">
+                    <c-input-group>
+                        <span cInputGroupText><i class="fa fa-weight-hanging"></i></span>
+                        <input [(ngModel)]="filtroBusqueda" type="text" class="form-control" placeholder="Buscar..." name="filtroBusqueda" id="filtroBusqueda" />
+                    </c-input-group>
+                </div>
+
+                <table [striped]="true" cTable [responsive]="true">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Menú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let estacion of estaciones" style="font-size: 12px;">
+                            <td scope="row">
+                                {{ estacion.estacion_id }}
+                            </td>
+                            <td>
+                                {{ estacion.estacion_nombre }}
+                            </td>
+                            <td>
+                                {{ estacion.estacion_tipo }} {{ estacion.estacion_subtipo }}
+                            </td>
+                            <td>
+                                <a cButton routerLink="./{{estacion.estacion_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i></a> 
+                                <!-- <c-button-group aria-label="Button group with nested dropdown" role="group">
+                                    <c-dropdown variant="btn-group">
+                                        <button cButton color="secondary" cDropdownToggle>
+                                            <i class="fa-solid fa-list"></i>
+                                        </button>
+                                        <ul cDropdownMenu>
+                                            <li><a cDropdownItem *ngIf="distributivo.distributivo_estado!='ESTACION'" routerLink="./{{distributivo.distributivo_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
+                                        </ul>
+                                    </c-dropdown>
+                                </c-button-group> -->
+
+
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </c-card-body>
+        </c-card>
+    </c-col>
+</c-row>
