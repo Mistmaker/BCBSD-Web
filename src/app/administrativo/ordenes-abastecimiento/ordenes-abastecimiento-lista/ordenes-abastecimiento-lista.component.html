@@ -32,10 +32,9 @@
                 <table [striped]="true" cTable [responsive]="true">
                     <thead>
                         <tr>
-                            <th scope="col">Órdenes de abastecimiento</th>
-                            <th scope="col">Unidad / Vehículo</th>
-                            <th scope="col">Suministro / Cantidad</th>
-                            <th scope="col">Responsable / Conductor</th>
+                            <th scope="col">Unidades</th>
+                            <th scope="col">Responsables</th>
+                            <th scope="col">Detalle</th>
                             <th scope="col">Menú</th>
                         </tr>
                     </thead>
@@ -43,56 +42,43 @@
                         <tr *ngFor="let orden of ordenes | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
                             <td scope="row">
                                 <div>
-                                    <i class="fa-solid fa-hand-point-up"></i><span class="ng-binding"> Orden Número {{ orden.orden_serie }}</span>
+                                    <i class="fa-solid fa-hand-point-up"></i><span class="ng-binding"> {{ orden.orden_codigo }}</span>
                                 </div>
                                 <div>
-                                    <i class="fa-solid fa-shield"></i><span class="ng-binding"> {{ orden.orden_codigo }}</span>
+                                    <i class="fa fa-calendar"></i><span class="ng-binding">  {{ orden.orden_registro }}</span>
                                 </div>
-                                <div cTooltip="Solicita">
+                                <div>
+                                    <i class="fa fa-building"></i><span class="ng-binding"> {{ orden.orden_codigo_institucion }}</span>
+                                </div>
+                                <!-- <div cTooltip="Solicita">
                                     <i class="fa-solid fa-clipboard-user"></i><span class="ng-binding"> {{ orden.solicita }}</span>
-                                </div>
+                                </div> -->
                                 <div>
                                     <i class="fa-solid fa-truck"></i><c-badge color="primary" shape="rounded-pill">{{ orden.vehiculo_sigla }}</c-badge>
                                 </div>
-                                <!-- <div>
-                                    <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> {{ orden.vehiculo_chasis }}</span>
-                                </div>
                                 <div>
-                                    <i class="fa-solid fa-fingerprint"></i><span class="ng-binding"> {{ orden.vehiculo_motor }}</span>
-                                </div> -->
+                                    <i class="fa fa-gas-pump"></i><span class="ng-binding">{{ orden.orden_caneca ?? 'NO APLICA' }}</span>
+                                </div>
                             </td>
                             <td>
-                                <div>
-                                    <i class="fa-solid fa-clock"></i><span class="ng-binding"> {{ orden.orden_hora_salida }}</span>
+                                <div cTooltip="Persona que solicita">
+                                    <i class="fa-solid fa-user-tie"></i><span class="ng-binding"> {{ orden.solicita }}</span>
                                 </div>
                                 <div>
+                                    <i class="bi bi-text-indent-left"></i><span class="ng-binding"> {{ orden.puesto_nombre_solicita }}</span>
+                                </div>
+                                <!-- <div>
                                     <i class="fa-solid fa-plane-departure"></i><span class="ng-binding"> {{ orden.orden_kilometraje_salida }}</span>
                                 </div>
-                                <div cTooltip="Autoriza">
-                                    <i class="fa-solid fa-user-tie"></i><span class="ng-binding"> {{ orden.dir_administrativo }}</span>
-                                </div>
+
                                 <div>
                                     <i class="fa-solid fa-map-pin"></i><span class="ng-binding"> {{ orden.orden_destino }}</span>
-                                </div>
-                                <div>
-                                    <i class="fa-solid fa-comment"></i><span class="ng-binding"> {{ orden.orden_motivo_salida }}</span>
-                                </div>
-                                <div cTooltip="Operador">
+                                </div> -->
+                                <div cTooltip="Operador" *ngIf="orden.operador">
                                     <i class="fa-solid fa-user"></i><span class="ng-binding"> {{ orden.operador }}</span>
                                 </div>
-                            </td>
-                            <td>
-                                <div *ngIf="orden.orden_hora_entrada">
-                                    <i class="fa-solid fa-clock"></i><span class="ng-binding"> {{ orden.orden_hora_entrada }}</span>
-                                </div>
-                                <div *ngIf="orden.orden_hora_entrada">
-                                    <i class="fa-solid fa-plane-arrival"></i><span class="ng-binding"> {{ orden.orden_kilometraje_entrada }}</span>
-                                </div>
-                                <div *ngIf="orden.orden_hora_entrada">
-                                    <i class="fa-solid fa-route"></i> <c-badge color="primary" shape="rounded-pill"><b>{{ orden.orden_kilometraje_entrada - orden.orden_kilometraje_salida }}</b></c-badge>
-                                </div>
-                                <div *ngIf="orden.orden_hora_entrada">
-                                    <i class="fa-solid fa-hourglass"></i> <c-badge color="dark" shape="rounded-pill"><b>{{ orden.horas_orden }}</b></c-badge>
+                                <div *ngIf="orden.operador">
+                                    <i class="bi bi-text-indent-left"></i><span class="ng-binding"> {{ orden.puesto_nombre_operador }}</span>
                                 </div>
                             </td>
                             <td>
@@ -114,7 +100,7 @@
                                             <i class="fa-solid fa-list"></i>
                                         </button>
                                         <ul cDropdownMenu>
-                                            <li><a cDropdownItem *ngIf="orden.orden_estado!='ESTACION'" routerLink="./{{orden.orden_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
+                                            <li><a cDropdownItem *ngIf="orden.orden_estado!='VALIDADA'" routerLink="./{{orden.orden_id}}" color="primary" size="sm"><i class="fa-solid fa-pencil"></i> Editar</a></li>
                                             <li><a cDropdownItem [href]="imprimir(+orden.orden_id)" target="_blank" color="secondary" size="sm"><i class="fa-solid fa-print"></i> Imprimir</a></li>
                                         </ul>
                                     </c-dropdown>

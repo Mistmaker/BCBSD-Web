@@ -1,5 +1,5 @@
 import { AuthService } from './../../../auth/auth.service';
-import { OrdenesMovilizacionModel } from './../../models/ordenes-movilizacion.model';
+import { OrdenesAbastecimientoModel } from './../../models/ordenes-abastecimiento.model';
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -37,7 +37,9 @@ import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent 
 import { OrdenesMovilizacionService } from '../../services/ordenes-movilizacion.service';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import { VehiculosModel } from '../../models/vehiculos.model';
-import { PersonalModel } from 'src/app/tthh/models/personal.model';
+
+import { OrdenesAbastecimientoService } from '../../services/ordenes-abastecimiento.service';
+import { PersonalModel } from '../../../tthh/models/personal.model';
 @Component({
   selector: 'app-ordenes-abastecimiento-mantenimiento',
   imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
@@ -47,7 +49,7 @@ import { PersonalModel } from 'src/app/tthh/models/personal.model';
   styleUrl: './ordenes-abastecimiento-mantenimiento.component.scss'
 })
 export class OrdenesAbastecimientoMantenimientoComponent {
-  orden: OrdenesMovilizacionModel = new OrdenesMovilizacionModel();
+  orden: OrdenesAbastecimientoModel = new OrdenesAbastecimientoModel();
   vehiculos: VehiculosModel[] = [];
   personal: PersonalModel[] = [];
   conductores: PersonalModel[] = [];
@@ -68,13 +70,13 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     }
   });
 
-  constructor(private _ordenesMovilizacionService: OrdenesMovilizacionService, private _personalService: PersonalService, private _authService: AuthService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private _ordenesAbastecimientoService: OrdenesAbastecimientoService, private _personalService: PersonalService, private _authService: AuthService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
     // this.cargarDatos();
     const routeStr = this.route.snapshot.paramMap.get('id');
     if (routeStr !== 'nuevo' && routeStr !== null) {
-      this._ordenesMovilizacionService.getById(+routeStr).subscribe({
+      this._ordenesAbastecimientoService.getById(+routeStr).subscribe({
         next: (data) => {
           this.orden = data;
         },
@@ -87,7 +89,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     }
 
     //Obteniendo vehiculos
-    this._ordenesMovilizacionService.getVehiculos().subscribe({
+    this._ordenesAbastecimientoService.getVehiculos().subscribe({
       next: (data) => {
         this.vehiculos = data;
       },
@@ -97,8 +99,8 @@ export class OrdenesAbastecimientoMantenimientoComponent {
       },
       complete: () => console.info('complete')
     });
-    //Obteniendo conductres
-    this._ordenesMovilizacionService.getConductores().subscribe({
+    //Obteniendo conductores
+    this._ordenesAbastecimientoService.getConductores().subscribe({
       next: (data) => {
         this.conductores = data;
       },
@@ -123,24 +125,22 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     })
   }
 
-  obtenerKilometraje(vehiculo: any) {
-    console.log('Selected value changed:', vehiculo);
-    this._ordenesMovilizacionService.getVehiculoUltKm(vehiculo.vehiculo_id).subscribe({
-      next: (data) => {
-        console.log(data)
-        this.orden.orden_kilometraje_salida = data.orden_kilometraje_entrada;
-        if (!data) this.orden.orden_kilometraje_salida = 0;
-      },
-      error: (e) => {
-        console.error(e);
-        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-      },
-      complete: () => console.info('complete')
-    })
-  }
+  // obtenerKilometraje(vehiculo: any) {
+  //   console.log('Selected value changed:', vehiculo);
+  //   this._ordenesAbastecimientoService.getVehiculoUltKm(vehiculo.vehiculo_id).subscribe({
+  //     next: (data) => {
+  //       console.log(data)
+  //     },
+  //     error: (e) => {
+  //       console.error(e);
+  //       Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+  //     },
+  //     complete: () => console.info('complete')
+  //   })
+  // }
 
   imprimir(id: number){
-    return this._ordenesMovilizacionService.imprimirOrden(id);
+    return this._ordenesAbastecimientoService.imprimirOrden(id);
   }
 
   // cargarDatos() {
@@ -161,7 +161,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     console.log('Submit... 1');
     this.orden.fk_usuario_id = this._authService.getUsuario()['usuario']['usuario_id'];
     console.log(this.orden);
-    this._ordenesMovilizacionService.save(this.orden).subscribe({
+    this._ordenesAbastecimientoService.save(this.orden).subscribe({
       next: (data) => {
         console.log(data)
         Swal.fire('Listo', data.msg, 'success')
@@ -181,7 +181,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
 
   onReset1() {
     this.customStylesValidated = false;
-    this.orden = new OrdenesMovilizacionModel();
+    this.orden = new OrdenesAbastecimientoModel();
     console.log('Reset... 1');
   }
 }

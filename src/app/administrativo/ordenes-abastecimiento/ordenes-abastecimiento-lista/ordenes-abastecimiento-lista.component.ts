@@ -38,6 +38,8 @@ import {
 } from '@coreui/angular';
 import { IconDirective } from '@coreui/icons-angular';
 import { FiltroGeneralPipe } from 'src/app/pipes/filtro-general.pipe';
+import { OrdenesAbastecimientoModel } from '../../models/ordenes-abastecimiento.model';
+import { OrdenesAbastecimientoService } from '../../services/ordenes-abastecimiento.service';
 
 @Component({
   selector: 'app-ordenes-abastecimiento-lista',
@@ -46,13 +48,12 @@ import { FiltroGeneralPipe } from 'src/app/pipes/filtro-general.pipe';
   styleUrl: './ordenes-abastecimiento-lista.component.scss'
 })
 export class OrdenesAbastecimientoListaComponent {
-  ordenes: any[] = [];
+  ordenes: OrdenesAbastecimientoModel[] = [];
   filtroBusqueda = '';
   errorMessage: string = '';
   page: number = 1;
 
-  constructor() { }
-
+  constructor(private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
   ngOnInit(): void {
     this.cargarDatos();
   }
@@ -60,10 +61,17 @@ export class OrdenesAbastecimientoListaComponent {
   cargarDatos() {
     this.ordenes = [];
     this.errorMessage = '';
-
+    this._ordenesAbastecimientoService.getAll().subscribe({
+      next: (data) => this.ordenes = data,
+      error: (e) => {
+        console.error(e);
+        this.errorMessage = e.message;
+      },
+      complete: () => console.info('complete')
+    })
   }
 
   imprimir(id: number) {
-    return ''
+    return this._ordenesAbastecimientoService.imprimirOrden(id);
   }
 }
