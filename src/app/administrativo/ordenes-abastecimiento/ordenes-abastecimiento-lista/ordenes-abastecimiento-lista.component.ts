@@ -53,6 +53,8 @@ export class OrdenesAbastecimientoListaComponent {
   errorMessage: string = '';
   page: number = 1;
 
+  seleccionados: string[] = [];
+
   constructor(private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
   ngOnInit(): void {
     this.cargarDatos();
@@ -71,7 +73,40 @@ export class OrdenesAbastecimientoListaComponent {
     })
   }
 
-  imprimir(id: number) {
-    return this._ordenesAbastecimientoService.imprimirOrden(id);
+  imprimirVarios() {
+    return this._ordenesAbastecimientoService.imprimirOrden(this.seleccionados);
   }
+
+  imprimir(id: number) {
+    return this._ordenesAbastecimientoService.imprimirOrden([id.toString()]);
+  }
+
+  seleccionarTodos(event: any) {
+    const checked = event.target.checked;
+    if (checked) {
+      this.ordenes.map((x) => this.toggle(x.orden_id.toString(), true));
+    } else {
+      this.seleccionados = [];
+    }
+
+  }
+
+  toggle(id: string, checked: boolean) {
+    this.seleccionados = checked
+      ? [...this.seleccionados, id]
+      : this.seleccionados.filter((x) => x !== id);
+  }
+
+
+get todosSeleccionados(): boolean {
+  return this.ordenes.length > 0 && this.seleccionados.length === this.ordenes.length;
+}
+
+get algunosSeleccionados(): boolean {
+  return this.seleccionados.length > 0 && !this.todosSeleccionados;
+}
+
+toggleTodos(checked: boolean) {
+  this.seleccionados = checked ? this.ordenes.map((o) => o.orden_id) : [];
+}
 }

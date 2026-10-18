@@ -49,8 +49,33 @@
                 <c-form-feedback [valid]="false">Ingrese Código de institución</c-form-feedback>
               </c-input-group>
             </c-col>
+
+            <c-col md="6"  *ngIf="!orden.orden_id && !orden.orden_caneca">
+              <label cLabel class="required-label" for="cantidadVales">Cantidad de vales</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText id="inputGroupPrepend"><i class="fa fa-rectangle-list"></i> </span>
+                <input cFormControl id="cantidadVales" name="cantidadVales" [(ngModel)]="orden.orden_nro_vales" required type="number" maxlength="7" />
+                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese la cantidad de vales</c-form-feedback>
+              </c-input-group>
+            </c-col>
+            
+            <c-col md="6" *ngIf="!orden.orden_id && !orden.orden_nro_vales">
+              <label cLabel class="required-label" for="combustible">Caneca</label>
+              <c-input-group class="has-validation">
+                <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-gas-pump"></i> </span>
+                <select cSelect id="combustible" name="combustible" [(ngModel)]="orden.orden_caneca" required>
+                  <option value="">Seleccione...</option>
+                  <option value="Super">Super</option>
+                  <option value="Extra">Extra</option>
+                  <option value="Diesel">Diesel</option>
+                </select>
+                <c-form-feedback [valid]="false">Seleccione tipo de combustible</c-form-feedback>
+              </c-input-group>
+            </c-col>
+
   
-            <c-col md="12" *ngIf="!orden.orden_id">
+            <c-col md="12" *ngIf="!orden.orden_id && !orden.orden_caneca">
               <label cLabel for="unidad">Unidad</label>
   
               <ng-select name="unidad" style="width: 100%;" id="unidad" [items]="vehiculos" bindLabel="vehiculo_sigla" bindValue="vehiculo_id" [(ngModel)]="orden.fk_unidad_id" placeholder="Buscar vehiculo..." [searchable]="true" [clearable]="true" required #vehiculoSelect="ngModel" [ngClass]="{ 'is-invalid': vehiculoSelect.invalid && vehiculoSelect.touched }" [disabled]="orden.orden_id">
@@ -98,7 +123,7 @@
   
             <c-col md="12" *ngIf="orden.orden_id">
               <label cLabel for="conductor">Operador</label>
-              <ng-select name="conductor" id="conductor" [items]="conductores" bindLabel="nombre_completo" bindValue="conductor_id" [(ngModel)]="orden.operador_id" placeholder="Buscar conductor..." [searchable]="true" [clearable]="true" required #conductorSelect="ngModel" [ngClass]="{ 'is-invalid': conductorSelect.invalid && conductorSelect.touched }" [disabled]="orden.orden_id">
+              <ng-select name="conductor" id="conductor" [items]="conductores" bindLabel="nombre_completo" bindValue="conductor_id" [(ngModel)]="orden.operador_id" placeholder="Buscar conductor..." [searchable]="true" [clearable]="true" required #conductorSelect="ngModel" [ngClass]="{ 'is-invalid': conductorSelect.invalid && conductorSelect.touched }" [disabled]="!orden.orden_id">
   
                 <ng-template ng-label-tmp let-item="item">
                   {{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }} (ID: {{ item.persona_doc_identidad }})
@@ -119,7 +144,8 @@
               </div> -->
             </c-col>
   
-  
+
+
 
             <c-col md="6"  *ngIf="!orden.orden_id">
               <label cLabel class="required-label" for="codigoInstitucion">Código de institución</label>
@@ -128,30 +154,6 @@
                 <input cFormControl id="codigoInstitucion" name="codigoInstitucion" [(ngModel)]="orden.orden_codigo_institucion" required type="text" maxlength="7" />
                 <c-form-feedback [valid]="true">Ok!</c-form-feedback>
                 <c-form-feedback [valid]="false">Ingrese Código de institución</c-form-feedback>
-              </c-input-group>
-            </c-col>
-
-            <c-col md="6"  *ngIf="!orden.orden_id">
-              <label cLabel class="required-label" for="cantidadVales">Cantidad de vales</label>
-              <c-input-group class="has-validation">
-                <span cInputGroupText id="inputGroupPrepend"><i class="fa fa-rectangle-list"></i> </span>
-                <input cFormControl id="cantidadVales" name="cantidadVales" [(ngModel)]="orden.orden_nro_vales" required type="number" maxlength="7" />
-                <c-form-feedback [valid]="true">Ok!</c-form-feedback>
-                <c-form-feedback [valid]="false">Ingrese la cantidad de vales</c-form-feedback>
-              </c-input-group>
-            </c-col>
-
-            <c-col md="6" *ngIf="!orden.orden_nro_vales">
-              <label cLabel class="required-label" for="combustible">Caneca</label>
-              <c-input-group class="has-validation">
-                <span cInputGroupText id="inputGroupPrepend"> <i class="fa fa-gas-pump"></i> </span>
-                <select cSelect id="combustible" name="combustible" [(ngModel)]="orden.orden_caneca" required>
-                  <option value="">Seleccione...</option>
-                  <option value="Super">Super</option>
-                  <option value="Extra">Extra</option>
-                  <option value="Diesel">Diesel</option>
-                </select>
-                <c-form-feedback [valid]="false">Seleccione tipo de combustible</c-form-feedback>
               </c-input-group>
             </c-col>
 
@@ -169,10 +171,92 @@
               <c-input-group class="has-validation">
                 <input cFormControl id="fecha" name="fecha" [(ngModel)]="orden.orden_fecha" required type="date" />
                 <c-form-feedback [valid]="true">Ok!</c-form-feedback>
-                <c-form-feedback [valid]="false">Ingrese fecha</c-form-feedback>
+                <c-form-feedback [valid]="false">Ingrese la fecha</c-form-feedback>
               </c-input-group>
             </c-col>
-  
+
+
+            <c-col xs="12" *ngIf="orden.orden_id ">
+              <button cButton color="secondary" (click)="agregarDetalle()"  type="button"><i class="fa-solid fa-plus"></i>{{orden.orden_nro_vales ? 'Agregar una unidad': ' Agregar una caneca'}}</button>
+            </c-col>
+
+
+            <ng-container *ngFor="let item of orden.detalles; let i = index; trackBy: trackByKey">
+                
+                <c-card class="mb-4">
+                  <c-card-body>
+                    
+                    <c-row>
+
+                    <c-col md="6" *ngIf="orden.fk_unidad_id">
+                      <label cLabel class="required-label" for="unidad{{i}}">Unidades</label>
+                      <select cSelect id="unidad{{i}}" name="unidad{{i}}" [(ngModel)]="item.fk_unidad_id" disabled>
+                        <option value="">--Seleccione unidad--</option>
+                        <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.vehiculo_id">{{ vehiculo.vehiculo_sigla }} / {{ vehiculo.vehiculo_placa }}</option>
+                      </select>
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Seleccione una unidad</c-form-feedback>
+                    </c-col>
+      
+                    
+                    <c-col md="6" *ngIf="orden.fk_unidad_id">
+                      <label cLabel class="required-label" for="kilometraje{{i}}">Kilometraje</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText id="inputGroupPrepend"><i class="bi bi-clock-fill"></i> </span>
+                        <input cFormControl id="kilometraje{{i}}" name="kilometraje{{i}}" [(ngModel)]="item.orden_detalle_kilometraje" required type="number" maxlength="7" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese el kilometraje</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+    
+                    <c-col md="4" >
+                      <label cLabel class="required-label" for="combustible{{i}}">Tipo de combustible</label>
+                      <select cSelect id="combustible{{i}}" name="combustible{{i}}" [(ngModel)]="item.orden_detalle_tipo_combustible">
+                        <option value="" selected>Seleccione...</option>
+                        <option value="DIESEL">DIESEL</option>
+                        <option value="ECO PAIS">ECO PAIS</option>
+                        <option value="EXTRA">EXTRA</option>
+                        <option value="SUPER">SUPER</option>
+                      </select>
+                      <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                      <c-form-feedback [valid]="false">Seleccione UN Tipo de combustible</c-form-feedback>
+                    </c-col>
+
+                    <c-col md="4" *ngIf="!orden.fk_unidad_id">
+                      <label cLabel class="required-label" for="canecas{{i}}">Número de canecas</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText id="inputGroupPrepend"><i class="bi bi-funnel-fill"></i> </span>
+                        <input cFormControl id="canecas{{i}}" name="canecas{{i}}" [(ngModel)]="item.orden_detalle_nro_canecas" required type="number" maxlength="7" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese el Número de canecas</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+    
+                    <c-col md="4">
+                      <label cLabel class="required-label" for="Galones{{i}}">Galones</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText id="inputGroupPrepend"><i class="bi bi-bag-fill"></i> </span>
+                        <input cFormControl id="Galones{{i}}" name="Galones{{i}}" [(ngModel)]="item.orden_detalle_cantidad_galones" required type="number" maxlength="7" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese el Galones</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+    
+                    <c-col md="4">
+                      <label cLabel class="required-label" for="Total{{i}}">Total</label>
+                      <c-input-group class="has-validation">
+                        <span cInputGroupText id="inputGroupPrepend"><i class="bi bi-currency-dollar"></i> </span>
+                        <input cFormControl id="Total{{i}}" name="Total{{i}}" [(ngModel)]="item.orden_detalle_precio_total" required type="number" step="0.01" />
+                        <c-form-feedback [valid]="true">Ok!</c-form-feedback>
+                        <c-form-feedback [valid]="false">Ingrese el Total</c-form-feedback>
+                      </c-input-group>
+                    </c-col>
+                  </c-row>
+
+                  </c-card-body>
+                </c-card>
+              </ng-container>
+            
             <!-- <c-col md="12">
               <label cLabel for="observaciones">Observaciones</label>
               <c-input-group class="has-validation">

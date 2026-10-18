@@ -40,7 +40,7 @@ export class OrdenesAbastecimientoService {
     return this.http.put<any>(`${environment.API_URL}/servicios/administrativo/ordenes-abastecimiento/setOrdenAbastecimiento.php`, orden)
   }
 
-  imprimirOrden(id: number){
-    return `${environment.API_URL}/reportes/ordenMovilizacion.php?id=${id}`;
+  imprimirOrden(ids: string[]){
+    return `${environment.API_URL}/reportes/ordenAbastecimiento.php?idsParam=${encodeURIComponent(ids.join(','))}`;
   }
 }

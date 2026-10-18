@@ -1,5 +1,5 @@
 import { AuthService } from './../../../auth/auth.service';
-import { OrdenesAbastecimientoModel } from './../../models/ordenes-abastecimiento.model';
+import { OrdenesAbastecimientoDetalleModel, OrdenesAbastecimientoModel } from './../../models/ordenes-abastecimiento.model';
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -78,6 +78,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     if (routeStr !== 'nuevo' && routeStr !== null) {
       this._ordenesAbastecimientoService.getById(+routeStr).subscribe({
         next: (data) => {
+          console.log(data);
           this.orden = data;
         },
         error: (e) => {
@@ -139,9 +140,6 @@ export class OrdenesAbastecimientoMantenimientoComponent {
   //   })
   // }
 
-  imprimir(id: number){
-    return this._ordenesAbastecimientoService.imprimirOrden(id);
-  }
 
   // cargarDatos() {
   //   this.errorMessage = '';
@@ -160,7 +158,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     if (form.invalid) { Swal.fire('Atencion', 'Algunos campos están incorrectos o vacios, por favor revise e intente nuevamente', 'warning'); return; }
     console.log('Submit... 1');
     this.orden.fk_usuario_id = this._authService.getUsuario()['usuario']['usuario_id'];
-    console.log(this.orden);
+    this.calcularTotal();
     this._ordenesAbastecimientoService.save(this.orden).subscribe({
       next: (data) => {
         console.log(data)
@@ -183,5 +181,23 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     this.customStylesValidated = false;
     this.orden = new OrdenesAbastecimientoModel();
     console.log('Reset... 1');
+  }
+
+  trackByKey = (index: number, obj: object): string => {
+		return index.toString();
+	};
+
+  agregarDetalle() {
+    this.orden.detalles ??= [];
+
+  const detalle = new OrdenesAbastecimientoDetalleModel(this.orden.orden_id)
+  if(this.orden.fk_unidad_id){
+    detalle.fk_unidad_id = this.orden.fk_unidad_id
+  }
+    this.orden.detalles.push(detalle);
+  }
+
+  calcularTotal() {
+    this.orden.orden_total = this.orden.detalles.reduce((total, detalle) => total + detalle.orden_detalle_precio_total, 0);
   }
 }

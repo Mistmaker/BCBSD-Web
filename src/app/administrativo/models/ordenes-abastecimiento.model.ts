@@ -18,8 +18,30 @@ export class OrdenesAbastecimientoModel {
     orden_estacion_servicio!: string;
     orden_total!: number;
     orden_observaciones!: string | null;
+    detalles!: OrdenesAbastecimientoDetalleModel[];
 
+    //DETALLES
+    total!: number;
+    kilometraje!: string;
+    imprimir!: boolean;
     constructor() {
         this.orden_serie = 0;
+        this.detalles = [];
     }
+}
+
+export class OrdenesAbastecimientoDetalleModel {
+    orden_detalle_id!: number;
+    orden_id!: string;
+    orden_detalle_linea!: number;
+    fk_unidad_id!: number;
+    orden_detalle_nro_canecas!: number;
+    orden_detalle_kilometraje!: number;
+    orden_detalle_tipo_combustible!: number;
+    orden_detalle_cantidad_galones!: number;
+    orden_detalle_precio_total!: number;
+    constructor(orden_id: string) {
+        this.orden_id = orden_id;
+
+     }
 }

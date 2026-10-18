@@ -10,6 +10,7 @@
                     <c-col xs="6">
                         <div class="d-grid gap-1 d-md-flex justify-content-md-end">
                             <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
+                            <a cButton [href]="imprimirVarios()" *ngIf="seleccionados.length > 0" target="_blank" color="secondary" size="sm"><i class="fa-solid fa-print"></i></a>
                             <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
                         </div>
                     </c-col>
@@ -32,6 +33,13 @@
                 <table [striped]="true" cTable [responsive]="true">
                     <thead>
                         <tr>
+                            <th scope="col">
+                                <c-form-check>
+                                    <input [checked]="todosSeleccionados"
+                                    [indeterminate]="algunosSeleccionados"
+                                    (change)="toggleTodos($any($event.target).checked)" cFormCheckInput style="width: 1.5rem; height: 1.5rem;" type="checkbox" />
+                                 </c-form-check>
+                            </th>
                             <th scope="col">Unidades</th>
                             <th scope="col">Responsables</th>
                             <th scope="col">Detalle</th>
@@ -40,6 +48,14 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let orden of ordenes | filtroGeneral: filtroBusqueda" style="font-size: 12px;">
+                            <td scope="row">
+                                <c-form-check>
+                                    <input cFormCheckInput 
+                                     [checked]="seleccionados.includes(orden.orden_id)"
+                                     (change)="toggle(orden.orden_id, $any($event.target).checked)"style="width: 1.5rem; height: 1.5rem;" type="checkbox" />
+                                 </c-form-check>
+                            </td>
+                            
                             <td scope="row">
                                 <div>
                                     <i class="fa-solid fa-hand-point-up"></i><span class="ng-binding"> {{ orden.orden_codigo }}</span>
@@ -53,11 +69,14 @@
                                 <!-- <div cTooltip="Solicita">
                                     <i class="fa-solid fa-clipboard-user"></i><span class="ng-binding"> {{ orden.solicita }}</span>
                                 </div> -->
-                                <div>
+                                <div *ngIf="orden.vehiculo_sigla">
                                     <i class="fa-solid fa-truck"></i><c-badge color="primary" shape="rounded-pill">{{ orden.vehiculo_sigla }}</c-badge>
                                 </div>
                                 <div>
                                     <i class="fa fa-gas-pump"></i><span class="ng-binding">{{ orden.orden_caneca ?? 'NO APLICA' }}</span>
+                                </div>
+                                <div *ngIf="orden.orden_estado == 'VALIDADA' ">
+                                    <i class="bi bi-currency-dollar"></i><span class="ng-binding"> {{ orden.total }}</span>
                                 </div>
                             </td>
                             <td>
@@ -80,6 +99,9 @@
                                 <div *ngIf="orden.operador">
                                     <i class="bi bi-text-indent-left"></i><span class="ng-binding"> {{ orden.puesto_nombre_operador }}</span>
                                 </div>
+                                <div *ngIf="orden.operador &&  orden.kilometraje"  cTooltip="Kilometraje">
+                                    <i class="fa-solid fa-car"></i><span class="ng-binding"> {{ orden.kilometraje }}</span>
+                                </div>
                             </td>
                             <td>
                                 <div>
@@ -87,7 +109,7 @@
                                 </div>
                                 <div>
                                     <i class="fa-solid fa-pencil"></i>
-                                    <c-badge color="{{ orden.orden_estado != 'ESTACION' ? 'warning' : 'success' }}"> {{ orden.orden_estado }}</c-badge>
+                                    <c-badge color="{{ orden.orden_estado != 'VALIDADA' ? 'warning' : 'success' }}"> {{ orden.orden_estado }}</c-badge>
                                 </div>
                                 <div>
                                     <i class="fa-solid fa-user"></i><span class="ng-binding"> {{ orden.usuario }}</span>
