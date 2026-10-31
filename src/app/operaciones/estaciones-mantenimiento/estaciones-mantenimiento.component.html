@@ -1,1 +1,137 @@
-<p>estaciones-mantenimiento works!</p>
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col xs="6">
+            <strong>{{ isEditing ? 'Edición de estación' : 'Registro de estación' }}</strong>
+          </c-col>
+          <c-col xs="6">
+            <div class="d-grid gap-1 d-md-flex justify-content-md-end">
+              <a cButton routerLink="../" color="primary" size="sm">
+                <i class="fa-solid fa-arrow-left"></i> Salir y cancelar
+              </a>
+            </div>
+          </c-col>
+        </c-row>
+      </c-card-header>
+
+      <c-card-body>
+        <p class="text-body-secondary small">
+          Complete los datos de la estación y presione Guardar para aplicar los cambios.
+        </p>
+
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+
+        <form #formulario="ngForm"
+              (ngSubmit)="onSubmit(formulario)"
+              [validated]="customStylesValidated"
+              cForm
+              class="row g-3 needs-validation">
+          <c-col md="6" *ngIf="estacion.estacion_id > 0">
+            <label cLabel for="estacion_id">ID</label>
+            <input cFormControl id="estacion_id" name="estacion_id"
+                   [(ngModel)]="estacion.estacion_id" readonly type="number" />
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_nombre">Nombre</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-fire-extinguisher"></i></span>
+              <input cFormControl id="estacion_nombre" name="estacion_nombre"
+                     [(ngModel)]="estacion.estacion_nombre" required type="text" />
+              <c-form-feedback [valid]="false">Ingrese el nombre de la estación.</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_tipo">Tipo</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-list"></i></span>
+              <input cFormControl id="estacion_tipo" name="estacion_tipo"
+                     [(ngModel)]="estacion.estacion_tipo" required type="text" />
+              <c-form-feedback [valid]="false">Ingrese el tipo de estación.</c-form-feedback>
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_subtipo">Subtipo</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-list"></i></span>
+              <input cFormControl id="estacion_subtipo" name="estacion_subtipo"
+                     [(ngModel)]="estacion.estacion_subtipo" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_jornada">Jornada</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-regular fa-clock"></i></span>
+              <input cFormControl id="estacion_jornada" name="estacion_jornada"
+                     [(ngModel)]="estacion.estacion_jornada" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="12">
+            <label cLabel for="estacion_ubicacion">Ubicación</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-location-dot"></i></span>
+              <input cFormControl id="estacion_ubicacion" name="estacion_ubicacion"
+                     [(ngModel)]="estacion.estacion_ubicacion" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_ubicacion_x">Coordenada X</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-map"></i></span>
+              <input cFormControl id="estacion_ubicacion_x" name="estacion_ubicacion_x"
+                     [(ngModel)]="estacion.estacion_ubicacion_x" (ngModelChange)="onCoordinatesChanged()"
+                     inputmode="decimal" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_ubicacion_y">Coordenada Y</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-map"></i></span>
+              <input cFormControl id="estacion_ubicacion_y" name="estacion_ubicacion_y"
+                     [(ngModel)]="estacion.estacion_ubicacion_y" (ngModelChange)="onCoordinatesChanged()"
+                     inputmode="decimal" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col xs="12">
+            <div class="alert alert-info" role="status">
+              Seleccione la ubicación de la estación en el mapa. Puede hacer clic en el punto deseado o arrastrar el marcador para ajustar las coordenadas.
+              <br />
+              <small>X corresponde a latitud y Y a longitud.</small>
+            </div>
+            <div id="station-map" aria-label="Mapa para seleccionar la ubicación GPS de la estación"></div>
+          </c-col>
+
+          <c-col md="6">
+            <label cLabel for="estacion_estado">Estado</label>
+            <c-input-group>
+              <span cInputGroupText><i class="fa-solid fa-toggle-on"></i></span>
+              <input cFormControl id="estacion_estado" name="estacion_estado"
+                     [(ngModel)]="estacion.estacion_estado" type="text" />
+            </c-input-group>
+          </c-col>
+
+          <c-col xs="12">
+            <div class="d-flex justify-content-end gap-2">
+              <a cButton routerLink="../" color="secondary">Cancelar</a>
+              <button cButton color="success" type="submit" [disabled]="isLoading || isSaving">
+                <i class="fa-solid fa-save"></i>
+                {{ isLoading ? 'Cargando...' : isSaving ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </c-col>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
