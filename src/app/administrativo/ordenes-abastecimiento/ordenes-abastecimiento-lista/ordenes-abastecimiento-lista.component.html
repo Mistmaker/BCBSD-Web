@@ -76,7 +76,7 @@
                                     <i class="fa fa-gas-pump"></i><span class="ng-binding">{{ orden.orden_caneca ?? 'NO APLICA' }}</span>
                                 </div>
                                 <div *ngIf="orden.orden_estado == 'VALIDADA' ">
-                                    <i class="bi bi-currency-dollar"></i><span class="ng-binding"> {{ orden.total }}</span>
+                                    <i class="bi bi-currency-dollar"></i><span class="ng-binding"> {{ orden.orden_precio_total }}</span>
                                 </div>
                             </td>
                             <td>
@@ -99,8 +99,8 @@
                                 <div *ngIf="orden.operador">
                                     <i class="bi bi-text-indent-left"></i><span class="ng-binding"> {{ orden.puesto_nombre_operador }}</span>
                                 </div>
-                                <div *ngIf="orden.operador &&  orden.kilometraje"  cTooltip="Kilometraje">
-                                    <i class="fa-solid fa-car"></i><span class="ng-binding"> {{ orden.kilometraje }}</span>
+                                <div *ngIf="orden.operador &&  orden.orden_kilometraje"  cTooltip="Kilometraje">
+                                    <i class="fa-solid fa-car"></i><span class="ng-binding"> {{ orden.orden_kilometraje }}</span>
                                 </div>
                             </td>
                             <td>

@@ -158,7 +158,7 @@ export class OrdenesAbastecimientoMantenimientoComponent {
     if (form.invalid) { Swal.fire('Atencion', 'Algunos campos están incorrectos o vacios, por favor revise e intente nuevamente', 'warning'); return; }
     console.log('Submit... 1');
     this.orden.fk_usuario_id = this._authService.getUsuario()['usuario']['usuario_id'];
-    this.calcularTotal();
+    // this.calcularTotal();
     this._ordenesAbastecimientoService.save(this.orden).subscribe({
       next: (data) => {
         console.log(data)
@@ -187,17 +187,17 @@ export class OrdenesAbastecimientoMantenimientoComponent {
 		return index.toString();
 	};
 
-  agregarDetalle() {
-    this.orden.detalles ??= [];
+  // agregarDetalle() {
+  //   this.orden.detalles ??= [];
 
-  const detalle = new OrdenesAbastecimientoDetalleModel(this.orden.orden_id)
-  if(this.orden.fk_unidad_id){
-    detalle.fk_unidad_id = this.orden.fk_unidad_id
-  }
-    this.orden.detalles.push(detalle);
-  }
+  // const detalle = new OrdenesAbastecimientoDetalleModel(this.orden.orden_id)
+  // if(this.orden.fk_unidad_id){
+  //   detalle.fk_unidad_id = this.orden.fk_unidad_id
+  // }
+  //   this.orden.detalles.push(detalle);
+  // }
 
-  calcularTotal() {
-    this.orden.orden_total = this.orden.detalles.reduce((total, detalle) => total + detalle.orden_detalle_precio_total, 0);
-  }
+  // calcularTotal() {
+  //   this.orden.orden_total = this.orden.detalles.reduce((total, detalle) => total + detalle.orden_detalle_precio_total, 0);
+  // }
 }

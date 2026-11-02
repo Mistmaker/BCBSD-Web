@@ -37,7 +37,7 @@ import {
   TableDirective,FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,TooltipDirective 
 } from '@coreui/angular';
 import { IconDirective } from '@coreui/icons-angular';
-import { FiltroGeneralPipe } from 'src/app/pipes/filtro-general.pipe';
+import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
 import { OrdenesAbastecimientoModel } from '../../models/ordenes-abastecimiento.model';
 import { OrdenesAbastecimientoService } from '../../services/ordenes-abastecimiento.service';
 

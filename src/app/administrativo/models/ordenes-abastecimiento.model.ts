@@ -16,9 +16,13 @@ export class OrdenesAbastecimientoModel {
     orden_caneca!: string | null;
     orden_fecha!: Date | null;
     orden_estacion_servicio!: string;
-    orden_total!: number;
+    orden_nro_canecas!: number;
+    orden_kilometraje!: number;
+    orden_tipo_combustible!: number;
+    orden_cantidad_galones!: number;
+    orden_precio_total!: number;
     orden_observaciones!: string | null;
-    detalles!: OrdenesAbastecimientoDetalleModel[];
+    // detalles!: OrdenesAbastecimientoDetalleModel[];
 
     //DETALLES
     total!: number;
@@ -26,7 +30,7 @@ export class OrdenesAbastecimientoModel {
     imprimir!: boolean;
     constructor() {
         this.orden_serie = 0;
-        this.detalles = [];
+        // this.detalles = [];
     }
 }
 
