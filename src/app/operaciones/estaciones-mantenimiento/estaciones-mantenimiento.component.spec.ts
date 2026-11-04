@@ -16,6 +16,7 @@ describe('EstacionesMantenimientoComponent', () => {
         {
           provide: EstacionesService,
           useValue: {
+            getJornadas: jasmine.createSpy().and.returnValue(of([])),
             getById: jasmine.createSpy().and.returnValue(of({})),
             save: jasmine.createSpy().and.returnValue(of({ msg: 'Guardado' })),
             update: jasmine.createSpy().and.returnValue(of({ msg: 'Actualizado' }))

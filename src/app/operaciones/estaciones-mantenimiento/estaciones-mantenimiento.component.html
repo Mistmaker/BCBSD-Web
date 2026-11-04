@@ -50,9 +50,15 @@
             <label cLabel for="estacion_tipo">Tipo</label>
             <c-input-group>
               <span cInputGroupText><i class="fa-solid fa-list"></i></span>
-              <input cFormControl id="estacion_tipo" name="estacion_tipo"
-                     [(ngModel)]="estacion.estacion_tipo" required type="text" />
-              <c-form-feedback [valid]="false">Ingrese el tipo de estación.</c-form-feedback>
+              <select cSelect id="estacion_tipo" name="estacion_tipo"
+                      [(ngModel)]="estacion.estacion_tipo" required>
+                <option value="" disabled>Seleccione un tipo</option>
+                <option value="ESTACION">ESTACION</option>
+                <option value="SUBESTACION">SUBESTACION</option>
+                <option value="GRUPO">GRUPO</option>
+                <option value="DIRECCION">DIRECCION</option>
+              </select>
+              <c-form-feedback [valid]="false">Seleccione el tipo de estación.</c-form-feedback>
             </c-input-group>
           </c-col>
 
@@ -60,17 +66,28 @@
             <label cLabel for="estacion_subtipo">Subtipo</label>
             <c-input-group>
               <span cInputGroupText><i class="fa-solid fa-list"></i></span>
-              <input cFormControl id="estacion_subtipo" name="estacion_subtipo"
-                     [(ngModel)]="estacion.estacion_subtipo" type="text" />
+              <select cSelect id="estacion_subtipo" name="estacion_subtipo"
+                      [(ngModel)]="estacion.estacion_subtipo" required>
+                <option value="" disabled>Seleccione un subtipo</option>
+                <option value="URBANA">URBANA</option>
+                <option value="RURAL">RURAL</option>
+              </select>
+              <c-form-feedback [valid]="false">Seleccione el subtipo de estación.</c-form-feedback>
             </c-input-group>
           </c-col>
 
           <c-col md="6">
-            <label cLabel for="estacion_jornada">Jornada</label>
+            <label cLabel for="fk_jornada_id">Jornada</label>
             <c-input-group>
               <span cInputGroupText><i class="fa-regular fa-clock"></i></span>
-              <input cFormControl id="estacion_jornada" name="estacion_jornada"
-                     [(ngModel)]="estacion.estacion_jornada" type="text" />
+              <select cSelect id="fk_jornada_id" name="fk_jornada_id"
+                      [(ngModel)]="estacion.fk_jornada_id" required>
+                <option [ngValue]="null" disabled>Seleccione una jornada</option>
+                <option *ngFor="let jornada of jornadas" [ngValue]="jornada.jornada_id">
+                  {{ jornada.jornada_nombre }}
+                </option>
+              </select>
+              <c-form-feedback [valid]="false">Seleccione una jornada.</c-form-feedback>
             </c-input-group>
           </c-col>
 
@@ -116,8 +133,13 @@
             <label cLabel for="estacion_estado">Estado</label>
             <c-input-group>
               <span cInputGroupText><i class="fa-solid fa-toggle-on"></i></span>
-              <input cFormControl id="estacion_estado" name="estacion_estado"
-                     [(ngModel)]="estacion.estacion_estado" type="text" />
+              <select cSelect id="estacion_estado" name="estacion_estado"
+                      [(ngModel)]="estacion.estacion_estado" required>
+                <option value="" disabled>Seleccione un estado</option>
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+              </select>
+              <c-form-feedback [valid]="false">Seleccione el estado de la estación.</c-form-feedback>
             </c-input-group>
           </c-col>
 

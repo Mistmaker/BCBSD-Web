@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, FormControlDirective, FormDirective, FormFeedbackComponent, FormLabelDirective, InputGroupComponent, InputGroupTextDirective, RowComponent } from '@coreui/angular';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, FormControlDirective, FormDirective, FormFeedbackComponent, FormLabelDirective, FormSelectDirective, InputGroupComponent, InputGroupTextDirective, RowComponent } from '@coreui/angular';
 import { FormsModule, NgForm } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { EstacionesModel } from '../models/estaciones.model';
 import { EstacionesService } from '../services/estaciones.service';
+import { JornadasModel } from '../../tthh/models/jornadas.model';
 import * as L from 'leaflet';
 
 @Component({
@@ -23,6 +24,7 @@ import * as L from 'leaflet';
     FormDirective,
     FormLabelDirective,
     FormControlDirective,
+    FormSelectDirective,
     FormFeedbackComponent,
     InputGroupComponent,
     InputGroupTextDirective
@@ -34,6 +36,7 @@ export class EstacionesMantenimientoComponent implements OnInit, AfterViewInit, 
   estacion = new EstacionesModel();
   customStylesValidated = false;
   errorMessage = '';
+  jornadas: JornadasModel[] = [];
   isEditing = false;
   isLoading = false;
   isSaving = false;
@@ -47,6 +50,17 @@ export class EstacionesMantenimientoComponent implements OnInit, AfterViewInit, 
   ) { }
 
   ngOnInit(): void {
+    this.estacionesService.getJornadas().subscribe({
+      next: (data) => {
+        this.jornadas = data;
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage = 'No se pudieron cargar las jornadas.';
+        Swal.fire('Error', `${this.errorMessage} ${error.message}`, 'error');
+      }
+    });
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id === null || id === 'nuevo') {
       return;
@@ -153,8 +167,8 @@ export class EstacionesMantenimientoComponent implements OnInit, AfterViewInit, 
   }
 
   private getCoordinates(): { lat: number; lng: number } | null {
-    const latitude = this.estacion.estacion_ubicacion_x.trim();
-    const longitude = this.estacion.estacion_ubicacion_y.trim();
+    const latitude = (this.estacion.estacion_ubicacion_x ?? '').trim();
+    const longitude = (this.estacion.estacion_ubicacion_y ?? '').trim();
     if (
       !latitude ||
       !longitude

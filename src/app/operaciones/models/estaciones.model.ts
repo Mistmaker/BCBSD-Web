@@ -1,5 +1,6 @@
 export class EstacionesModel {
     estacion_id!: number;
+    fk_jornada_id!: number;
     estacion_nombre!: string;
     estacion_tipo!: string;
     estacion_subtipo!: string;

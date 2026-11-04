@@ -208,32 +208,19 @@ export class DistributivoMantenimientoComponent {
     const estacion = this.distributivo.grupos.find(grupo =>
       grupo.pelotones.some(peloton => peloton.dist_pelo_id === dist_pelo_id)
     );
+    const grupoSeleccionadoEsPrimero = estacion?.pelotones[0]?.dist_pelo_id === dist_pelo_id;
 
-    if (cargoNombre == 'ENCARGADO DE ESTACION') {
-      if (estacion) {
-        // Iterar sobre los grupos (pelotones) de la estación
-        estacion.pelotones.forEach(peloton => {
-          console.log('Pelotón:', peloton);
-          // Buscar el cargo correspondiente en cada grupo
-          const cargoEnGrupo = peloton.cargos.find(c => c.cargo_nombre === cargoNombre);
-          console.log('Cargo en grupo:', cargoEnGrupo);
-          if (cargoEnGrupo) {
-            // Verificar si el personal ya está asignado en este grupo
-            const yaAsignado = cargoEnGrupo.puestos.some(puesto => puesto.fk_personal_id === event.ppersonal_id);
-            console.log('¿Personal ya asignado en este grupo?', yaAsignado);
-            if (!yaAsignado) {
-              // Asignar la tropa al cargo en este grupo
-              // console.log('Tropa a asignar:', nueva_tropa);
-              // nueva_tropa.fk_dist_pelo_id = peloton.dist_pelo_id; // Actualizar el ID del pelotón para esta tropa
-              const tmp_nueva_tropa = { ...nueva_tropa }; // Crear una copia de la tropa para evitar mutaciones no deseadas
-              tmp_nueva_tropa.fk_dist_pelo_id = peloton.dist_pelo_id; // Actualizar el ID del pelotón para esta tropa
-              console.log('Tropa actualizada con ID de pelotón:', tmp_nueva_tropa);
-              cargoEnGrupo.puestos.push({ ...tmp_nueva_tropa });
-            }
+    if (cargoNombre === 'ENCARGADO DE ESTACION' && estacion && grupoSeleccionadoEsPrimero) {
+      estacion.pelotones.forEach(peloton => {
+        const cargoEnGrupo = peloton.cargos.find(c => c.cargo_nombre === cargoNombre);
+        if (cargoEnGrupo) {
+          const yaAsignado = cargoEnGrupo.puestos.some(puesto => puesto.fk_personal_id === event.ppersonal_id);
+          if (!yaAsignado) {
+            const tmp_nueva_tropa = { ...nueva_tropa, fk_dist_pelo_id: peloton.dist_pelo_id };
+            cargoEnGrupo.puestos.push(tmp_nueva_tropa);
           }
-          console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-        });
-      }
+        }
+      });
     }
 
     // Mover el personal asignado al array temporal
@@ -274,6 +261,31 @@ export class DistributivoMantenimientoComponent {
       next: (data) => {
         console.log(data)
         this.distributivo.distributivo_id = data.id;
+        this._distributivoService.getPelotones(this.distributivo.distributivo_id).subscribe({
+            next: (data) => {
+              this.distributivo.grupos = data;
+              console.log(this.personal);
+              // pasar a personal asignado a todo el personal que ya venga asignado en el distributivo
+              this.distributivo.grupos.forEach(grupo => {
+                grupo.pelotones.forEach(peloton => {
+                  peloton.cargos.forEach(cargo => {
+                    cargo.puestos.forEach((puesto: TropasModel) => {
+                      const personalAsignado = this.personal.find(persona => persona.ppersonal_id === puesto.fk_personal_id);
+                      if (personalAsignado) {
+                        this.personalAsignado.push(personalAsignado);
+                        this.personal = this.personal.filter(persona => persona.ppersonal_id !== puesto.fk_personal_id);
+                      }
+                    });
+                  });
+                });
+              });
+            },
+            error: (e) => {
+              console.error(e);
+              Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+            },
+            complete: () => console.info('complete 4')
+          })
         Swal.fire('Listo', data.msg, 'success')
         // this.router.navigate(['../'], { relativeTo: this.route });
       },

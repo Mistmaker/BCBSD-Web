@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { EstacionesModel } from '../models/estaciones.model';
+import { JornadasModel } from '../../tthh/models/jornadas.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,10 @@ export class EstacionesService {
   
     getById(id: number) {
       return this.http.get<EstacionesModel>(`${environment.API_URL}/servicios/operaciones/getEstaciones.php?id=${id}`)
+    }
+
+    getJornadas() {
+      return this.http.get<JornadasModel[]>(`${environment.API_URL}/servicios/tthh/getJornadas.php`)
     }
     
     // getPelotones(id: number) {
