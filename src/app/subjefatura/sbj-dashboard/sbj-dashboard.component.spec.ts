@@ -9,9 +9,6 @@ describe('SbjDashboardComponent', () => {
   let fixture: ComponentFixture<SbjDashboardComponent>;
 
   beforeEach(async () => {
-    // La plantilla no incluye el contenedor #map, así que se omite la inicialización de Leaflet.
-    spyOn(SbjDashboardComponent.prototype as any, 'initMap');
-
     await TestBed.configureTestingModule({
       imports: [SbjDashboardComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()]
