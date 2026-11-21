@@ -1,4 +1,5 @@
 import {
+  ConfiguracionMantenimiento, listaParametro, totalesPorRubro, totalesRubroOrdenes,
   colorEstadoMantenimiento, FacturaMantenimientoModel, OrdenMantenimientoModel, ordenParaGuardar, PlanMantenimientoModel,
   planParaGuardar, ReglaMantenimientoModel
 } from './mantenimiento.model';
@@ -6,7 +7,7 @@ import {
 describe('mantenimiento.model', () => {
   it('ordenParaGuardar quita campos de la vista y filas vacías', () => {
     const orden = Object.assign(new OrdenMantenimientoModel(), {
-      orden_id: 5, fk_vehiculo_id: 1, vehiculo_sigla: 'B-1', s_nombre: 'X', total_facturas: 10, informe_id: 3, usuario: 'admin',
+      orden_id: 5, fk_vehiculo_id: 1, vehiculo_sigla: 'B-1', s_nombre: 'X', total_facturas: 10, totales_rubro: '{}', informe_id: 3, usuario: 'admin', informe_numero: 'INF-1',
       trabajos: [{ trabajo_descripcion: '  Cambio de aceite ' }, { trabajo_descripcion: '   ' }],
       sugeridos: [{ trabajo_descripcion: '' }],
       anexos: [{ anexo_descripcion: 'Fotos' }],
@@ -20,6 +21,8 @@ describe('mantenimiento.model', () => {
     expect(datos.vehiculo_sigla).toBeUndefined();
     expect(datos.s_nombre).toBeUndefined();
     expect(datos.informe_id).toBeUndefined();
+    expect(datos.totales_rubro).toBeUndefined();
+    expect(datos.informe_numero).toBe('INF-1');
     expect(datos.orden_id).toBe(5);
     expect(datos.trabajos).toEqual([{ trabajo_descripcion: 'Cambio de aceite' }]);
     expect(datos.sugeridos).toEqual([]);
@@ -51,5 +54,25 @@ describe('mantenimiento.model', () => {
     expect(colorEstadoMantenimiento('FINALIZADA')).toBe('success');
     expect(colorEstadoMantenimiento('SIN PLAN')).toBe('secondary');
     expect(colorEstadoMantenimiento(undefined)).toBe('secondary');
+  });
+
+  it('lee parámetros tipo lista con valor por defecto', () => {
+    const config = { parametros: [{ param_key: 'MANT_RUBROS', param_value: 'MANO DE OBRA| REPUESTOS |', param_name: '' }] } as ConfiguracionMantenimiento;
+    expect(listaParametro(config, 'MANT_RUBROS', ['X'])).toEqual(['MANO DE OBRA', 'REPUESTOS']);
+    expect(listaParametro(config, 'OTRO', ['X'])).toEqual(['X']);
+    expect(listaParametro(null, 'MANT_RUBROS', ['X'])).toEqual(['X']);
+  });
+
+  it('totaliza por rubro en el orden configurado, ignorando valores vacíos', () => {
+    const f = (tipo: string, valor: any) => Object.assign(new FacturaMantenimientoModel(), { factura_tipo: tipo, factura_valor: valor });
+    const rubros = ['MANO DE OBRA', 'REPUESTOS', 'ACEITES Y LUBRICANTES'];
+    expect(totalesPorRubro([f('REPUESTOS', '415'), f('MANO DE OBRA', 51.1), f('REPUESTOS', '10.10'), f('ACEITES Y LUBRICANTES', ''), f('FACTURA', 5)], rubros))
+      .toEqual([{ rubro: 'MANO DE OBRA', total: 51.1 }, { rubro: 'REPUESTOS', total: 425.1 }, { rubro: 'FACTURA', total: 5 }]);
+  });
+
+  it('suma los totales por rubro de varias órdenes', () => {
+    const o1 = Object.assign(new OrdenMantenimientoModel(), { totales_rubro: '{"MANO DE OBRA": 10, "REPUESTOS": 5}' });
+    const o2 = Object.assign(new OrdenMantenimientoModel(), { totales_rubro: { 'MANO DE OBRA': 2.5 } });
+    expect(totalesRubroOrdenes([o1, o2], ['MANO DE OBRA', 'REPUESTOS'])).toEqual([{ rubro: 'MANO DE OBRA', total: 12.5 }, { rubro: 'REPUESTOS', total: 5 }]);
   });
 });

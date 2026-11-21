@@ -45,9 +45,12 @@ export class TrabajoMantenimientoModel {
   trabajo_descripcion = '';
 }
 
+export const RUBROS_POR_DEFECTO = ['MANO DE OBRA', 'REPUESTOS', 'ACEITES Y LUBRICANTES'];
+
 export class FacturaMantenimientoModel {
   factura_id?: number;
-  factura_tipo = 'FACTURA';
+  /** Rubro presupuestario */
+  factura_tipo = RUBROS_POR_DEFECTO[0];
   factura_numero: string | null = null;
   factura_valor: number | string | null = null;
   factura_descripcion: string | null = null;
@@ -74,16 +77,24 @@ export class OrdenMantenimientoModel {
   ultimo_km_mantenimiento?: number | null;
   ultimo_fecha_mantenimiento?: string | null;
   orden_proximomantenimiento?: number | null;
+  /** Fecha del acta de entrega */
   orden_fecha_entrega: string | null = null;
   orden_observaciones: string | null = null;
   orden_fecha_recepcion: string | null = null;
   orden_quien_recepcion: string | null = null;
   orden_cargo_recepcion: string | null = null;
 
+  /** Trabajos a realizar: novedades reportadas por el custodio y transcritas por el analista */
   trabajos: TrabajoMantenimientoModel[] = [];
+  /** Trabajos sugeridos por el contratista al revisar el vehículo en el taller */
   sugeridos: TrabajoMantenimientoModel[] = [];
+  /** Desglose del pago por rubro presupuestario (factura_tipo = rubro) */
   facturas: FacturaMantenimientoModel[] = [];
   anexos: AnexoMantenimientoModel[] = [];
+
+  /** Informe de pago: si el número existe la orden se agrupa en él; si no, se crea */
+  informe_numero: string | null = null;
+  informe_fecha: string | null = null;
 
   // Campos de la vista (solo lectura)
   vehiculo_sigla?: string;
@@ -94,6 +105,8 @@ export class OrdenMantenimientoModel {
   da_nombre?: string;
   psg_nombre?: string;
   total_facturas?: number;
+  /** { rubro: total } (la vista lo envía como JSON en texto) */
+  totales_rubro?: Record<string, number> | string;
   informe_id?: number | null;
   usuario?: string;
 }
@@ -131,6 +144,11 @@ export interface EstadoVehiculoModel {
   vehiculo_marca: string;
   vehiculo_modelo: string;
   vehiculo_tipo: string;
+  vehiculo_chasis?: string | null;
+  vehiculo_motor?: string | null;
+  vehiculo_anio?: number | null;
+  vehiculo_color1?: string | null;
+  vehiculo_combustible?: string | null;
   fk_plan_id: number | null;
   plan_modelo: string | null;
   vehiculo_kilometraje: number;
@@ -158,7 +176,7 @@ export function ordenParaGuardar(orden: OrdenMantenimientoModel): Partial<OrdenM
   const limpio = (t: string | null | undefined) => (t ?? '').trim();
   const {
     vehiculo_sigla, vehiculo_placa, vehiculo_marca, vehiculo_modelo, s_nombre, da_nombre, psg_nombre,
-    total_facturas, informe_id, usuario, ...datos
+    total_facturas, totales_rubro, informe_id, usuario, ...datos
   } = orden;
   return {
     ...datos,
@@ -185,4 +203,43 @@ export function planParaGuardar(plan: PlanMantenimientoModel): any {
     })),
     vehiculos: plan.vehiculos.map(v => typeof v === 'number' ? v : Number(v.vehiculo_id)),
   };
+}
+
+/** Configuración del módulo (admin.tb_sistema + admin.tb_params del módulo MANTENIMIENTO). */
+export interface ConfiguracionMantenimiento {
+  sistema_nombre: string;
+  sistema_siglas: string;
+  parametros: { param_key: string; param_value: string; param_name: string }[];
+  director_administrativo: { ppersonal_id: number; nombre_completo: string } | null;
+}
+
+/** Lee un parámetro tipo lista ("A|B|C") de la configuración. */
+export function listaParametro(config: ConfiguracionMantenimiento | null, clave: string, porDefecto: string[]): string[] {
+  const valor = config?.parametros?.find(p => p.param_key === clave)?.param_value;
+  const lista = (valor ?? '').split('|').map(v => v.trim()).filter(v => v);
+  return lista.length ? lista : porDefecto;
+}
+
+/** Totales por rubro de una lista de valores del desglose, en el orden de los rubros configurados. */
+export function totalesPorRubro(facturas: FacturaMantenimientoModel[], rubros: string[]): { rubro: string; total: number }[] {
+  const totales = new Map<string, number>();
+  for (const f of facturas) {
+    const valor = Number(f.factura_valor);
+    if (!f.factura_tipo || !Number.isFinite(valor) || f.factura_valor === null || f.factura_valor === '') { continue; }
+    totales.set(f.factura_tipo, (totales.get(f.factura_tipo) ?? 0) + valor);
+  }
+  const orden = [...rubros, ...[...totales.keys()].filter(r => !rubros.includes(r))];
+  return orden.filter(r => totales.has(r)).map(r => ({ rubro: r, total: Math.round(totales.get(r)! * 100) / 100 }));
+}
+
+/** Suma los totales por rubro (campo totales_rubro de la vista) de varias órdenes. */
+export function totalesRubroOrdenes(ordenes: OrdenMantenimientoModel[], rubros: string[]): { rubro: string; total: number }[] {
+  const facturas: FacturaMantenimientoModel[] = [];
+  for (const o of ordenes) {
+    const t = typeof o.totales_rubro === 'string' ? JSON.parse(o.totales_rubro || '{}') : (o.totales_rubro ?? {});
+    for (const [rubro, total] of Object.entries(t)) {
+      facturas.push(Object.assign(new FacturaMantenimientoModel(), { factura_tipo: rubro, factura_valor: Number(total) }));
+    }
+  }
+  return totalesPorRubro(facturas, rubros);
 }

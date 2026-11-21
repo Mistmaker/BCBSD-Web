@@ -43,6 +43,9 @@
             </c-row>
 
             <h6 class="text-body-secondary">Órdenes incluidas <small>({{ seleccionadas.size }} seleccionadas · {{ totalSeleccionado | currency: 'USD' }})</small></h6>
+            <p *ngIf="totalesRubro.length" class="small mb-2">
+              <span *ngFor="let t of totalesRubro; let last = last"><strong>{{ t.rubro }}:</strong> {{ t.total | currency: 'USD' }}<span *ngIf="!last"> · </span></span>
+            </p>
             <div class="table-responsive">
               <table cTable hover small>
                 <thead><tr><th></th><th>Código</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Facturas</th><th>Estado</th></tr></thead>

@@ -10,8 +10,8 @@ import Swal from 'sweetalert2';
 import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import {
-  AnexoMantenimientoModel, colorEstadoMantenimiento, EstadoOrdenMantenimiento, EstadoVehiculoModel, FacturaMantenimientoModel,
-  OrdenMantenimientoModel, TrabajoMantenimientoModel
+  AnexoMantenimientoModel, colorEstadoMantenimiento, ConfiguracionMantenimiento, EstadoOrdenMantenimiento, EstadoVehiculoModel,
+  FacturaMantenimientoModel, listaParametro, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, totalesPorRubro, TrabajoMantenimientoModel
 } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 
@@ -26,6 +26,8 @@ export function ahoraLocal(fecha = new Date()): string {
   return d.toISOString().substring(0, 16);
 }
 
+export type PestanaOrden = 'registro' | 'detalle' | 'pago';
+
 @Component({
   selector: 'app-orden-mantenimiento-form',
   imports: [CommonModule, FormsModule, RouterLink, NgSelectComponent, NgLabelTemplateDirective, NgOptionTemplateDirective, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent,
@@ -37,11 +39,26 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   vehiculos: EstadoVehiculoModel[] = [];
   personal: PersonalModel[] = [];
   estadoVehiculo: EstadoVehiculoModel | null = null;
+  configuracion: ConfiguracionMantenimiento | null = null;
+  pestana: PestanaOrden = 'registro';
+  verUnidad = false;
   validado = false;
   guardando = false;
   cargando = true;
   readonly color = colorEstadoMantenimiento;
-  readonly tiposFactura = ['FACTURA', 'PROFORMA', 'NOTA DE VENTA', 'OTRO'];
+
+  /** Rubros presupuestarios (parámetro MANT_RUBROS) más los que ya tenga la orden */
+  get rubros(): string[] {
+    const base = listaParametro(this.configuracion, 'MANT_RUBROS', RUBROS_POR_DEFECTO);
+    return [...base, ...this.orden.facturas.map(f => f.factura_tipo).filter(t => t && !base.includes(t))];
+  }
+  /** Cargos posibles del responsable (parámetro MANT_CARGOS_RESPONSABLE) más el actual de la orden */
+  get cargos(): string[] {
+    const base = listaParametro(this.configuracion, 'MANT_CARGOS_RESPONSABLE', ['PROFESIONAL TÉCNICO EN SERVICIOS GENERALES']);
+    const actual = this.orden.tecnico_puesto;
+    return actual && !base.includes(actual) ? [...base, actual] : base;
+  }
+  get totalesRubro() { return totalesPorRubro(this.orden.facturas, this.rubros); }
 
   constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService,
               private route: ActivatedRoute, private router: Router) { }
@@ -59,11 +76,13 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     forkJoin({
       vehiculos: this.mantenimiento.getEstadoVehiculos(),
       personal: this.personalService.getAll(),
+      configuracion: this.mantenimiento.getConfiguracion(),
       orden: ordenId ? this.mantenimiento.getOrden(ordenId) : of(null),
     }).subscribe({
-      next: ({ vehiculos, personal, orden }) => {
+      next: ({ vehiculos, personal, configuracion, orden }) => {
         this.vehiculos = vehiculos;
         this.personal = personal;
+        this.configuracion = configuracion;
         if (orden) {
           this.orden = Object.assign(new OrdenMantenimientoModel(), orden, {
             orden_fecha_mantenimiento: aFechaHoraLocal(orden.orden_fecha_mantenimiento),
@@ -72,6 +91,8 @@ export class OrdenMantenimientoFormComponent implements OnInit {
           this.cargarEstadoVehiculo(this.orden.fk_vehiculo_id);
         } else {
           this.orden.orden_fecha_mantenimiento = ahoraLocal();
+          this.orden.director_administrativo = configuracion.director_administrativo?.ppersonal_id ?? null;
+          this.orden.tecnico_puesto = this.cargos[0] ?? null;
           const query = this.route.snapshot.queryParamMap;
           const tipo = query.get('tipo');
           if (tipo === 'PREVENTIVO' || tipo === 'CORRECTIVO') { this.orden.orden_tipomantenimiento = tipo; }
@@ -109,7 +130,23 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   }
 
   agregarTrabajo(lista: TrabajoMantenimientoModel[]): void { lista.push(new TrabajoMantenimientoModel()); }
-  agregarFactura(): void { this.orden.facturas.push(new FacturaMantenimientoModel()); }
+  agregarFactura(): void {
+    const f = new FacturaMantenimientoModel();
+    // sugiere el primer rubro que aún no se usa
+    f.factura_tipo = this.rubros.find(r => !this.orden.facturas.some(x => x.factura_tipo === r)) ?? this.rubros[0];
+    this.orden.facturas.push(f);
+  }
+
+  /** Botón +1: sugiere el siguiente número de informe */
+  siguienteInforme(): void {
+    this.mantenimiento.getSiguienteNumeroInforme().subscribe({
+      next: (r) => {
+        this.orden.informe_numero = r.informe_numero;
+        this.orden.informe_fecha ??= new Date().toISOString().substring(0, 10);
+      },
+      error: (e) => Swal.fire('Error', e.error?.msg ?? e.message, 'error')
+    });
+  }
   agregarAnexo(): void { this.orden.anexos.push(new AnexoMantenimientoModel()); }
   quitar<T>(lista: T[], indice: number): void { lista.splice(indice, 1); }
 
@@ -126,6 +163,8 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   guardar(form: NgForm, nuevoEstado?: EstadoOrdenMantenimiento): void {
     this.validado = true;
     if (form.invalid) {
+      // los campos obligatorios están en el formulario de registro
+      this.pestana = this.camposFaltantes().length ? 'registro' : this.pestana;
       Swal.fire('Atención', 'Revise los campos requeridos antes de guardar.', 'warning');
       return;
     }
@@ -153,6 +192,16 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     };
     Swal.fire({ title: 'Confirmar', text: textos[estado], icon: 'question', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No' })
       .then(r => { if (r.isConfirmed) { this.guardar(form, estado); } });
+  }
+
+  /** Campos obligatorios del formulario de registro que faltan. */
+  camposFaltantes(): string[] {
+    const o = this.orden;
+    const faltan: [unknown, string][] = [
+      [o.fk_vehiculo_id, 'unidad'], [o.orden_fecha_mantenimiento, 'fecha'], [o.orden_km_mantenimiento !== null && o.orden_km_mantenimiento !== undefined ? 1 : null, 'kilometraje'],
+      [o.director_administrativo, 'director administrativo'], [o.personal_solicita, 'persona que solicita'], [o.tecnico_servicios, 'responsable del registro'],
+    ];
+    return faltan.filter(([v]) => !v).map(([, n]) => n);
   }
 
   buscarVehiculo = (termino: string, v: EstadoVehiculoModel) => {

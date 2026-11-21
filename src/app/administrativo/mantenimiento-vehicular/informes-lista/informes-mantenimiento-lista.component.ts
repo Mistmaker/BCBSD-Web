@@ -16,7 +16,7 @@ import { MantenimientoService } from '../../services/mantenimiento.service';
   templateUrl: './informes-mantenimiento-lista.component.html'
 })
 export class InformesMantenimientoListaComponent implements OnInit {
-  informes: (InformeMantenimientoModel & { ordenes: any })[] = [];
+  informes: (Omit<InformeMantenimientoModel, 'ordenes'> & { ordenes: number; total: number })[] = [];
   filtro = '';
   readonly color = colorEstadoMantenimiento;
 

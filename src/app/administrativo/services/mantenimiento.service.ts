@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
-  EstadoVehiculoModel, InformeMantenimientoModel, OrdenMantenimientoModel, PlanMantenimientoModel, PlanResumenModel,
+  ConfiguracionMantenimiento, EstadoVehiculoModel, InformeMantenimientoModel, OrdenMantenimientoModel, PlanMantenimientoModel, PlanResumenModel,
   RecursoMantenimientoModel, ordenParaGuardar, planParaGuardar
 } from '../models/mantenimiento.model';
 
@@ -13,6 +13,11 @@ export class MantenimientoService {
   private readonly url = `${environment.API_URL}/servicios/administrativo/mantenimiento`;
 
   constructor(private http: HttpClient) { }
+
+  /** Institución, parámetros del módulo y director administrativo vigente */
+  getConfiguracion() {
+    return this.http.get<ConfiguracionMantenimiento>(`${environment.API_URL}/servicios/admin/getSistema.php`, { params: { modulo: 'MANTENIMIENTO' } });
+  }
 
   // Estado de la flota / alertas
   getEstadoVehiculos() {
@@ -42,6 +47,9 @@ export class MantenimientoService {
   // Informes
   getInformes() {
     return this.http.get<InformeMantenimientoModel[]>(`${this.url}/getInformesMantenimiento.php`);
+  }
+  getSiguienteNumeroInforme() {
+    return this.http.get<{ informe_numero: string; informe_serie: number }>(`${this.url}/getInformesMantenimiento.php`, { params: { siguiente: 1 } });
   }
   getInforme(id: number) {
     return this.http.get<InformeMantenimientoModel>(`${this.url}/getInformesMantenimiento.php`, { params: { id } });

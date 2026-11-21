@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 
 import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
-import { colorEstadoMantenimiento, InformeMantenimientoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
+import { colorEstadoMantenimiento, InformeMantenimientoModel, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, totalesRubroOrdenes } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 
 @Component({
@@ -33,6 +33,9 @@ export class InformeMantenimientoFormComponent implements OnInit {
 
   get esNuevo(): boolean { return !this.informe.informe_id; }
   get soloLectura(): boolean { return this.informe.informe_estado === 'ANULADO'; }
+  get totalesRubro() {
+    return totalesRubroOrdenes(this.disponibles.filter(o => this.seleccionadas.has(o.orden_id!)), RUBROS_POR_DEFECTO);
+  }
   get totalSeleccionado(): number {
     return this.disponibles.filter(o => this.seleccionadas.has(o.orden_id!)).reduce((t, o) => t + (Number(o.total_facturas) || 0), 0);
   }

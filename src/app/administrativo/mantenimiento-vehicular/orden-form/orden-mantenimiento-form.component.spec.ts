@@ -6,7 +6,16 @@ import Swal from 'sweetalert2';
 import { OrdenMantenimientoFormComponent, aFechaHoraLocal, ahoraLocal } from './orden-mantenimiento-form.component';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 import { PersonalService } from '../../../tthh/services/personal.service';
-import { EstadoVehiculoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
+import { ConfiguracionMantenimiento, EstadoVehiculoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
+
+const configuracion: ConfiguracionMantenimiento = {
+  sistema_nombre: 'CB', sistema_siglas: 'CBSD',
+  parametros: [
+    { param_key: 'MANT_RUBROS', param_value: 'MANO DE OBRA|REPUESTOS|ACEITES Y LUBRICANTES', param_name: '' },
+    { param_key: 'MANT_CARGOS_RESPONSABLE', param_value: 'ADMINISTRADOR DE LA ORDEN DE COMPRA|PROFESIONAL TÉCNICO', param_name: '' },
+  ],
+  director_administrativo: { ppersonal_id: 44, nombre_completo: 'DIRECTOR' },
+};
 
 const estado: EstadoVehiculoModel = {
   vehiculo_id: 7, vehiculo_sigla: 'B-7', vehiculo_placa: 'PEA-7', vehiculo_marca: 'HINO', vehiculo_modelo: '500', vehiculo_tipo: 'CAMION',
@@ -35,7 +44,9 @@ describe('OrdenMantenimientoFormComponent', () => {
   }
 
   beforeEach(() => {
-    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService', ['getEstadoVehiculos', 'getEstadoVehiculo', 'getOrden', 'guardarOrden']);
+    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService',
+      ['getEstadoVehiculos', 'getEstadoVehiculo', 'getOrden', 'guardarOrden', 'getConfiguracion', 'getSiguienteNumeroInforme']);
+    mant.getConfiguracion.and.returnValue(of(configuracion));
     mant.getEstadoVehiculos.and.returnValue(of([estado]));
     mant.getEstadoVehiculo.and.returnValue(of(estado));
     spyOn(Swal, 'fire').and.returnValue(Promise.resolve({ isConfirmed: true } as any));
@@ -57,6 +68,50 @@ describe('OrdenMantenimientoFormComponent', () => {
     expect(c.orden.orden_fecha_mantenimiento).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 
+  it('orden nueva: precarga el director vigente y el primer cargo configurado', () => {
+    const c = crear('nuevo');
+    expect(c.orden.director_administrativo).toBe(44);
+    expect(c.orden.tecnico_puesto).toBe('ADMINISTRADOR DE LA ORDEN DE COMPRA');
+    expect(c.pestana).toBe('registro');
+  });
+
+  it('desglose por rubro: sugiere rubros no usados y totaliza', () => {
+    const c = crear('nuevo');
+    c.agregarFactura();
+    c.agregarFactura();
+    c.agregarFactura();
+    expect(c.orden.facturas.map(f => f.factura_tipo)).toEqual(['MANO DE OBRA', 'REPUESTOS', 'ACEITES Y LUBRICANTES']);
+    c.orden.facturas[0].factura_valor = 51.1;
+    c.orden.facturas[1].factura_valor = '415';
+    expect(c.totalesRubro).toEqual([{ rubro: 'MANO DE OBRA', total: 51.1 }, { rubro: 'REPUESTOS', total: 415 }]);
+    expect(c.totalFacturas).toBeCloseTo(466.1);
+  });
+
+  it('botón +1 completa el número y la fecha del informe', () => {
+    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'CBSD26INF00007', informe_serie: 7 }));
+    const c = crear('nuevo');
+    c.siguienteInforme();
+    expect(c.orden.informe_numero).toBe('CBSD26INF00007');
+    expect(c.orden.informe_fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('si faltan datos obligatorios vuelve a la pestaña de registro', () => {
+    const c = crear('nuevo');
+    c.pestana = 'pago';
+    c.guardar({ invalid: true } as any);
+    expect(c.camposFaltantes()).toContain('unidad');
+    expect(c.pestana).toBe('registro');
+  });
+
+  it('conserva rubros y cargos antiguos que no están en la configuración', () => {
+    mant.getOrden.and.returnValue(of(Object.assign(new OrdenMantenimientoModel(), {
+      orden_id: 3, fk_vehiculo_id: 7, tecnico_puesto: 'CARGO ANTIGUO', facturas: [{ factura_tipo: 'FACTURA', factura_valor: 10 }],
+    })));
+    const c = crear('3');
+    expect(c.cargos).toContain('CARGO ANTIGUO');
+    expect(c.rubros).toContain('FACTURA');
+  });
+
   it('advierte si el km es menor al último mantenimiento', () => {
     const c = crear('nuevo', { vehiculo: '7' });
     c.orden.orden_km_mantenimiento = 20000;
@@ -69,7 +124,7 @@ describe('OrdenMantenimientoFormComponent', () => {
     mant.getOrden.and.returnValue(of(Object.assign(new OrdenMantenimientoModel(), {
       orden_id: 3, orden_codigo: 'CBSD26MAN00003', fk_vehiculo_id: 7, orden_km_mantenimiento: '28000.00' as any,
       orden_fecha_mantenimiento: '2026-11-20 09:30:00', orden_estado: 'MANTENIMIENTO',
-      facturas: [{ factura_tipo: 'FACTURA', factura_valor: '10.50' }, { factura_tipo: 'PROFORMA', factura_valor: null }],
+      facturas: [{ factura_tipo: 'MANO DE OBRA', factura_valor: '10.50' }, { factura_tipo: 'REPUESTOS', factura_valor: null }],
     })));
     const c = crear('3');
     expect(mant.getOrden).toHaveBeenCalledWith(3);
@@ -110,7 +165,7 @@ describe('OrdenMantenimientoFormComponent', () => {
     c.agregarFactura();
     c.agregarAnexo();
     expect(c.orden.trabajos.length).toBe(1);
-    expect(c.orden.facturas[0].factura_tipo).toBe('FACTURA');
+    expect(c.orden.facturas[0].factura_tipo).toBe('MANO DE OBRA');
     c.quitar(c.orden.trabajos, 0);
     expect(c.orden.trabajos.length).toBe(0);
   });
