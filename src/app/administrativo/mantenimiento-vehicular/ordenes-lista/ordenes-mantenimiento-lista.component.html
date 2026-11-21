@@ -1,0 +1,94 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Mantenimiento vehicular - Órdenes de mantenimiento</strong></c-col>
+          <c-col md="6" class="text-md-end">
+            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva orden</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <div *ngIf="alertas.length" class="alert alert-warning py-2" role="alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <strong>{{ alertas.length }}</strong> vehículo(s) con mantenimiento preventivo vencido o próximo.
+          <a href="" (click)="$event.preventDefault(); vista = 'flota'; filtroEstadoFlota = ''">Ver estado de la flota</a>
+        </div>
+
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item"><a class="nav-link" [class.active]="vista === 'ordenes'" href="" (click)="$event.preventDefault(); vista = 'ordenes'">Órdenes</a></li>
+          <li class="nav-item"><a class="nav-link" [class.active]="vista === 'flota'" href="" (click)="$event.preventDefault(); vista = 'flota'">
+            Estado de la flota <c-badge *ngIf="alertas.length" color="danger">{{ alertas.length }}</c-badge></a></li>
+        </ul>
+
+        <!-- ÓRDENES -->
+        <ng-container *ngIf="vista === 'ordenes'">
+          <input cFormControl class="mb-3" placeholder="Buscar por código, unidad, placa, estado..." [(ngModel)]="filtro" name="filtro" />
+          <div class="table-responsive">
+            <table cTable hover small>
+              <thead>
+                <tr><th>Código</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Km</th><th class="text-end">Facturas</th><th>Informe</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="cargando"><td colspan="9" class="text-center text-body-secondary">Cargando...</td></tr>
+                <tr *ngIf="!cargando && !ordenes.length"><td colspan="9" class="text-center text-body-secondary">No hay órdenes registradas</td></tr>
+                <tr *ngFor="let o of ordenes | filtroGeneral: filtro">
+                  <td>{{ o.orden_codigo }}</td>
+                  <td>{{ o.vehiculo_sigla }} <small class="text-body-secondary">{{ o.vehiculo_placa }}</small></td>
+                  <td>{{ o.orden_fecha_mantenimiento | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ o.orden_tipomantenimiento }}</td>
+                  <td class="text-end">{{ o.orden_km_mantenimiento | number: '1.0-0' }}</td>
+                  <td class="text-end">{{ o.total_facturas | currency: 'USD' }}</td>
+                  <td><i *ngIf="o.informe_id" class="fa-solid fa-file-lines" title="Incluida en un informe"></i></td>
+                  <td><c-badge [color]="color(o.orden_estado)">{{ o.orden_estado }}</c-badge></td>
+                  <td class="text-end"><a cButton [routerLink]="['./', o.orden_id]" color="secondary" size="sm" variant="outline"><i class="fa-solid fa-pen"></i></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+
+        <!-- ESTADO DE LA FLOTA -->
+        <ng-container *ngIf="vista === 'flota'">
+          <c-row class="mb-3 g-2">
+            <c-col md="4">
+              <select cSelect [(ngModel)]="filtroEstadoFlota" name="filtroEstadoFlota">
+                <option value="">Todos los vehículos</option>
+                <option value="VENCIDO">Vencidos</option>
+                <option value="PROXIMO">Próximos</option>
+                <option value="AL DIA">Al día</option>
+                <option value="SIN PLAN">Sin plan asignado</option>
+              </select>
+            </c-col>
+            <c-col md="8" class="small text-body-secondary align-self-center">
+              Km actual: mayor kilometraje registrado en movilización, abastecimiento, partes y mantenimiento.
+            </c-col>
+          </c-row>
+          <div class="table-responsive">
+            <table cTable hover small>
+              <thead>
+                <tr><th>Unidad</th><th>Plan</th><th class="text-end">Km actual</th><th class="text-end">Próximo</th><th class="text-end">Faltan</th><th>Último mantenimiento</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of flotaFiltrada">
+                  <td>{{ v.vehiculo_sigla }} <small class="text-body-secondary">{{ v.vehiculo_placa }}</small></td>
+                  <td>{{ v.plan_modelo ?? '—' }}</td>
+                  <td class="text-end">{{ v.vehiculo_kilometraje | number: '1.0-0' }}</td>
+                  <td class="text-end">{{ v.proximo ? (v.proximo.km_proximo | number: '1.0-0') : '—' }}</td>
+                  <td class="text-end" [class.text-danger]="v.proximo && v.proximo.km_restante <= 0">{{ v.proximo ? (v.proximo.km_restante | number: '1.0-0') : '—' }}</td>
+                  <td>{{ v.ultimo_fecha_mantenimiento ? (v.ultimo_fecha_mantenimiento | date: 'dd/MM/yyyy') + ' · ' + (v.ultimo_km_mantenimiento | number: '1.0-0') + ' km' : '—' }}</td>
+                  <td>
+                    <c-badge [color]="color(v.estado_mantenimiento)">{{ v.estado_mantenimiento }}</c-badge>
+                    <small *ngIf="v.ordenes_abiertas > 0" class="ms-1 text-body-secondary" title="Órdenes en mantenimiento">({{ v.ordenes_abiertas }} abierta)</small>
+                  </td>
+                  <td class="text-end"><button cButton color="primary" size="sm" variant="outline" (click)="crearOrden(v)"><i class="fa-solid fa-wrench"></i> Orden</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

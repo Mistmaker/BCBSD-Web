@@ -1,0 +1,32 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Mantenimiento vehicular - Informes de mantenimiento</strong></c-col>
+          <c-col md="6" class="text-md-end"><a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo informe</a></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <input cFormControl class="mb-3" placeholder="Buscar..." [(ngModel)]="filtro" name="filtro" />
+        <div class="table-responsive">
+          <table cTable hover small>
+            <thead><tr><th>Número</th><th>Fecha</th><th>Taller</th><th class="text-end">Órdenes</th><th>Técnico</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngIf="!informes.length"><td colspan="7" class="text-center text-body-secondary">No hay informes registrados</td></tr>
+              <tr *ngFor="let i of informes | filtroGeneral: filtro">
+                <td>{{ i.informe_numero }}</td>
+                <td>{{ i.informe_fecha | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ i.informe_taller }}</td>
+                <td class="text-end">{{ i.ordenes }}</td>
+                <td>{{ i.psg_nombre }}</td>
+                <td><c-badge [color]="color(i.informe_estado)">{{ i.informe_estado }}</c-badge></td>
+                <td class="text-end"><a cButton [routerLink]="['./', i.informe_id]" color="secondary" size="sm" variant="outline"><i class="fa-solid fa-pen"></i></a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

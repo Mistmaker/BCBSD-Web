@@ -42,6 +42,11 @@ module.exports = function(config) {
       Chrome_Custom: {
         base: 'Chrome',
         flags: ['--disable-search-engine-choice-screen']
+      },
+      // Para servidores/CI sin interfaz gráfica: ng test --watch=false --browsers=ChromeHeadlessCI
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-gpu']
       }
     },
     singleRun: false,

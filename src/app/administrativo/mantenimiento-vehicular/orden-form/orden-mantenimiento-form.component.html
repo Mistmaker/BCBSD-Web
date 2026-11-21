@@ -1,0 +1,159 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8">
+            <strong>{{ esNueva ? 'Nueva orden de mantenimiento' : 'Orden de mantenimiento ' + orden.orden_codigo }}</strong>
+            <c-badge *ngIf="!esNueva" class="ms-2" [color]="color(orden.orden_estado)">{{ orden.orden_estado }}</c-badge>
+          </c-col>
+          <c-col md="4" class="text-md-end">
+            <a cButton routerLink="/admin/ordenes-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body *ngIf="!cargando">
+        <form #form="ngForm" cForm [validated]="validado" class="needs-validation" (ngSubmit)="guardar(form)" novalidate>
+          <fieldset [disabled]="soloLectura">
+            <h6 class="text-body-secondary">Vehículo</h6>
+            <c-row class="g-3 mb-3">
+              <c-col md="6">
+                <label cLabel class="required-label" for="vehiculo">Unidad</label>
+                <ng-select id="vehiculo" name="vehiculo" [items]="vehiculos" bindValue="vehiculo_id" [searchFn]="buscarVehiculo"
+                           [(ngModel)]="orden.fk_vehiculo_id" (change)="alCambiarVehiculo()" [readonly]="!esNueva || soloLectura" required
+                           placeholder="Buscar por sigla o placa..." [class.is-invalid]="validado && !orden.fk_vehiculo_id">
+                  <ng-template ng-label-tmp let-item="item">{{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }}</ng-template>
+                  <ng-template ng-option-tmp let-item="item">
+                    {{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }} <small class="text-body-secondary">{{ item.vehiculo_marca }} {{ item.vehiculo_modelo }}</small>
+                  </ng-template>
+                </ng-select>
+              </c-col>
+              <c-col md="6" *ngIf="estadoVehiculo as ev">
+                <div class="border rounded p-2 small h-100">
+                  <div><strong>Km actual:</strong> {{ ev.vehiculo_kilometraje | number: '1.0-0' }}
+                    · <strong>Plan:</strong> {{ ev.plan_modelo ?? 'Sin plan' }}
+                    <c-badge class="ms-1" [color]="color(ev.estado_mantenimiento)">{{ ev.estado_mantenimiento }}</c-badge></div>
+                  <div *ngIf="ev.proximo"><strong>Próximo preventivo:</strong> {{ ev.proximo.km_proximo | number: '1.0-0' }} km
+                    (faltan {{ ev.proximo.km_restante | number: '1.0-0' }})</div>
+                  <div><strong>Último mantenimiento:</strong>
+                    {{ ev.ultimo_fecha_mantenimiento ? (ev.ultimo_fecha_mantenimiento | date: 'dd/MM/yyyy') + ' · ' + (ev.ultimo_km_mantenimiento | number: '1.0-0') + ' km' : 'sin registros' }}</div>
+                </div>
+              </c-col>
+            </c-row>
+
+            <h6 class="text-body-secondary">Datos de la orden</h6>
+            <c-row class="g-3 mb-3">
+              <c-col md="3">
+                <label cLabel class="required-label" for="tipo">Tipo</label>
+                <select cSelect id="tipo" name="tipo" [(ngModel)]="orden.orden_tipomantenimiento" required>
+                  <option value="CORRECTIVO">CORRECTIVO</option>
+                  <option value="PREVENTIVO">PREVENTIVO</option>
+                </select>
+              </c-col>
+              <c-col md="3">
+                <label cLabel class="required-label" for="fecha">Fecha de mantenimiento</label>
+                <input cFormControl id="fecha" name="fecha" type="datetime-local" [(ngModel)]="orden.orden_fecha_mantenimiento" required />
+              </c-col>
+              <c-col md="3">
+                <label cLabel class="required-label" for="km">Kilometraje</label>
+                <input cFormControl id="km" name="km" type="number" min="0" step="1" [(ngModel)]="orden.orden_km_mantenimiento" required />
+                <small *ngIf="advertenciaKm" class="text-warning">{{ advertenciaKm }}</small>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="entrega">Fecha de entrega</label>
+                <input cFormControl id="entrega" name="entrega" type="date" [(ngModel)]="orden.orden_fecha_entrega" />
+              </c-col>
+              <c-col md="4">
+                <label cLabel class="required-label" for="solicita">Solicitado por</label>
+                <ng-select id="solicita" name="solicita" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo"
+                           [(ngModel)]="orden.personal_solicita" required [readonly]="soloLectura" [class.is-invalid]="validado && !orden.personal_solicita"></ng-select>
+              </c-col>
+              <c-col md="4">
+                <label cLabel class="required-label" for="director">Director administrativo</label>
+                <ng-select id="director" name="director" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo"
+                           [(ngModel)]="orden.director_administrativo" required [readonly]="soloLectura" [class.is-invalid]="validado && !orden.director_administrativo"></ng-select>
+              </c-col>
+              <c-col md="4">
+                <label cLabel class="required-label" for="tecnico">Técnico de servicios generales</label>
+                <ng-select id="tecnico" name="tecnico" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo"
+                           [(ngModel)]="orden.tecnico_servicios" required [readonly]="soloLectura" [class.is-invalid]="validado && !orden.tecnico_servicios"></ng-select>
+              </c-col>
+              <c-col md="12">
+                <label cLabel for="observaciones">Observaciones / problema reportado</label>
+                <textarea cFormControl id="observaciones" name="observaciones" rows="2" [(ngModel)]="orden.orden_observaciones"></textarea>
+              </c-col>
+            </c-row>
+
+            <!-- Trabajos realizados y sugeridos -->
+            <c-row class="g-3 mb-3">
+              <c-col md="6"><ng-container *ngTemplateOutlet="tplTrabajos; context: { titulo: 'Trabajos realizados', lista: orden.trabajos, clave: 'trabajo' }"></ng-container></c-col>
+              <c-col md="6"><ng-container *ngTemplateOutlet="tplTrabajos; context: { titulo: 'Trabajos sugeridos por el taller', lista: orden.sugeridos, clave: 'sugerido' }"></ng-container></c-col>
+            </c-row>
+            <ng-template #tplTrabajos let-titulo="titulo" let-lista="lista" let-clave="clave">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <h6 class="text-body-secondary mb-0">{{ titulo }}</h6>
+                <button cButton type="button" size="sm" color="secondary" variant="outline" (click)="agregarTrabajo(lista)" [attr.aria-label]="'Agregar a ' + titulo"><i class="fa-solid fa-plus"></i></button>
+              </div>
+              <div *ngFor="let t of lista; let i = index" class="input-group input-group-sm mb-1">
+                <input cFormControl [name]="clave + i" [(ngModel)]="t.trabajo_descripcion" placeholder="Descripción" />
+                <button cButton type="button" color="danger" variant="outline" (click)="quitar(lista, i)"><i class="fa-solid fa-trash"></i></button>
+              </div>
+              <small *ngIf="!lista.length" class="text-body-secondary">Sin registros</small>
+            </ng-template>
+
+            <!-- Facturas -->
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="text-body-secondary mb-0">Facturas y proformas <small>(total {{ totalFacturas | currency: 'USD' }})</small></h6>
+              <button cButton type="button" size="sm" color="secondary" variant="outline" (click)="agregarFactura()" aria-label="Agregar factura"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <c-row *ngFor="let f of orden.facturas; let i = index" class="g-1 mb-1">
+              <c-col md="2"><select cSelect [name]="'ftipo' + i" [(ngModel)]="f.factura_tipo" required><option *ngFor="let t of tiposFactura" [value]="t">{{ t }}</option></select></c-col>
+              <c-col md="3"><input cFormControl [name]="'fnum' + i" [(ngModel)]="f.factura_numero" placeholder="Número" /></c-col>
+              <c-col md="2"><input cFormControl [name]="'fval' + i" type="number" min="0" step="0.01" [(ngModel)]="f.factura_valor" placeholder="Valor" /></c-col>
+              <c-col md="4"><input cFormControl [name]="'fdes' + i" [(ngModel)]="f.factura_descripcion" placeholder="Descripción" /></c-col>
+              <c-col md="1"><button cButton type="button" color="danger" variant="outline" (click)="quitar(orden.facturas, i)"><i class="fa-solid fa-trash"></i></button></c-col>
+            </c-row>
+            <small *ngIf="!orden.facturas.length" class="text-body-secondary d-block mb-3">Sin facturas</small>
+
+            <!-- Anexos -->
+            <div class="d-flex justify-content-between align-items-center mt-3 mb-1">
+              <h6 class="text-body-secondary mb-0">Anexos</h6>
+              <button cButton type="button" size="sm" color="secondary" variant="outline" (click)="agregarAnexo()" aria-label="Agregar anexo"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div *ngFor="let a of orden.anexos; let i = index" class="input-group input-group-sm mb-1">
+              <input cFormControl [name]="'anexo' + i" [(ngModel)]="a.anexo_descripcion" placeholder="Descripción del anexo" />
+              <button cButton type="button" color="danger" variant="outline" (click)="quitar(orden.anexos, i)"><i class="fa-solid fa-trash"></i></button>
+            </div>
+
+            <!-- Recepción (orden existente) -->
+            <ng-container *ngIf="!esNueva">
+              <h6 class="text-body-secondary mt-3">Recepción del vehículo</h6>
+              <c-row class="g-3 mb-3">
+                <c-col md="3">
+                  <label cLabel for="frec">Fecha de recepción</label>
+                  <input cFormControl id="frec" name="frec" type="date" [(ngModel)]="orden.orden_fecha_recepcion" />
+                </c-col>
+                <c-col md="5">
+                  <label cLabel for="qrec">Recibido por</label>
+                  <input cFormControl id="qrec" name="qrec" [(ngModel)]="orden.orden_quien_recepcion" />
+                </c-col>
+                <c-col md="4">
+                  <label cLabel for="crec">Cargo</label>
+                  <input cFormControl id="crec" name="crec" [(ngModel)]="orden.orden_cargo_recepcion" />
+                </c-col>
+              </c-row>
+            </ng-container>
+          </fieldset>
+
+          <div *ngIf="!soloLectura" class="d-flex flex-wrap gap-2 justify-content-end mt-3">
+            <button *ngIf="!esNueva && !orden.informe_id" cButton type="button" color="danger" variant="outline" [disabled]="guardando" (click)="cambiarEstado(form, 'ANULADA')">Anular</button>
+            <button *ngIf="orden.orden_estado === 'FINALIZADA'" cButton type="button" color="secondary" variant="outline" [disabled]="guardando" (click)="cambiarEstado(form, 'MANTENIMIENTO')">Reabrir</button>
+            <button *ngIf="!esNueva && orden.orden_estado === 'MANTENIMIENTO'" cButton type="button" color="success" [disabled]="guardando" (click)="cambiarEstado(form, 'FINALIZADA')"><i class="fa-solid fa-check"></i> Finalizar</button>
+            <button cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
+          </div>
+          <p *ngIf="orden.informe_id" class="small text-body-secondary mt-2 mb-0">Esta orden está incluida en un informe; para anularla, primero quítela del informe.</p>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
