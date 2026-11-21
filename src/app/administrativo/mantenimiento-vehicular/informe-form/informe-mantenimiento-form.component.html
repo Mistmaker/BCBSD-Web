@@ -4,41 +4,55 @@
       <c-card-header style="background-color: #bf0411; color: white;">
         <c-row class="align-items-center">
           <c-col md="8">
-            <strong>{{ esNuevo ? 'Nuevo informe de mantenimiento' : 'Informe ' + informe.informe_numero }}</strong>
+            <strong>{{ esNuevo ? 'Nuevo informe de mantenimiento (bitácora)' : 'Informe ' + informe.informe_numero }}</strong>
             <c-badge *ngIf="!esNuevo" class="ms-2" [color]="color(informe.informe_estado)">{{ informe.informe_estado }}</c-badge>
           </c-col>
-          <c-col md="4" class="text-md-end"><a cButton routerLink="/admin/informes-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a></c-col>
+          <c-col md="4" class="text-md-end">
+            <button *ngIf="!esNuevo" cButton type="button" color="light" size="sm" class="me-1" (click)="imprimir()"><i class="fa-solid fa-print"></i> Imprimir</button>
+            <a cButton routerLink="/admin/informes-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
         </c-row>
       </c-card-header>
       <c-card-body>
         <form #form="ngForm" cForm [validated]="validado" class="needs-validation" (ngSubmit)="guardar(form)" novalidate>
           <fieldset [disabled]="soloLectura">
+            <p class="small text-body-secondary">Agrupa las órdenes de los vehículos enviados juntos al taller en un solo informe para el pago.</p>
             <c-row class="g-3 mb-3">
-              <c-col md="3">
-                <label cLabel for="numero">Número</label>
-                <input cFormControl id="numero" name="numero" [(ngModel)]="informe.informe_numero" [disabled]="!esNuevo" placeholder="Se genera automáticamente" />
-              </c-col>
-              <c-col md="3">
-                <label cLabel class="required-label" for="fecha">Fecha</label>
-                <input cFormControl id="fecha" name="fecha" type="date" [(ngModel)]="informe.informe_fecha" required />
-              </c-col>
-              <c-col md="6">
-                <label cLabel for="taller">Taller</label>
-                <input cFormControl id="taller" name="taller" [(ngModel)]="informe.informe_taller" />
+              <c-col md="12">
+                <label cLabel class="required-label" for="numero">Número de informe</label>
+                <div class="input-group">
+                  <button cButton type="button" color="secondary" variant="outline" (click)="siguienteNumero()" [disabled]="!esNuevo" aria-label="Siguiente número de informe">+1</button>
+                  <input cFormControl id="numero" name="numero" [(ngModel)]="informe.informe_numero" [disabled]="!esNuevo"
+                         placeholder="Ej.: BITÁCORA 04-MANTENIMIENTO MOTOCICLETAS CB-GADM-SD-DA-2025-0008-OC (vacío: se genera)" />
+                </div>
               </c-col>
               <c-col md="6">
-                <label cLabel class="required-label" for="tecnico">Técnico / administrador de contrato</label>
+                <label cLabel class="required-label" for="tecnico">Responsable del registro</label>
                 <ng-select id="tecnico" name="tecnico" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo" [(ngModel)]="informe.tecnico_servicios"
                            required [readonly]="soloLectura" [class.is-invalid]="validado && !informe.tecnico_servicios"></ng-select>
               </c-col>
               <c-col md="6">
-                <label cLabel class="required-label" for="director">Director administrativo</label>
+                <label cLabel for="cargo">Cargo del responsable</label>
+                <select cSelect id="cargo" name="cargo" [(ngModel)]="informe.tecnico_cargo">
+                  <option *ngFor="let c of cargos" [value]="c">{{ c }}</option>
+                </select>
+              </c-col>
+              <c-col md="6">
+                <label cLabel class="required-label" for="director">Revisado por (director administrativo)</label>
                 <ng-select id="director" name="director" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo" [(ngModel)]="informe.director_administrativo"
                            required [readonly]="soloLectura" [class.is-invalid]="validado && !informe.director_administrativo"></ng-select>
               </c-col>
+              <c-col md="3">
+                <label cLabel class="required-label" for="fecha">Fecha de emisión</label>
+                <input cFormControl id="fecha" name="fecha" type="date" [(ngModel)]="informe.informe_fecha" required />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="taller">Taller responsable</label>
+                <input cFormControl id="taller" name="taller" [(ngModel)]="informe.informe_taller" placeholder="Ej.: Taller Juanito" />
+              </c-col>
               <c-col md="12">
-                <label cLabel for="detalle">Detalle / conclusiones</label>
-                <textarea cFormControl id="detalle" name="detalle" rows="3" [(ngModel)]="informe.informe_detalle"></textarea>
+                <label cLabel for="detalle">Detalle</label>
+                <textarea cFormControl id="detalle" name="detalle" rows="2" [(ngModel)]="informe.informe_detalle"></textarea>
               </c-col>
             </c-row>
 
@@ -46,14 +60,16 @@
             <p *ngIf="totalesRubro.length" class="small mb-2">
               <span *ngFor="let t of totalesRubro; let last = last"><strong>{{ t.rubro }}:</strong> {{ t.total | currency: 'USD' }}<span *ngIf="!last"> · </span></span>
             </p>
+            <input cFormControl class="mb-2" name="filtroOrdenes" [(ngModel)]="filtro" placeholder="Buscar por código, número, unidad, placa o solicitante..." />
             <div class="table-responsive">
               <table cTable hover small>
-                <thead><tr><th></th><th>Código</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Facturas</th><th>Estado</th></tr></thead>
+                <thead><tr><th></th><th>Código</th><th>No.</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Facturas</th><th>Estado</th></tr></thead>
                 <tbody>
-                  <tr *ngIf="!disponibles.length"><td colspan="7" class="text-center text-body-secondary">No hay órdenes pendientes de informe</td></tr>
-                  <tr *ngFor="let o of disponibles" (click)="!soloLectura && alternar(o.orden_id!)" style="cursor: pointer">
+                  <tr *ngIf="!disponibles.length"><td colspan="8" class="text-center text-body-secondary">No hay órdenes pendientes de informe</td></tr>
+                  <tr *ngFor="let o of ordenesFiltradas" (click)="!soloLectura && alternar(o.orden_id!)" style="cursor: pointer">
                     <td><input cFormCheckInput type="checkbox" [checked]="seleccionadas.has(o.orden_id!)" (click)="$event.stopPropagation(); alternar(o.orden_id!)" [disabled]="soloLectura" /></td>
                     <td>{{ o.orden_codigo }}</td>
+                    <td>{{ numero(o.orden_serie) }}</td>
                     <td>{{ o.vehiculo_sigla }} <small class="text-body-secondary">{{ o.vehiculo_placa }}</small></td>
                     <td>{{ o.orden_fecha_mantenimiento | date: 'dd/MM/yyyy' }}</td>
                     <td>{{ o.orden_tipomantenimiento }}</td>

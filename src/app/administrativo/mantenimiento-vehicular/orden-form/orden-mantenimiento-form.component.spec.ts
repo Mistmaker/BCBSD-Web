@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { OrdenMantenimientoFormComponent, aFechaHoraLocal, ahoraLocal } from './orden-mantenimiento-form.component';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 import { PersonalService } from '../../../tthh/services/personal.service';
+import { PdfService } from '../../../core/pdf.service';
 import { ConfiguracionMantenimiento, EstadoVehiculoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
 
 const configuracion: ConfiguracionMantenimiento = {
@@ -27,6 +28,7 @@ const estado: EstadoVehiculoModel = {
 describe('OrdenMantenimientoFormComponent', () => {
   let mant: jasmine.SpyObj<MantenimientoService>;
   let fixture: ComponentFixture<OrdenMantenimientoFormComponent>;
+  let pdf: jasmine.SpyObj<PdfService>;
 
   function crear(id: string, query: Record<string, string> = {}) {
     TestBed.configureTestingModule({
@@ -35,6 +37,7 @@ describe('OrdenMantenimientoFormComponent', () => {
         provideRouter([]),
         { provide: MantenimientoService, useValue: mant },
         { provide: PersonalService, useValue: { getAll: () => of([]) } },
+        { provide: PdfService, useValue: pdf },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }), queryParamMap: convertToParamMap(query) } } },
       ]
     });
@@ -45,7 +48,8 @@ describe('OrdenMantenimientoFormComponent', () => {
 
   beforeEach(() => {
     mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService',
-      ['getEstadoVehiculos', 'getEstadoVehiculo', 'getOrden', 'guardarOrden', 'getConfiguracion', 'getSiguienteNumeroInforme']);
+      ['getEstadoVehiculos', 'getEstadoVehiculo', 'getOrden', 'guardarOrden', 'getConfiguracion', 'getSiguienteSerieOrden', 'urlReporteOrden']);
+    pdf = jasmine.createSpyObj<PdfService>('PdfService', ['abrir']);
     mant.getConfiguracion.and.returnValue(of(configuracion));
     mant.getEstadoVehiculos.and.returnValue(of([estado]));
     mant.getEstadoVehiculo.and.returnValue(of(estado));
@@ -87,12 +91,25 @@ describe('OrdenMantenimientoFormComponent', () => {
     expect(c.totalFacturas).toBeCloseTo(466.1);
   });
 
-  it('botón +1 completa el número y la fecha del informe', () => {
-    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'CBSD26INF00007', informe_serie: 7 }));
+  it('botón +1 completa el número de informe individual y la fecha de entrega', () => {
+    mant.getSiguienteSerieOrden.and.returnValue(of({ orden_serie: 6 }));
     const c = crear('nuevo');
     c.siguienteInforme();
-    expect(c.orden.informe_numero).toBe('CBSD26INF00007');
-    expect(c.orden.informe_fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(c.orden.orden_serie).toBe(6);
+    expect(c.orden.orden_fecha_entrega).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('imprime orden, informe y acta de una orden guardada', () => {
+    mant.getOrden.and.returnValue(of(Object.assign(new OrdenMantenimientoModel(), { orden_id: 3, fk_vehiculo_id: 7 })));
+    mant.urlReporteOrden.and.callFake((id: number, doc: string) => `url/${id}/${doc}`);
+    const c = crear('3');
+    c.imprimir('acta');
+    expect(pdf.abrir).toHaveBeenCalledWith('url/3/acta');
+  });
+
+  it('ofrece el tipo PREVENTIVO Y CORRECTIVO', () => {
+    const c = crear('nuevo');
+    expect(c.tipos).toContain('PREVENTIVO Y CORRECTIVO');
   });
 
   it('si faltan datos obligatorios vuelve a la pestaña de registro', () => {

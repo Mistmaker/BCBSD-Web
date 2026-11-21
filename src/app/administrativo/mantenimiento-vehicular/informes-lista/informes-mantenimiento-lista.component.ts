@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
 import { colorEstadoMantenimiento, InformeMantenimientoModel } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
+import { PdfService } from '../../../core/pdf.service';
 
 @Component({
   selector: 'app-informes-mantenimiento-lista',
@@ -20,7 +21,11 @@ export class InformesMantenimientoListaComponent implements OnInit {
   filtro = '';
   readonly color = colorEstadoMantenimiento;
 
-  constructor(private mantenimiento: MantenimientoService) { }
+  constructor(private mantenimiento: MantenimientoService, private pdf: PdfService) { }
+
+  imprimir(id: number): void {
+    this.pdf.abrir(this.mantenimiento.urlReporteBitacora(id));
+  }
 
   ngOnInit(): void {
     this.mantenimiento.getInformes().subscribe({

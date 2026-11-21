@@ -11,9 +11,10 @@ import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import {
   AnexoMantenimientoModel, colorEstadoMantenimiento, ConfiguracionMantenimiento, EstadoOrdenMantenimiento, EstadoVehiculoModel,
-  FacturaMantenimientoModel, listaParametro, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, totalesPorRubro, TrabajoMantenimientoModel
+  FacturaMantenimientoModel, listaParametro, numeroInforme, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, TIPOS_MANTENIMIENTO, totalesPorRubro, TrabajoMantenimientoModel
 } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
+import { PdfService } from '../../../core/pdf.service';
 
 /** 'YYYY-MM-DD HH:mm:ss' (API) -> 'YYYY-MM-DDTHH:mm' (input datetime-local) */
 export function aFechaHoraLocal(valor: string | null | undefined): string {
@@ -46,6 +47,8 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   guardando = false;
   cargando = true;
   readonly color = colorEstadoMantenimiento;
+  readonly tipos = TIPOS_MANTENIMIENTO;
+  readonly numero = numeroInforme;
 
   /** Rubros presupuestarios (parámetro MANT_RUBROS) más los que ya tenga la orden */
   get rubros(): string[] {
@@ -60,7 +63,7 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   }
   get totalesRubro() { return totalesPorRubro(this.orden.facturas, this.rubros); }
 
-  constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService,
+  constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService, private pdf: PdfService,
               private route: ActivatedRoute, private router: Router) { }
 
   get esNueva(): boolean { return !this.orden.orden_id; }
@@ -137,16 +140,21 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     this.orden.facturas.push(f);
   }
 
-  /** Botón +1: sugiere el siguiente número de informe */
+  /** Botón +1: sugiere el siguiente número de informe individual */
   siguienteInforme(): void {
-    this.mantenimiento.getSiguienteNumeroInforme().subscribe({
+    this.mantenimiento.getSiguienteSerieOrden().subscribe({
       next: (r) => {
-        this.orden.informe_numero = r.informe_numero;
-        this.orden.informe_fecha ??= new Date().toISOString().substring(0, 10);
+        this.orden.orden_serie = r.orden_serie;
+        this.orden.orden_fecha_entrega ??= new Date().toISOString().substring(0, 10);
       },
       error: (e) => Swal.fire('Error', e.error?.msg ?? e.message, 'error')
     });
   }
+
+  imprimir(doc: 'orden' | 'informe' | 'acta'): void {
+    if (this.orden.orden_id) { this.pdf.abrir(this.mantenimiento.urlReporteOrden(this.orden.orden_id, doc)); }
+  }
+
   agregarAnexo(): void { this.orden.anexos.push(new AnexoMantenimientoModel()); }
   quitar<T>(lista: T[], indice: number): void { lista.splice(indice, 1); }
 

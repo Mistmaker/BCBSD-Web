@@ -6,7 +6,7 @@ import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, Card
 import Swal from 'sweetalert2';
 
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
-import { colorEstadoMantenimiento, EstadoVehiculoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
+import { colorEstadoMantenimiento, EstadoVehiculoModel, numeroInforme, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 
 @Component({
@@ -23,6 +23,7 @@ export class OrdenesMantenimientoListaComponent implements OnInit {
   filtroEstadoFlota = '';
   cargando = false;
   readonly color = colorEstadoMantenimiento;
+  readonly numero = numeroInforme;
 
   constructor(private mantenimiento: MantenimientoService, private router: Router) { }
 

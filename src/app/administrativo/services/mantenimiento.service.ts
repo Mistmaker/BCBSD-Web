@@ -48,6 +48,22 @@ export class MantenimientoService {
   getInformes() {
     return this.http.get<InformeMantenimientoModel[]>(`${this.url}/getInformesMantenimiento.php`);
   }
+  /** Siguiente número de informe individual de la orden (botón +1) */
+  getSiguienteSerieOrden() {
+    return this.http.get<{ orden_serie: number }>(`${this.url}/getOrdenesMantenimiento.php`, { params: { siguiente_serie: 1 } });
+  }
+
+  /** URL del PDF de una orden: orden, informe individual o acta entrega-recepción */
+  urlReporteOrden(id: number, doc: 'orden' | 'informe' | 'acta'): string {
+    return `${environment.API_URL}/reportes/mantenimiento/ordenMantenimiento.php?id=${id}&doc=${doc}`;
+  }
+
+  /** URL del PDF de una bitácora (informe de grupo) */
+  urlReporteBitacora(id: number): string {
+    return `${environment.API_URL}/reportes/mantenimiento/informeMantenimiento.php?id=${id}`;
+  }
+
+  /** Siguiente número de bitácora sugerido (botón +1) */
   getSiguienteNumeroInforme() {
     return this.http.get<{ informe_numero: string; informe_serie: number }>(`${this.url}/getInformesMantenimiento.php`, { params: { siguiente: 1 } });
   }

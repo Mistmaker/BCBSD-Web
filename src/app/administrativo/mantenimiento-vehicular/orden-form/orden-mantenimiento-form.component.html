@@ -4,10 +4,15 @@
       <c-card-header style="background-color: #bf0411; color: white;">
         <c-row class="align-items-center">
           <c-col md="8">
-            <strong>{{ esNueva ? 'Control de mantenimiento - nueva orden' : 'Control de mantenimiento - orden ' + orden.orden_codigo }}</strong>
+            <strong>{{ esNueva ? 'Control de mantenimiento - nueva orden' : 'Control de mantenimiento - orden ' + orden.orden_codigo + ' · No. ' + numero(orden.orden_serie) }}</strong>
             <c-badge *ngIf="!esNueva" class="ms-2" [color]="color(orden.orden_estado)">{{ orden.orden_estado }}</c-badge>
           </c-col>
           <c-col md="4" class="text-md-end">
+            <ng-container *ngIf="!esNueva">
+              <button cButton type="button" color="light" size="sm" class="me-1" (click)="imprimir('orden')" title="Orden de mantenimiento"><i class="fa-solid fa-print"></i> Orden</button>
+              <button cButton type="button" color="light" size="sm" class="me-1" (click)="imprimir('informe')" title="Informe de mantenimiento individual"><i class="fa-solid fa-print"></i> Informe</button>
+              <button cButton type="button" color="light" size="sm" class="me-1" (click)="imprimir('acta')" title="Acta entrega-recepción"><i class="fa-solid fa-print"></i> Acta</button>
+            </ng-container>
             <a cButton routerLink="/admin/ordenes-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a>
           </c-col>
         </c-row>
@@ -80,8 +85,7 @@
                 <c-col md="4">
                   <label cLabel class="required-label" for="tipo">Tipo de mantenimiento</label>
                   <select cSelect id="tipo" name="tipo" [(ngModel)]="orden.orden_tipomantenimiento" required>
-                    <option value="CORRECTIVO">CORRECTIVO</option>
-                    <option value="PREVENTIVO">PREVENTIVO</option>
+                    <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
                   </select>
                 </c-col>
                 <c-col md="4">
@@ -170,18 +174,25 @@
               <!-- Informe de pago y desglose -->
               <div class="border rounded mb-3">
                 <div class="px-3 pt-2"><h6 class="mb-0">Informe de pago</h6>
-                  <small class="text-body-secondary">Las órdenes con el mismo número de informe se agrupan en un solo informe.</small></div>
+                  <small class="text-body-secondary">El número de informe se imprime como "No." en la orden, el informe y el acta.</small></div>
                 <c-row class="g-3 px-3 py-2">
-                  <c-col md="6">
+                  <c-col md="4">
                     <label cLabel for="informe">Número de informe</label>
                     <div class="input-group">
                       <button cButton type="button" color="secondary" variant="outline" (click)="siguienteInforme()" title="Siguiente número" aria-label="Siguiente número de informe">+1</button>
-                      <input cFormControl id="informe" name="informe" [(ngModel)]="orden.informe_numero" placeholder="Ej.: CBSD26INF00001" />
+                      <input cFormControl id="informe" name="informe" type="number" min="0" step="1" [(ngModel)]="orden.orden_serie" placeholder="Ej.: 5" />
                     </div>
                   </c-col>
-                  <c-col md="6">
-                    <label cLabel for="finforme">Fecha del informe</label>
-                    <input cFormControl id="finforme" name="finforme" type="date" [(ngModel)]="orden.informe_fecha" />
+                  <c-col md="3">
+                    <label cLabel for="finforme">Fecha de entrega</label>
+                    <input cFormControl id="finforme" name="finforme" type="date" [(ngModel)]="orden.orden_fecha_entrega" />
+                  </c-col>
+                  <c-col md="5">
+                    <label cLabel for="taller">Taller / contratista</label>
+                    <input cFormControl id="taller" name="taller" [(ngModel)]="orden.orden_taller" placeholder="Ej.: MIRIAN ZAPATA - FAST MOTO SERVICE" />
+                  </c-col>
+                  <c-col xs="12" *ngIf="orden.informe_numero">
+                    <small><i class="fa-solid fa-file-lines"></i> Incluida en la bitácora <strong>{{ orden.informe_numero }}</strong></small>
                   </c-col>
                 </c-row>
                 <table class="table table-sm align-middle mb-0">
@@ -208,19 +219,12 @@
 
               <!-- Acta de entrega -->
               <div class="border rounded mb-3">
-                <div class="px-3 pt-2"><h6 class="mb-0">Acta de entrega</h6></div>
+                <div class="px-3 pt-2"><h6 class="mb-0">Acta entrega-recepción</h6>
+                  <small class="text-body-secondary">La firman quien solicitó el mantenimiento (recibe conforme) y el responsable del registro (entrega conforme).</small></div>
                 <c-row class="g-3 px-3 py-2">
                   <c-col md="4">
-                    <label cLabel for="entrega">Fecha de entrega</label>
-                    <input cFormControl id="entrega" name="entrega" type="date" [(ngModel)]="orden.orden_fecha_entrega" />
-                  </c-col>
-                  <c-col md="4">
-                    <label cLabel for="qrec">Recibido por</label>
-                    <input cFormControl id="qrec" name="qrec" [(ngModel)]="orden.orden_quien_recepcion" />
-                  </c-col>
-                  <c-col md="4">
-                    <label cLabel for="crec">Cargo</label>
-                    <input cFormControl id="crec" name="crec" [(ngModel)]="orden.orden_cargo_recepcion" />
+                    <label cLabel for="facta">Fecha de entrega</label>
+                    <input cFormControl id="facta" name="facta" type="date" [(ngModel)]="orden.orden_fecha_recepcion" />
                   </c-col>
                 </c-row>
               </div>
@@ -233,7 +237,7 @@
             <button *ngIf="!esNueva && orden.orden_estado === 'MANTENIMIENTO'" cButton type="button" color="success" [disabled]="guardando" (click)="cambiarEstado(form, 'FINALIZADA')"><i class="fa-solid fa-check"></i> Finalizar</button>
             <button cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
           </div>
-          <p *ngIf="orden.informe_id" class="small text-body-secondary mt-2 mb-0">Esta orden está en el informe {{ orden.informe_numero }}; para anularla, primero quítela del informe.</p>
+          <p *ngIf="orden.informe_id" class="small text-body-secondary mt-2 mb-0">Esta orden está en la bitácora {{ orden.informe_numero }}; para anularla, primero quítela de la bitácora.</p>
         </form>
       </c-card-body>
     </c-card>

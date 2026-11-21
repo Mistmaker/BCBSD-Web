@@ -1,5 +1,5 @@
 import {
-  ConfiguracionMantenimiento, listaParametro, totalesPorRubro, totalesRubroOrdenes,
+  ConfiguracionMantenimiento, listaParametro, numeroInforme, totalesPorRubro, totalesRubroOrdenes,
   colorEstadoMantenimiento, FacturaMantenimientoModel, OrdenMantenimientoModel, ordenParaGuardar, PlanMantenimientoModel,
   planParaGuardar, ReglaMantenimientoModel
 } from './mantenimiento.model';
@@ -22,7 +22,7 @@ describe('mantenimiento.model', () => {
     expect(datos.s_nombre).toBeUndefined();
     expect(datos.informe_id).toBeUndefined();
     expect(datos.totales_rubro).toBeUndefined();
-    expect(datos.informe_numero).toBe('INF-1');
+    expect(datos.informe_numero).toBeUndefined('la bitácora se asigna desde el informe, no desde la orden');
     expect(datos.orden_id).toBe(5);
     expect(datos.trabajos).toEqual([{ trabajo_descripcion: 'Cambio de aceite' }]);
     expect(datos.sugeridos).toEqual([]);
@@ -74,5 +74,13 @@ describe('mantenimiento.model', () => {
     const o1 = Object.assign(new OrdenMantenimientoModel(), { totales_rubro: '{"MANO DE OBRA": 10, "REPUESTOS": 5}' });
     const o2 = Object.assign(new OrdenMantenimientoModel(), { totales_rubro: { 'MANO DE OBRA': 2.5 } });
     expect(totalesRubroOrdenes([o1, o2], ['MANO DE OBRA', 'REPUESTOS'])).toEqual([{ rubro: 'MANO DE OBRA', total: 12.5 }, { rubro: 'REPUESTOS', total: 5 }]);
+  });
+
+  it('formatea el número de informe individual con 3 dígitos', () => {
+    expect(numeroInforme(5)).toBe('005');
+    expect(numeroInforme('12')).toBe('012');
+    expect(numeroInforme(1234)).toBe('1234');
+    expect(numeroInforme(0)).toBe('—');
+    expect(numeroInforme(null)).toBe('—');
   });
 });

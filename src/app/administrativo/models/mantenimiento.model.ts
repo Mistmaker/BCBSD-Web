@@ -1,6 +1,7 @@
 // Módulo de mantenimiento vehicular (API: servicios/administrativo/mantenimiento)
 
-export type TipoMantenimiento = 'CORRECTIVO' | 'PREVENTIVO';
+export type TipoMantenimiento = 'CORRECTIVO' | 'PREVENTIVO' | 'PREVENTIVO Y CORRECTIVO';
+export const TIPOS_MANTENIMIENTO: TipoMantenimiento[] = ['CORRECTIVO', 'PREVENTIVO', 'PREVENTIVO Y CORRECTIVO'];
 export type EstadoOrdenMantenimiento = 'MANTENIMIENTO' | 'FINALIZADA' | 'ANULADA';
 export type EstadoVehiculoMantenimiento = 'VENCIDO' | 'PROXIMO' | 'AL DIA' | 'SIN PLAN';
 
@@ -63,7 +64,12 @@ export class AnexoMantenimientoModel {
 
 export class OrdenMantenimientoModel {
   orden_id?: number;
+  /** Código generado: SIGLAS + año + ODM + serie (CBSD26ODM00010) */
   orden_codigo?: string;
+  /** Número de informe individual: se imprime como "No. 005" en la orden, el informe y el acta */
+  orden_serie: number | null = null;
+  /** Taller o contratista que realizó el mantenimiento */
+  orden_taller: string | null = null;
   orden_estado: EstadoOrdenMantenimiento = 'MANTENIMIENTO';
   orden_registro?: string;
   fk_vehiculo_id: number | null = null;
@@ -77,9 +83,10 @@ export class OrdenMantenimientoModel {
   ultimo_km_mantenimiento?: number | null;
   ultimo_fecha_mantenimiento?: string | null;
   orden_proximomantenimiento?: number | null;
-  /** Fecha del acta de entrega */
+  /** Fecha de entrega del informe de pago */
   orden_fecha_entrega: string | null = null;
   orden_observaciones: string | null = null;
+  /** Fecha del acta entrega-recepción de satisfacción vehicular */
   orden_fecha_recepcion: string | null = null;
   orden_quien_recepcion: string | null = null;
   orden_cargo_recepcion: string | null = null;
@@ -92,10 +99,6 @@ export class OrdenMantenimientoModel {
   facturas: FacturaMantenimientoModel[] = [];
   anexos: AnexoMantenimientoModel[] = [];
 
-  /** Informe de pago: si el número existe la orden se agrupa en él; si no, se crea */
-  informe_numero: string | null = null;
-  informe_fecha: string | null = null;
-
   // Campos de la vista (solo lectura)
   vehiculo_sigla?: string;
   vehiculo_placa?: string;
@@ -107,7 +110,10 @@ export class OrdenMantenimientoModel {
   total_facturas?: number;
   /** { rubro: total } (la vista lo envía como JSON en texto) */
   totales_rubro?: Record<string, number> | string;
+  /** Bitácora (informe de grupo) en la que está incluida la orden */
   informe_id?: number | null;
+  informe_numero?: string | null;
+  informe_fecha?: string | null;
   usuario?: string;
 }
 
@@ -176,7 +182,7 @@ export function ordenParaGuardar(orden: OrdenMantenimientoModel): Partial<OrdenM
   const limpio = (t: string | null | undefined) => (t ?? '').trim();
   const {
     vehiculo_sigla, vehiculo_placa, vehiculo_marca, vehiculo_modelo, s_nombre, da_nombre, psg_nombre,
-    total_facturas, totales_rubro, informe_id, usuario, ...datos
+    total_facturas, totales_rubro, informe_id, informe_numero, informe_fecha, usuario, ...datos
   } = orden;
   return {
     ...datos,
@@ -221,6 +227,11 @@ export function listaParametro(config: ConfiguracionMantenimiento | null, clave:
 }
 
 /** Totales por rubro de una lista de valores del desglose, en el orden de los rubros configurados. */
+/** Número de informe con 3 dígitos: 5 -> "005" */
+export function numeroInforme(serie: number | string | null | undefined): string {
+  return serie === null || serie === undefined || serie === '' || Number(serie) === 0 ? '—' : String(Number(serie)).padStart(3, '0');
+}
+
 export function totalesPorRubro(facturas: FacturaMantenimientoModel[], rubros: string[]): { rubro: string; total: number }[] {
   const totales = new Map<string, number>();
   for (const f of facturas) {

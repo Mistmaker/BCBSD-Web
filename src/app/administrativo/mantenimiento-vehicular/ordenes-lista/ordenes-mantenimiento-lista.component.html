@@ -28,19 +28,20 @@
           <div class="table-responsive">
             <table cTable hover small>
               <thead>
-                <tr><th>Código</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Km</th><th class="text-end">Facturas</th><th>Informe</th><th>Estado</th><th></th></tr>
+                <tr><th>Código</th><th>No.</th><th>Unidad</th><th>Fecha</th><th>Tipo</th><th class="text-end">Km</th><th class="text-end">Facturas</th><th>Bitácora</th><th>Estado</th><th></th></tr>
               </thead>
               <tbody>
-                <tr *ngIf="cargando"><td colspan="9" class="text-center text-body-secondary">Cargando...</td></tr>
-                <tr *ngIf="!cargando && !ordenes.length"><td colspan="9" class="text-center text-body-secondary">No hay órdenes registradas</td></tr>
+                <tr *ngIf="cargando"><td colspan="10" class="text-center text-body-secondary">Cargando...</td></tr>
+                <tr *ngIf="!cargando && !ordenes.length"><td colspan="10" class="text-center text-body-secondary">No hay órdenes registradas</td></tr>
                 <tr *ngFor="let o of ordenes | filtroGeneral: filtro">
                   <td>{{ o.orden_codigo }}</td>
+                  <td>{{ numero(o.orden_serie) }}</td>
                   <td>{{ o.vehiculo_sigla }} <small class="text-body-secondary">{{ o.vehiculo_placa }}</small></td>
                   <td>{{ o.orden_fecha_mantenimiento | date: 'dd/MM/yyyy' }}</td>
                   <td>{{ o.orden_tipomantenimiento }}</td>
                   <td class="text-end">{{ o.orden_km_mantenimiento | number: '1.0-0' }}</td>
                   <td class="text-end">{{ o.total_facturas | currency: 'USD' }}</td>
-                  <td><i *ngIf="o.informe_id" class="fa-solid fa-file-lines" title="Incluida en un informe"></i></td>
+                  <td><small>{{ o.informe_numero }}</small></td>
                   <td><c-badge [color]="color(o.orden_estado)">{{ o.orden_estado }}</c-badge></td>
                   <td class="text-end"><a cButton [routerLink]="['./', o.orden_id]" color="secondary" size="sm" variant="outline"><i class="fa-solid fa-pen"></i></a></td>
                 </tr>

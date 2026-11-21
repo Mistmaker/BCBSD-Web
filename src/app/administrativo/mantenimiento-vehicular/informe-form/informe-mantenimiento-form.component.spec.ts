@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { InformeMantenimientoFormComponent } from './informe-mantenimiento-form.component';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 import { PersonalService } from '../../../tthh/services/personal.service';
+import { PdfService } from '../../../core/pdf.service';
 import { InformeMantenimientoModel, OrdenMantenimientoModel } from '../../models/mantenimiento.model';
 
 describe('InformeMantenimientoFormComponent', () => {
@@ -19,6 +20,7 @@ describe('InformeMantenimientoFormComponent', () => {
         provideRouter([]),
         { provide: MantenimientoService, useValue: mant },
         { provide: PersonalService, useValue: { getAll: () => of([]) } },
+        { provide: PdfService, useValue: jasmine.createSpyObj<PdfService>('PdfService', ['abrir']) },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }) } } },
       ]
     });
@@ -28,7 +30,9 @@ describe('InformeMantenimientoFormComponent', () => {
   }
 
   beforeEach(() => {
-    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService', ['getOrdenes', 'getInforme', 'guardarInforme']);
+    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService', ['getOrdenes', 'getInforme', 'guardarInforme', 'getConfiguracion', 'getSiguienteNumeroInforme']);
+    mant.getConfiguracion.and.returnValue(of({ sistema_nombre: '', sistema_siglas: 'CBSD', director_administrativo: { ppersonal_id: 44, nombre_completo: 'D' },
+      parametros: [{ param_key: 'MANT_CARGOS_RESPONSABLE', param_value: 'ADMINISTRADOR DE LA ORDEN DE COMPRA|OTRO', param_name: '' }] }));
     mant.getOrdenes.and.returnValue(of([orden(2, 50), orden(3, 25)]));
     spyOn(Swal, 'fire').and.returnValue(Promise.resolve({ isConfirmed: true } as any));
   });
@@ -41,6 +45,30 @@ describe('InformeMantenimientoFormComponent', () => {
     expect([...c.seleccionadas]).toEqual([1]);
     c.alternar(3);
     expect(c.totalSeleccionado).toBe(125);
+  });
+
+  it('bitácora nueva: precarga director y cargo; +1 sugiere el número', () => {
+    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'CBSD26INF00002', informe_serie: 2 }));
+    const c = crear('nuevo');
+    expect(c.informe.director_administrativo).toBe(44);
+    expect(c.informe.tecnico_cargo).toBe('ADMINISTRADOR DE LA ORDEN DE COMPRA');
+    c.siguienteNumero();
+    expect(c.informe.informe_numero).toBe('CBSD26INF00002');
+  });
+
+  it('filtra las órdenes sin ocultar las seleccionadas', () => {
+    mant.getOrdenes.and.returnValue(of([
+      Object.assign(orden(2), { vehiculo_sigla: 'M-04', orden_serie: 5 }),
+      Object.assign(orden(3), { vehiculo_sigla: 'M-06', orden_serie: 1 }),
+    ]));
+    const c = crear('nuevo');
+    c.alternar(3);
+    c.filtro = '005';
+    expect(c.ordenesFiltradas.map(o => o.orden_id)).toEqual([2, 3]);
+    c.filtro = 'm-04';
+    expect(c.ordenesFiltradas.map(o => o.orden_id)).toEqual([2, 3]);
+    c.alternar(3);
+    expect(c.ordenesFiltradas.map(o => o.orden_id)).toEqual([2]);
   });
 
   it('exige al menos una orden', () => {
