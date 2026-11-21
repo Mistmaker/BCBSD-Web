@@ -1,0 +1,73 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8"><strong>{{ plan.plan_id ? 'Plan de mantenimiento ' + plan.plan_modelo : 'Nuevo plan de mantenimiento' }}</strong></c-col>
+          <c-col md="4" class="text-md-end"><a cButton routerLink="/admin/planes-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <form #form="ngForm" cForm [validated]="validado" class="needs-validation" (ngSubmit)="guardar(form)" novalidate>
+          <c-row class="g-3 mb-3">
+            <c-col md="5">
+              <label cLabel class="required-label" for="modelo">Modelo de vehículo</label>
+              <input cFormControl id="modelo" name="modelo" [(ngModel)]="plan.plan_modelo" required placeholder="Ej.: HINO 500 / TOYOTA HILUX 2.7" />
+            </c-col>
+            <c-col md="2" *ngIf="plan.plan_id">
+              <label cLabel for="estado">Estado</label>
+              <select cSelect id="estado" name="estado" [(ngModel)]="plan.plan_estado"><option>ACTIVO</option><option>INACTIVO</option></select>
+            </c-col>
+            <c-col [md]="plan.plan_id ? 5 : 7">
+              <label cLabel for="obs">Observaciones</label>
+              <input cFormControl id="obs" name="obs" [(ngModel)]="plan.plan_observaciones" />
+            </c-col>
+            <c-col md="12">
+              <label cLabel for="vehiculos">Vehículos que usan este plan</label>
+              <ng-select id="vehiculos" name="vehiculos" [items]="vehiculos" bindValue="vehiculo_id" [multiple]="true" [closeOnSelect]="false"
+                         [(ngModel)]="plan.vehiculos" placeholder="Seleccione las unidades de este modelo">
+                <ng-template ng-label-tmp let-item="item" let-clear="clear">
+                  <span class="ng-value-label">{{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }}</span>
+                  <span class="ng-value-icon right" (click)="clear(item)">×</span>
+                </ng-template>
+                <ng-template ng-option-tmp let-item="item">{{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }} <small class="text-body-secondary">{{ item.vehiculo_marca }} {{ item.vehiculo_modelo }}</small></ng-template>
+              </ng-select>
+            </c-col>
+          </c-row>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="text-body-secondary mb-0">Reglas por kilometraje</h6>
+            <button cButton type="button" size="sm" color="secondary" variant="outline" (click)="agregarRegla()"><i class="fa-solid fa-plus"></i> Regla</button>
+          </div>
+          <div *ngFor="let r of plan.reglas; let i = index" class="border rounded p-2 mb-2">
+            <c-row class="g-2 align-items-end">
+              <c-col md="2">
+                <label cLabel [for]="'inicio' + i">Desde km</label>
+                <input cFormControl [id]="'inicio' + i" [name]="'inicio' + i" type="number" min="0" step="1" [(ngModel)]="r.mantenimiento_km_inicio" />
+              </c-col>
+              <c-col md="2">
+                <label cLabel class="required-label" [for]="'intervalo' + i">Cada (km)</label>
+                <input cFormControl [id]="'intervalo' + i" [name]="'intervalo' + i" type="number" min="1" step="1" [(ngModel)]="r.mantenimiento_km_intervalo" required />
+              </c-col>
+              <c-col md="7">
+                <label cLabel [for]="'recursos' + i">Recursos / trabajos incluidos</label>
+                <ng-select [id]="'recursos' + i" [name]="'recursos' + i" [items]="recursos" bindValue="recurso_id" bindLabel="recurso_descripcion"
+                           [multiple]="true" [closeOnSelect]="false" [(ngModel)]="r.recursos"></ng-select>
+              </c-col>
+              <c-col md="1" class="text-end">
+                <button cButton type="button" color="danger" variant="outline" (click)="quitarRegla(i)" [disabled]="plan.reglas.length === 1"><i class="fa-solid fa-trash"></i></button>
+              </c-col>
+              <c-col xs="12" *ngIf="puntos(r.mantenimiento_km_inicio, r.mantenimiento_km_intervalo) as p">
+                <small *ngIf="p.length" class="text-body-secondary">Mantenimientos en: {{ p.join(' · ') }} km...</small>
+              </c-col>
+            </c-row>
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
+          </div>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

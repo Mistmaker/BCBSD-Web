@@ -27,8 +27,19 @@ Publicar en Apache el contenido de `dist/coreui-free-angular-admin-template/brow
 ## Pruebas
 
 ```bash
-npm run test:auth   # pruebas de sesión, interceptor, guard y PDF (Chrome headless)
-npm run test:ci     # toda la suite
+npm run test:auth           # sesión, interceptor, guard y PDF (Chrome headless)
+npm run test:mantenimiento  # módulo de mantenimiento vehicular
+npm run test:ci             # toda la suite
 ```
+
+## Módulo de mantenimiento vehicular
+
+Rutas (menú "Mantenimiento vehicular" de la Dir. Administrativa; los roles se crean con la migración del API):
+
+- `/admin/ordenes-mantenimiento`: órdenes y pestaña **Estado de la flota** (alertas de preventivo vencido/próximo).
+- `/admin/informes-mantenimiento`: informes que agrupan órdenes.
+- `/admin/planes-mantenimiento`: planes preventivos por modelo y catálogo de recursos.
+
+Requiere aplicar en el API `migrations/mantenimiento/` (ver `DESPLIEGUE.md` del API) y asignar los roles a los usuarios.
 
 En servidores sin Chrome, definir `CHROME_BIN` con la ruta de Chromium.

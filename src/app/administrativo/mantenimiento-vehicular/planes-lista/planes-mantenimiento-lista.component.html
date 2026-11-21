@@ -1,0 +1,64 @@
+<c-row>
+  <c-col lg="7">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col xs="7"><strong>Planes de mantenimiento preventivo</strong></c-col>
+          <c-col xs="5" class="text-end"><a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo plan</a></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="small text-body-secondary">Cada plan corresponde a un modelo de vehículo y define cada cuántos km se realiza el mantenimiento preventivo.</p>
+        <table cTable hover small>
+          <thead><tr><th>Modelo</th><th class="text-end">Reglas</th><th class="text-end">Vehículos</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngIf="!planes.length"><td colspan="5" class="text-center text-body-secondary">No hay planes registrados</td></tr>
+            <tr *ngFor="let p of planes">
+              <td>{{ p.plan_modelo }}</td>
+              <td class="text-end">{{ p.reglas }}</td>
+              <td class="text-end">{{ p.vehiculos }}</td>
+              <td><c-badge [color]="p.plan_estado === 'ACTIVO' ? 'success' : 'secondary'">{{ p.plan_estado }}</c-badge></td>
+              <td class="text-end"><a cButton [routerLink]="['./', p.plan_id]" color="secondary" size="sm" variant="outline"><i class="fa-solid fa-pen"></i></a></td>
+            </tr>
+          </tbody>
+        </table>
+      </c-card-body>
+    </c-card>
+  </c-col>
+
+  <c-col lg="5">
+    <c-card class="mb-4">
+      <c-card-header>
+        <c-row class="align-items-center">
+          <c-col xs="7"><strong>Catálogo de recursos</strong></c-col>
+          <c-col xs="5" class="text-end"><button cButton size="sm" color="primary" variant="outline" (click)="editarRecurso()"><i class="fa-solid fa-plus"></i> Recurso</button></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <form *ngIf="recurso" class="border rounded p-2 mb-3" (ngSubmit)="guardarRecurso()">
+          <c-row class="g-2">
+            <c-col xs="4"><input cFormControl name="codigo" [(ngModel)]="recurso.recurso_codigo" placeholder="Código" /></c-col>
+            <c-col xs="8"><input cFormControl name="tipo" [(ngModel)]="recurso.recurso_tipo" placeholder="Tipo (repuesto, lubricante...)" /></c-col>
+            <c-col xs="12"><input cFormControl name="descripcion" [(ngModel)]="recurso.recurso_descripcion" placeholder="Descripción *" required /></c-col>
+            <c-col xs="12" class="text-end">
+              <button cButton type="button" size="sm" color="secondary" variant="ghost" (click)="recurso = null">Cancelar</button>
+              <button cButton type="submit" size="sm" color="primary"><i class="fa-solid fa-save"></i> Guardar</button>
+            </c-col>
+          </c-row>
+        </form>
+        <input cFormControl class="mb-2" placeholder="Buscar recurso..." [(ngModel)]="filtroRecursos" name="filtroRecursos" />
+        <div style="max-height: 420px; overflow-y: auto;">
+          <table cTable hover small>
+            <tbody>
+              <tr *ngFor="let r of recursos | filtroGeneral: filtroRecursos" (click)="editarRecurso(r)" style="cursor: pointer">
+                <td><small class="text-body-secondary">{{ r.recurso_codigo }}</small></td>
+                <td>{{ r.recurso_descripcion }}</td>
+                <td><small class="text-body-secondary">{{ r.recurso_tipo }}</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

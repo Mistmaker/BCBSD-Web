@@ -52,6 +52,48 @@ const routes: Routes = [
       title: 'Generación de Abastecimiento'
     }, canActivate: [AuthGuard]
   },
+  {
+    path: 'ordenes-mantenimiento',
+    loadComponent: () => import('./mantenimiento-vehicular/ordenes-lista/ordenes-mantenimiento-lista.component').then(m => m.OrdenesMantenimientoListaComponent),
+    data: {
+      title: 'Órdenes de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'ordenes-mantenimiento/:id',
+    loadComponent: () => import('./mantenimiento-vehicular/orden-form/orden-mantenimiento-form.component').then(m => m.OrdenMantenimientoFormComponent),
+    data: {
+      title: 'Orden de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'informes-mantenimiento',
+    loadComponent: () => import('./mantenimiento-vehicular/informes-lista/informes-mantenimiento-lista.component').then(m => m.InformesMantenimientoListaComponent),
+    data: {
+      title: 'Informes de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'informes-mantenimiento/:id',
+    loadComponent: () => import('./mantenimiento-vehicular/informe-form/informe-mantenimiento-form.component').then(m => m.InformeMantenimientoFormComponent),
+    data: {
+      title: 'Informe de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'planes-mantenimiento',
+    loadComponent: () => import('./mantenimiento-vehicular/planes-lista/planes-mantenimiento-lista.component').then(m => m.PlanesMantenimientoListaComponent),
+    data: {
+      title: 'Planes de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'planes-mantenimiento/:id',
+    loadComponent: () => import('./mantenimiento-vehicular/plan-form/plan-mantenimiento-form.component').then(m => m.PlanMantenimientoFormComponent),
+    data: {
+      title: 'Plan de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
