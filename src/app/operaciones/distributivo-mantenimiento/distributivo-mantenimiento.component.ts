@@ -48,6 +48,9 @@ import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent 
 // import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 import { DistributivoService } from '../services/distributivo.service';
+import { AuthService } from '../../auth/auth.service';
+import { forkJoin, of } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 
 import { Cargos, DistributivoModel, PelotonesModel, TropasModel } from './../models/distributivo.model';
 
@@ -69,7 +72,7 @@ import { Cargos, DistributivoModel, PelotonesModel, TropasModel } from './../mod
   templateUrl: './distributivo-mantenimiento.component.html',
   styleUrl: './distributivo-mantenimiento.component.scss'
 })
-export class DistributivoMantenimientoComponent {
+export class DistributivoMantenimientoComponent implements OnInit {
 
   distributivo: DistributivoModel = new DistributivoModel();
   personal: PersonalModel[] = [];
@@ -112,77 +115,55 @@ export class DistributivoMantenimientoComponent {
     }
   });
 
-  constructor(private _distributivoService: DistributivoService, private _personalService: PersonalService, private _intervencionesService: IntervencionesService, private route: ActivatedRoute, private router: Router) { }
+  private todoPersonal: PersonalModel[] = []; // catálogo completo de personal (fuente de verdad)
+  isSaving = false;
+
+  constructor(private _distributivoService: DistributivoService, private _personalService: PersonalService, private _intervencionesService: IntervencionesService, private _authService: AuthService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
-    // Obteniendo personal (solicitantes)
-    this._personalService.getAll().subscribe({
-      next: (data) => {
-        this.personal = data;
-      },
-      error: (e) => {
-        console.error(e);
-        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-      },
-      complete: () => console.info('complete 1')
-    })
-
-    //Obteniendo estaciones
-    this._intervencionesService.getEstaciones().subscribe({
-      next: (data) => {
-        this.estaciones = data;
-      },
-      error: (e) => {
-        console.error(e);
-        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-      },
-      complete: () => console.info('complete 2')
-    });
-
-    // this.cargarDatos();
     const routeStr = this.route.snapshot.paramMap.get('id');
-    if (routeStr !== 'nuevo' && routeStr !== null) {
-      this._distributivoService.getById(+routeStr).subscribe({
-        next: (data) => {
-          this.distributivo = data;
-          this._distributivoService.getPelotones(+routeStr).subscribe({
-            next: (data) => {
-              this.distributivo.grupos = data;
-              console.log(this.personal);
-              // pasar a personal asignado a todo el personal que ya venga asignado en el distributivo
-              this.distributivo.grupos.forEach(grupo => {
-                grupo.pelotones.forEach(peloton => {
-                  peloton.cargos.forEach(cargo => {
-                    cargo.puestos.forEach((puesto: TropasModel) => {
-                      const personalAsignado = this.personal.find(persona => persona.ppersonal_id === puesto.fk_personal_id);
-                      if (personalAsignado) {
-                        this.personalAsignado.push(personalAsignado);
-                        this.personal = this.personal.filter(persona => persona.ppersonal_id !== puesto.fk_personal_id);
-                      }
-                    });
-                  });
-                });
-              });
-            },
-            error: (e) => {
-              console.error(e);
-              Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-            },
-            complete: () => console.info('complete 4')
-          })
-        },
-        error: (e) => {
-          console.error(e);
-          Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-        },
-        complete: () => console.info('complete 3')
-      })
-    }
+    const distributivoId = routeStr !== null && routeStr !== 'nuevo' ? Number(routeStr) : null;
 
-    
+    // Se cargan los catálogos y el distributivo en paralelo, pero el personal asignado
+    // solo se calcula cuando TODO llegó, evitando la condición de carrera.
+    forkJoin({
+      personal: this._personalService.getAll(),
+      estaciones: this._intervencionesService.getEstaciones(),
+      distributivo: distributivoId ? this._distributivoService.getById(distributivoId) : of(null),
+      grupos: distributivoId ? this._distributivoService.getPelotones(distributivoId) : of(null),
+    }).subscribe({
+      next: ({ personal, estaciones, distributivo, grupos }) => {
+        this.todoPersonal = personal;
+        this.estaciones = estaciones;
+        if (distributivo) {
+          this.distributivo = distributivo;
+          this.distributivo.grupos = grupos ?? [];
+        }
+        this.sincronizarPersonalAsignado();
+      },
+      error: (e) => {
+        console.error(e);
+        Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
+      }
+    });
+  }
 
-    
-
+  /**
+   * Recalcula las listas de personal disponible y asignado a partir de los puestos
+   * presentes en el distributivo. Una persona sigue como asignada mientras ocupe al
+   * menos un puesto (p. ej. un encargado de estación presente en varios grupos).
+   */
+  private sincronizarPersonalAsignado(): void {
+    const idsAsignados = new Set<number>();
+    this.distributivo.grupos.forEach(grupo =>
+      grupo.pelotones.forEach(peloton =>
+        peloton.cargos.forEach(cargo =>
+          cargo.puestos.forEach((puesto: TropasModel) => idsAsignados.add(puesto.fk_personal_id))
+        )
+      )
+    );
+    this.personal = this.todoPersonal.filter(p => !idsAsignados.has(p.ppersonal_id));
+    this.personalAsignado = this.todoPersonal.filter(p => idsAsignados.has(p.ppersonal_id));
   }
 
   seleccionarGrupo(idGrupo: number) {
@@ -190,14 +171,14 @@ export class DistributivoMantenimientoComponent {
   }
 
   asignarPersonal(event: any, cargo: Cargos, cargoNombre: string, dist_pelo_id: number) {
-    console.log('Selection changed:', event, cargo, cargoNombre, dist_pelo_id);
+    if (!event) { return; } // ng-select emite undefined al limpiar la selección
 
     // Crear la nueva tropa con los datos seleccionados
-    let nueva_tropa: TropasModel = new TropasModel();
+    const nueva_tropa: TropasModel = new TropasModel();
     nueva_tropa.fk_personal_id = event.ppersonal_id; // ID del personal seleccionado
     nueva_tropa.tropa_cargo = cargoNombre;
     nueva_tropa.tropa_estado = 'ACTIVO';
-    nueva_tropa.fk_usuario_id = 1; // ID del usuario actual (puedes obtenerlo desde un servicio de autenticación)
+    nueva_tropa.fk_usuario_id = this._authService.getUsuarioId()!;
     nueva_tropa.fk_dist_pelo_id = dist_pelo_id;
     nueva_tropa.tropa_nombre_completo = event.nombre_completo; // Nombre completo del personal seleccionado
 
@@ -210,6 +191,8 @@ export class DistributivoMantenimientoComponent {
     );
     const grupoSeleccionadoEsPrimero = estacion?.pelotones[0]?.dist_pelo_id === dist_pelo_id;
 
+    // El encargado asignado en el primer grupo queda a cargo de todos los grupos de la estación.
+    // Si luego se quita de un grupo puntual (vacaciones, permiso, etc.) permanece en los demás.
     if (cargoNombre === 'ENCARGADO DE ESTACION' && estacion && grupoSeleccionadoEsPrimero) {
       estacion.pelotones.forEach(peloton => {
         const cargoEnGrupo = peloton.cargos.find(c => c.cargo_nombre === cargoNombre);
@@ -223,88 +206,59 @@ export class DistributivoMantenimientoComponent {
       });
     }
 
-    // Mover el personal asignado al array temporal
-    const personalAsignado = this.personal.find(persona => persona.ppersonal_id === event.ppersonal_id);
-    if (personalAsignado) {
-      this.personalAsignado.push(personalAsignado);
-      this.personal = this.personal.filter(persona => persona.ppersonal_id !== event.ppersonal_id);
-    }
+    this.sincronizarPersonalAsignado();
     // Resetear la selección temporal
     this.tmpPersonalSelccionado = 0;
   }
 
   removerAsignacion(personal: TropasModel, cargo: Cargos, estacionId: number) {
-    // Remover al personal del cargo actual
+    // Se quita solo de este cargo/grupo; si sigue en otros grupos continúa como asignado
     cargo.puestos = cargo.puestos.filter(puesto => puesto.fk_personal_id !== personal.fk_personal_id);
-
-    // Buscar el personal en el array temporal
-    const personalRemovido = this.personalAsignado.find(p => p.ppersonal_id === personal.fk_personal_id);
-    console.log('Personal removido:', personalRemovido);
-    if (personalRemovido) {
-      // Mover el personal de vuelta al array principal
-      // this.personal.push(personalRemovido);
-      this.personal = [...this.personal, personalRemovido];
-      this.personalAsignado = this.personalAsignado.filter(p => p.ppersonal_id !== personal.fk_personal_id);
-      console.log('Personal', this.personal);
-    }
-
-    console.log(`Personal con ID ${personal.fk_personal_id} removido de la asignación en la estación ${estacionId}`);
+    this.sincronizarPersonalAsignado();
   }
 
   onSubmit(form: NgForm) {
     this.customStylesValidated = true;
     if (form.invalid) { Swal.fire('Atencion', 'Algunos campos están incorrectos o vacios, por favor revise e intente nuevamente', 'warning'); return; }
-    console.log('Submit... 1', form);
-    // this.intervencion.fk_usuario_id = this._authService.getUsuario()['usuario']['usuario_id'];
-    console.log(this.distributivo);
-    this._distributivoService.save(this.distributivo).subscribe({
-      next: (data) => {
-        console.log(data)
+    if (this.isSaving) { return; }
+
+    this.distributivo.fk_usuario_id = this._authService.getUsuarioId()!;
+    const esNuevo = !this.distributivo.distributivo_id;
+    const request = esNuevo
+      ? this._distributivoService.save(this.distributivo)
+      : this._distributivoService.update(this.distributivo);
+
+    this.isSaving = true;
+    request.pipe(
+      switchMap((data) => {
         this.distributivo.distributivo_id = data.id;
-        this._distributivoService.getPelotones(this.distributivo.distributivo_id).subscribe({
-            next: (data) => {
-              this.distributivo.grupos = data;
-              console.log(this.personal);
-              // pasar a personal asignado a todo el personal que ya venga asignado en el distributivo
-              this.distributivo.grupos.forEach(grupo => {
-                grupo.pelotones.forEach(peloton => {
-                  peloton.cargos.forEach(cargo => {
-                    cargo.puestos.forEach((puesto: TropasModel) => {
-                      const personalAsignado = this.personal.find(persona => persona.ppersonal_id === puesto.fk_personal_id);
-                      if (personalAsignado) {
-                        this.personalAsignado.push(personalAsignado);
-                        this.personal = this.personal.filter(persona => persona.ppersonal_id !== puesto.fk_personal_id);
-                      }
-                    });
-                  });
-                });
-              });
-            },
-            error: (e) => {
-              console.error(e);
-              Swal.fire('Error', 'Error al obtener registro. ' + e.message, 'error');
-            },
-            complete: () => console.info('complete 4')
-          })
-        Swal.fire('Listo', data.msg, 'success')
-        // this.router.navigate(['../'], { relativeTo: this.route });
+        // Recargar los grupos desde el servidor para reflejar el estado guardado
+        return this._distributivoService.getPelotones(this.distributivo.distributivo_id).pipe(
+          map(grupos => ({ data, grupos }))
+        );
+      }),
+      finalize(() => this.isSaving = false)
+    ).subscribe({
+      next: ({ data, grupos }) => {
+        this.distributivo.grupos = grupos;
+        this.sincronizarPersonalAsignado();
+        Swal.fire('Listo', data.msg, 'success');
       },
       error: (e) => {
         console.error(e);
         this.errorMessage = e.message;
         this.Toast.fire({
           icon: 'error',
-          title: e.error.error + '<br>' + e.error.msg
+          title: (e.error?.error ?? 'Error') + '<br>' + (e.error?.msg ?? e.message)
         });
-      },
-      complete: () => console.info('complete')
-    })
+      }
+    });
   }
 
   onReset1() {
     this.customStylesValidated = false;
     this.distributivo = new DistributivoModel();
-    console.log('Reset... 1');
+    this.sincronizarPersonalAsignado();
   }
 
 }

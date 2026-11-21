@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http'
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -26,17 +26,12 @@ export class AuthService {
     return JSON.parse(localStorage.getItem('usuario') || '{}');
   }
 
-  getRoles(usuario_id: number): any {
-    // const userRoles = JSON.parse(localStorage.getItem('usuario') || '{}');
-    // http://localhost/cbsd-api/servicios/auth/getRoles.php?id=113
-    this.http.get(`${environment.API_URL}/auth/getRoles.php?id=${usuario_id}`).subscribe({
-      next: (data) =>{ return data},
-      error: (e) => {
-        console.error(e);
-      },
-      complete: () => console.info('complete')
-    })
-    // return userRoles.usuario.roles;
+  getUsuarioId(): number | null {
+    return this.getUsuario()?.usuario?.usuario_id ?? null;
+  }
+
+  getRoles(usuario_id: number) {
+    return this.http.get<number[]>(`${environment.API_URL}/servicios/auth/getRoles.php?id=${usuario_id}`);
   }
 
   getMenus(usuario_id: number, voluntario_id: number = 0): any {
@@ -46,8 +41,6 @@ export class AuthService {
   ExisteRol(rol_id: number): boolean {
     const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
     const roles = userData.usuario.roles
-    // const roles = this.getRoles(113)
-    console.log(roles)
     return roles.includes(rol_id);
   }
 
