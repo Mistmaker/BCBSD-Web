@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 
 import { DistributivoMantenimientoComponent } from './distributivo-mantenimiento.component';
 
@@ -8,7 +12,8 @@ describe('DistributivoMantenimientoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DistributivoMantenimientoComponent]
+      imports: [DistributivoMantenimientoComponent],
+      providers: [provideNoopAnimations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     })
     .compileComponents();
 

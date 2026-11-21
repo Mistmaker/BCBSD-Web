@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { ArchDashboardComponent } from './arch-dashboard.component';
 
@@ -8,7 +9,8 @@ describe('ArchDashboardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ArchDashboardComponent]
+      imports: [ArchDashboardComponent],
+      providers: [provideRouter([])]
     })
     .compileComponents();
 

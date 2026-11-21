@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { EstacionesMantenimientoComponent } from './estaciones-mantenimiento.component';
@@ -13,6 +13,7 @@ describe('EstacionesMantenimientoComponent', () => {
     await TestBed.configureTestingModule({
       imports: [EstacionesMantenimientoComponent],
       providers: [
+        provideRouter([]),
         {
           provide: EstacionesService,
           useValue: {
@@ -25,8 +26,7 @@ describe('EstacionesMantenimientoComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: 'nuevo' }) } }
-        },
-        { provide: Router, useValue: { navigate: jasmine.createSpy() } }
+        }
       ]
     })
     .compileComponents();

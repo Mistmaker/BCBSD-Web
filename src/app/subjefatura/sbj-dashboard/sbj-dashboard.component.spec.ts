@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { SbjDashboardComponent } from './sbj-dashboard.component';
 
@@ -7,8 +9,12 @@ describe('SbjDashboardComponent', () => {
   let fixture: ComponentFixture<SbjDashboardComponent>;
 
   beforeEach(async () => {
+    // La plantilla no incluye el contenedor #map, así que se omite la inicialización de Leaflet.
+    spyOn(SbjDashboardComponent.prototype as any, 'initMap');
+
     await TestBed.configureTestingModule({
-      imports: [SbjDashboardComponent]
+      imports: [SbjDashboardComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     })
     .compileComponents();
 
