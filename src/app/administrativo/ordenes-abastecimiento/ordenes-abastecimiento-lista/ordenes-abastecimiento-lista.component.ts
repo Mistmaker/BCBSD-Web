@@ -1,3 +1,4 @@
+import { PdfService } from '../../../core/pdf.service';
 import { Component, OnInit } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
@@ -55,7 +56,7 @@ export class OrdenesAbastecimientoListaComponent {
 
   seleccionados: string[] = [];
 
-  constructor(private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
+  constructor(private _pdfService: PdfService, private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
   ngOnInit(): void {
     this.cargarDatos();
   }
@@ -74,11 +75,11 @@ export class OrdenesAbastecimientoListaComponent {
   }
 
   imprimirVarios() {
-    return this._ordenesAbastecimientoService.imprimirOrden(this.seleccionados);
+    this._pdfService.abrir(this._ordenesAbastecimientoService.imprimirOrden(this.seleccionados));
   }
 
   imprimir(id: number) {
-    return this._ordenesAbastecimientoService.imprimirOrden([id.toString()]);
+    this._pdfService.abrir(this._ordenesAbastecimientoService.imprimirOrden([id.toString()]));
   }
 
   seleccionarTodos(event: any) {

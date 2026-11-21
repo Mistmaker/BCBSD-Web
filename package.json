@@ -15,7 +15,9 @@
     "start": "ng serve -o",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCI",
+    "test:auth": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/auth/**/*.spec.ts' --include='src/app/core/**/*.spec.ts'"
   },
   "private": true,
   "dependencies": {

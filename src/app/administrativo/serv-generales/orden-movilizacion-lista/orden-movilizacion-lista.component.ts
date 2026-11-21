@@ -1,3 +1,4 @@
+import { PdfService } from '../../../core/pdf.service';
 // import { VehiculosModel } from './../../models/vehiculos.model';
 // import { VehiculosService } from './../../services/vehiculos.service';
 import { Component, OnInit } from '@angular/core';
@@ -56,7 +57,7 @@ export class OrdenMovilizacionListaComponent implements OnInit {
   errorMessage: string = '';
   page: number = 1;
 
-  constructor(private _ordenesMovilizacionService: OrdenesMovilizacionService) { }
+  constructor(private _pdfService: PdfService, private _ordenesMovilizacionService: OrdenesMovilizacionService) { }
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -76,7 +77,7 @@ export class OrdenMovilizacionListaComponent implements OnInit {
   }
 
   imprimir(id: number) {
-    return this._ordenesMovilizacionService.imprimirOrden(id);
+    this._pdfService.abrir(this._ordenesMovilizacionService.imprimirOrden(id));
   }
 
 }
