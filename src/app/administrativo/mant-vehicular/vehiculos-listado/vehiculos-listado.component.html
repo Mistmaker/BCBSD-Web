@@ -9,11 +9,11 @@
                     </c-col>
                     <c-col xs="6">
                         <!-- <div class="d-grid gap-1 d-md-flex justify-content-md-end">
-                            <a cButton routerLink="./nuevo" *ngIf="authService.ExisteRol(3)" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                            <a cButton routerLink="./nuevo" *ngIf="authService.tienePermiso('ADM_VEHICULO_CREAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
                         </div> -->
                         <div class="d-grid gap-1 d-md-flex justify-content-md-end">
                             <button cButton color="secondary" size="sm" (click)="cargarDatos()"><i class="fa-solid fa-repeat"></i></button>
-                            <a cButton routerLink="./nuevo" *ngIf="authService.ExisteRol(3)" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
+                            <a cButton routerLink="./nuevo" *ngIf="authService.tienePermiso('ADM_VEHICULO_CREAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo</a>
                         </div>
                     </c-col>
                 </c-row>

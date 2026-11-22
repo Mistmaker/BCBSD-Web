@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +23,7 @@ export class PlanesMantenimientoListaComponent implements OnInit {
   /** Recurso en edición (nuevo o existente) */
   recurso: RecursoMantenimientoModel | null = null;
 
-  constructor(private mantenimiento: MantenimientoService) { }
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService) { }
 
   ngOnInit(): void {
     this.mantenimiento.getPlanes().subscribe({

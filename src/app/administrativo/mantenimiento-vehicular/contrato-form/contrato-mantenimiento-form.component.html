@@ -1,0 +1,126 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8">
+            <strong>{{ contrato.contrato_id ? 'Contrato ' + contrato.contrato_codigo : 'Nuevo contrato de mantenimiento' }}</strong>
+            <c-badge *ngIf="contrato.contrato_id" class="ms-2" [color]="color(contrato.contrato_estado)">{{ contrato.contrato_estado }}</c-badge>
+          </c-col>
+          <c-col md="4" class="text-md-end"><a cButton routerLink="/admin/contratos-mantenimiento" color="primary" size="sm"><i class="fa-solid fa-arrow-left"></i> Volver</a></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <form #form="ngForm" cForm [validated]="validado" class="needs-validation" (ngSubmit)="guardar(form)" novalidate>
+          <h6 class="text-body-secondary">Datos del contrato</h6>
+          <c-row class="g-3 mb-3">
+            <c-col md="5">
+              <label cLabel class="required-label" for="codigo">Código del proceso</label>
+              <input cFormControl id="codigo" name="codigo" [(ngModel)]="contrato.contrato_codigo" required placeholder="Ej.: CB-GADM-SD-DA-2025-0008-OC" />
+            </c-col>
+            <c-col md="4">
+              <label cLabel class="required-label" for="tipo">Tipo</label>
+              <select cSelect id="tipo" name="tipo" [(ngModel)]="contrato.contrato_tipo" required>
+                <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+              </select>
+            </c-col>
+            <c-col md="3">
+              <label cLabel for="estado">Estado</label>
+              <select cSelect id="estado" name="estado" [(ngModel)]="contrato.contrato_estado">
+                <option>VIGENTE</option><option>FINALIZADO</option><option>ANULADO</option>
+              </select>
+            </c-col>
+            <c-col md="5">
+              <label cLabel for="corto">Nombre corto</label>
+              <input cFormControl id="corto" name="corto" [(ngModel)]="contrato.contrato_nombre_corto" placeholder="Ej.: MANTENIMIENTO MOTOCICLETAS" />
+              <small class="text-body-secondary">Se usa en el número sugerido de las bitácoras.</small>
+            </c-col>
+            <c-col md="7">
+              <label cLabel for="objeto">Objeto del contrato</label>
+              <input cFormControl id="objeto" name="objeto" [(ngModel)]="contrato.contrato_objeto" placeholder="Ej.: Servicio de mantenimiento preventivo y correctivo del parque automotor" />
+            </c-col>
+            <c-col md="3">
+              <label cLabel for="inicio">Fecha de inicio</label>
+              <input cFormControl id="inicio" name="inicio" type="date" [(ngModel)]="contrato.contrato_fecha_inicio" />
+            </c-col>
+            <c-col md="3">
+              <label cLabel for="fin">Fecha de fin</label>
+              <input cFormControl id="fin" name="fin" type="date" [(ngModel)]="contrato.contrato_fecha_fin" />
+            </c-col>
+            <c-col md="6">
+              <label cLabel for="administrador">Administrador del contrato</label>
+              <ng-select id="administrador" name="administrador" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo" [(ngModel)]="contrato.administrador_contrato"></ng-select>
+            </c-col>
+          </c-row>
+
+          <h6 class="text-body-secondary">Taller / contratista</h6>
+          <c-row class="g-3 mb-3">
+            <c-col md="5">
+              <label cLabel class="required-label" for="taller">Nombre del taller</label>
+              <input cFormControl id="taller" name="taller" [(ngModel)]="contrato.contrato_taller" required placeholder="Ej.: MIRIAN ZAPATA - FAST MOTO SERVICE" />
+            </c-col>
+            <c-col md="3">
+              <label cLabel for="ruc">RUC</label>
+              <input cFormControl id="ruc" name="ruc" [(ngModel)]="contrato.contrato_ruc" maxlength="13" />
+            </c-col>
+            <c-col md="4">
+              <label cLabel for="representante">Representante legal</label>
+              <input cFormControl id="representante" name="representante" [(ngModel)]="contrato.contrato_representante_legal" />
+            </c-col>
+          </c-row>
+
+          <h6 class="text-body-secondary">Presupuesto por rubro</h6>
+          <c-row class="g-3 mb-2">
+            <c-col md="4">
+              <label cLabel class="required-label" for="monto">Monto total del contrato</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input cFormControl id="monto" name="monto" type="number" min="0" step="0.01" [(ngModel)]="contrato.contrato_monto" required />
+                <button cButton type="button" color="secondary" variant="outline" (click)="repartir()" title="Repartir en partes iguales">Repartir</button>
+              </div>
+            </c-col>
+            <c-col md="8" class="align-self-end small">
+              Partidas: <strong>{{ totalPartidas | currency: 'USD' }}</strong> ·
+              <span [class.text-danger]="sinAsignar < 0">sin asignar: <strong>{{ sinAsignar | currency: 'USD' }}</strong></span>
+            </c-col>
+          </c-row>
+          <table class="table table-sm align-middle">
+            <thead><tr><th style="width: 26%">Rubro</th><th style="width: 22%">Partida presupuestaria</th><th style="width: 16%">Monto asignado</th><th>Consumido / saldo</th><th style="width: 3rem"></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of contrato.partidas; let i = index">
+                <td><select cSelect sizing="sm" [name]="'rubro' + i" [(ngModel)]="p.partida_rubro" required [disabled]="!!(+p.consumido!)">
+                  <option *ngFor="let r of rubros" [value]="r">{{ r }}</option></select></td>
+                <td><input cFormControl sizing="sm" [name]="'pcod' + i" [(ngModel)]="p.partida_codigo" placeholder="Ej.: 73.04.05" /></td>
+                <td><input cFormControl sizing="sm" [name]="'pmonto' + i" type="number" min="0" step="0.01" [(ngModel)]="p.partida_monto" required /></td>
+                <td>
+                  <ng-container *ngIf="p.partida_id; else nueva">
+                    <c-progress thin [value]="porcentaje(p.partida_monto!, p.consumido)" [color]="porcentaje(p.partida_monto!, p.consumido) >= 90 ? 'danger' : 'success'"></c-progress>
+                    <small>{{ p.consumido | currency: 'USD' }} consumido · saldo {{ (+p.partida_monto! - +p.consumido!) | currency: 'USD' }}</small>
+                  </ng-container>
+                  <ng-template #nueva><small class="text-body-secondary">Sin consumos</small></ng-template>
+                </td>
+                <td class="text-end"><button cButton type="button" size="sm" color="danger" variant="outline" (click)="quitarPartida(i)" aria-label="Quitar partida"><i class="fa-solid fa-trash"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+          <button *ngIf="rubrosLibres.length" cButton type="button" size="sm" color="secondary" variant="outline" class="mb-3" (click)="agregarPartida()"><i class="fa-solid fa-plus"></i> Partida</button>
+
+          <h6 class="text-body-secondary">Vehículos cubiertos</h6>
+          <p class="small text-body-secondary mb-1">Para contratos por vigencia tecnológica, seleccione los vehículos. Si queda vacío, el contrato cubre a todos los vehículos.</p>
+          <ng-select id="vehiculos" name="vehiculos" [items]="vehiculos" bindValue="vehiculo_id" [multiple]="true" [closeOnSelect]="false"
+                     [(ngModel)]="contrato.vehiculos" placeholder="Todos los vehículos">
+            <ng-template ng-label-tmp let-item="item" let-clear="clear">
+              <span class="ng-value-label">{{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }}</span>
+              <span class="ng-value-icon right" (click)="clear(item)">×</span>
+            </ng-template>
+            <ng-template ng-option-tmp let-item="item">{{ item.vehiculo_sigla }} · {{ item.vehiculo_placa }} <small class="text-body-secondary">{{ item.vehiculo_marca }} {{ item.vehiculo_modelo }}</small></ng-template>
+          </ng-select>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button *ngIf="auth.tienePermiso('MANT_CONTRATO_GESTIONAR')" cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
+          </div>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

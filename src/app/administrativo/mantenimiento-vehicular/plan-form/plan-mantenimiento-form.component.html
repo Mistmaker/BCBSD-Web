@@ -64,7 +64,7 @@
           </div>
 
           <div class="d-flex justify-content-end mt-3">
-            <button cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
+            <button *ngIf="auth.tienePermiso('MANT_PLAN_GESTIONAR')" cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
           </div>
         </form>
       </c-card-body>

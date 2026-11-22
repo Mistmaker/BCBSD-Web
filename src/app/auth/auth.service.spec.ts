@@ -72,6 +72,15 @@ describe('AuthService', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/voluntarios']);
   });
 
+  it('tienePermiso usa los códigos de privilegio del login', () => {
+    guardarSesion({ token: 'x', usuario: { usuario_id: 1, permisos: ['MANT_ORDENES', 'MANT_ORDEN_CREAR'] } });
+    expect(service.tienePermiso('MANT_ORDEN_CREAR')).toBeTrue();
+    expect(service.tienePermiso('MANT_ORDEN_ANULAR', 'MANT_ORDENES')).toBeTrue();
+    expect(service.tienePermiso('MANT_ORDEN_ANULAR')).toBeFalse();
+    guardarSesion({ token: 'x', usuario: { usuario_id: 1 } });
+    expect(service.tienePermiso('MANT_ORDENES')).withContext('sesión anterior sin permisos').toBeFalse();
+  });
+
   it('getRoles consulta el endpoint correcto', () => {
     service.getRoles(7).subscribe(roles => expect(roles).toEqual([1, 2]));
     http.expectOne(`${environment.API_URL}/servicios/auth/getRoles.php?id=7`).flush([1, 2]);

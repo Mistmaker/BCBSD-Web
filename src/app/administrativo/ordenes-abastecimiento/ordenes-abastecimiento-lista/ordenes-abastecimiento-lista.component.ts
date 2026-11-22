@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { PdfService } from '../../../core/pdf.service';
 import { Component, OnInit } from '@angular/core';
 
@@ -56,7 +57,7 @@ export class OrdenesAbastecimientoListaComponent {
 
   seleccionados: string[] = [];
 
-  constructor(private _pdfService: PdfService, private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
+  constructor(public auth: AuthService, private _pdfService: PdfService, private _ordenesAbastecimientoService: OrdenesAbastecimientoService) { }
   ngOnInit(): void {
     this.cargarDatos();
   }

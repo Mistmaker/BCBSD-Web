@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +9,7 @@ import Swal from 'sweetalert2';
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
 import { colorEstadoMantenimiento, InformeMantenimientoModel } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
+import { PdfService } from '../../../core/pdf.service';
 
 @Component({
   selector: 'app-informes-mantenimiento-lista',
@@ -16,11 +18,15 @@ import { MantenimientoService } from '../../services/mantenimiento.service';
   templateUrl: './informes-mantenimiento-lista.component.html'
 })
 export class InformesMantenimientoListaComponent implements OnInit {
-  informes: (InformeMantenimientoModel & { ordenes: any })[] = [];
+  informes: (Omit<InformeMantenimientoModel, 'ordenes'> & { ordenes: number; total: number })[] = [];
   filtro = '';
   readonly color = colorEstadoMantenimiento;
 
-  constructor(private mantenimiento: MantenimientoService) { }
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private pdf: PdfService) { }
+
+  imprimir(id: number): void {
+    this.pdf.abrir(this.mantenimiento.urlReporteBitacora(id));
+  }
 
   ngOnInit(): void {
     this.mantenimiento.getInformes().subscribe({
