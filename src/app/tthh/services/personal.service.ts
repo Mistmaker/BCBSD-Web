@@ -15,6 +15,11 @@ export class PersonalService {
     return this.http.get<PersonalModel[]>(`${environment.API_URL}/servicios/tthh/getPersonalOperativo.php`)
   }
 
+  /** Todo el personal EN FUNCIONES, operativo y administrativo (custodios, profesionales de prevención, analistas...) */
+  getTodos() {
+    return this.http.get<PersonalModel[]>(`${environment.API_URL}/servicios/tthh/getPersonal.php`)
+  }
+
   getById(id: number) {
     return this.http.get<PersonalModel>(`${environment.API_URL}/servicios/tthh/getPersonal.php?id=${id}`)
   }

@@ -142,9 +142,10 @@
                   </div>
                 </c-col>
                 <c-col md="6">
-                  <label cLabel class="required-label" for="director">Director administrativo</label>
-                  <ng-select id="director" name="director" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo"
-                             [(ngModel)]="orden.director_administrativo" required [readonly]="soloLectura" [class.is-invalid]="validado && !orden.director_administrativo"></ng-select>
+                  <label cLabel for="director">Director administrativo</label>
+                  <input cFormControl id="director" [value]="directorNombre ?? 'Sin director EN FUNCIONES'" readonly [class.is-invalid]="!directorNombre" />
+                  <small class="text-body-secondary" *ngIf="directorNombre && !orden.orden_id">Se asigna automáticamente: quien ocupa el puesto de director administrativo EN FUNCIONES (titular o subrogante).</small>
+                  <small class="text-danger" *ngIf="!directorNombre">Nadie ocupa el puesto de director administrativo EN FUNCIONES. Revise Talento Humano o el parámetro MANT_DIRECTOR_PUESTO_ID.</small>
                 </c-col>
                 <c-col md="6">
                   <label cLabel class="required-label" for="solicita">Persona que solicita</label>

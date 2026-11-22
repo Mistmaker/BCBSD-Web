@@ -20,7 +20,7 @@ describe('ContratoMantenimientoFormComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: { tienePermiso: () => true, getUsuario: () => ({}) } },
         { provide: MantenimientoService, useValue: mant },
-        { provide: PersonalService, useValue: { getAll: () => of([]) } },
+        { provide: PersonalService, useValue: { getTodos: () => of([]) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }) } } },
       ]
     });

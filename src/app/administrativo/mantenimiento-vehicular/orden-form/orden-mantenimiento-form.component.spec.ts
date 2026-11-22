@@ -44,7 +44,7 @@ describe('OrdenMantenimientoFormComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: { tienePermiso: () => true, getUsuario: () => ({}) } },
         { provide: MantenimientoService, useValue: mant },
-        { provide: PersonalService, useValue: { getAll: () => of([]) } },
+        { provide: PersonalService, useValue: { getTodos: () => of([]) } },
         { provide: PdfService, useValue: pdf },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }), queryParamMap: convertToParamMap(query) } } },
       ]
@@ -82,11 +82,27 @@ describe('OrdenMantenimientoFormComponent', () => {
     expect(c.orden.orden_fecha_mantenimiento).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 
-  it('orden nueva: precarga el director vigente y el primer cargo configurado', () => {
+  it('orden nueva: muestra el director vigente (lo asigna el servidor) y el primer cargo configurado', () => {
     const c = crear('nuevo');
-    expect(c.orden.director_administrativo).toBe(44);
+    expect(c.directorNombre).toBe('DIRECTOR');
+    expect(c.orden.director_administrativo).toBeNull();
+    expect(c.camposFaltantes()).not.toContain('director administrativo EN FUNCIONES');
     expect(c.orden.tecnico_puesto).toBe('ADMINISTRADOR DE LA ORDEN DE COMPRA');
     expect(c.pestana).toBe('registro');
+  });
+
+  it('orden existente: muestra el director con el que se emitió, no el vigente', () => {
+    const c = crear('nuevo');
+    c.orden.orden_id = 5;
+    c.orden.da_nombre = 'DIRECTOR ANTERIOR';
+    expect(c.directorNombre).toBe('DIRECTOR ANTERIOR');
+  });
+
+  it('sin director EN FUNCIONES no se puede emitir', () => {
+    const c = crear('nuevo');
+    c.configuracion!.director_administrativo = null;
+    expect(c.directorNombre).toBeNull();
+    expect(c.camposFaltantes()).toContain('director administrativo EN FUNCIONES');
   });
 
   it('desglose por rubro: sugiere rubros no usados y totaliza', () => {

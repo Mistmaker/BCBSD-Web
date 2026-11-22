@@ -28,6 +28,22 @@ const routes: Routes = [
     }, canActivate: [AuthGuard, permisoGuard]
   },
   {
+    path: 'bitacora-vehiculos',
+    loadComponent: () => import('./bitacora-vehiculos/flota/bitacora-flota.component').then(m => m.BitacoraFlotaComponent),
+    data: {
+      permiso: 'ADM_BITACORA_VEHICULOS',
+      title: 'Bitácora de vehículos'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
+    path: 'bitacora-vehiculos/:id',
+    loadComponent: () => import('./bitacora-vehiculos/vehiculo/bitacora-vehiculo.component').then(m => m.BitacoraVehiculoComponent),
+    data: {
+      permiso: 'ADM_BITACORA_VEHICULOS',
+      title: 'Bitácora del vehículo'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
     path: 'ordenes-movilizacion',
     loadComponent: () => import('./serv-generales/orden-movilizacion-lista/orden-movilizacion-lista.component').then(m => m.OrdenMovilizacionListaComponent),
     data: {

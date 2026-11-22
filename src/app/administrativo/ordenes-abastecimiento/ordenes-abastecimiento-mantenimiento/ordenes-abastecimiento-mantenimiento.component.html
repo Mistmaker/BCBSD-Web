@@ -236,7 +236,7 @@
                       <label cLabel class="required-label" for="Galonesdet">Galones</label>
                       <c-input-group class="has-validation">
                         <span cInputGroupText id="inputGroupPrepend"><i class="bi bi-bag-fill"></i> </span>
-                        <input cFormControl id="Galonesdet" name="Galonesdet" [(ngModel)]="orden.orden_cantidad_galones" required type="number" maxlength="7" />
+                        <input cFormControl id="Galonesdet" name="Galonesdet" [(ngModel)]="orden.orden_cantidad_galones" required type="number" step="0.001" min="0" maxlength="7" />
                         <c-form-feedback [valid]="true">Ok!</c-form-feedback>
                         <c-form-feedback [valid]="false">Ingrese el Galones</c-form-feedback>
                       </c-input-group>

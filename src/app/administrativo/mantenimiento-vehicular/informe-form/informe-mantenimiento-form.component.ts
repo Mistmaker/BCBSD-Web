@@ -68,7 +68,7 @@ export class InformeMantenimientoFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     const informeId = id && id !== 'nuevo' ? Number(id) : null;
     forkJoin({
-      personal: this.personalService.getAll(),
+      personal: this.personalService.getTodos(),
       configuracion: this.mantenimiento.getConfiguracion(),
       contratos: this.mantenimiento.getContratos(),
       libres: this.mantenimiento.getOrdenes({ sin_informe: true }),
@@ -86,7 +86,6 @@ export class InformeMantenimientoFormComponent implements OnInit {
           incluidas.forEach(o => this.seleccionadas.add(o.orden_id!));
           this.filtrarPorContrato();
         } else {
-          this.informe.director_administrativo = configuracion.director_administrativo?.ppersonal_id ?? null;
           this.informe.tecnico_cargo = this.cargos[0] ?? null;
         }
       },
@@ -126,8 +125,17 @@ export class InformeMantenimientoFormComponent implements OnInit {
     this.seleccionadas.has(ordenId) ? this.seleccionadas.delete(ordenId) : this.seleccionadas.add(ordenId);
   }
 
+  /** Director que firma: el del informe si ya existe; en uno nuevo, quien ocupa el puesto EN FUNCIONES (lo asigna el servidor). */
+  get directorNombre(): string | null {
+    return (this.informe.informe_id ? this.informe.da_nombre : this.configuracion?.director_administrativo?.nombre_completo) ?? null;
+  }
+
   guardar(form: NgForm, anular = false): void {
     this.validado = true;
+    if (!anular && !this.directorNombre) {
+      Swal.fire('Atención', 'Nadie ocupa el puesto de director administrativo EN FUNCIONES. Revise Talento Humano o el parámetro MANT_DIRECTOR_PUESTO_ID.', 'warning');
+      return;
+    }
     if (!anular && (form.invalid || this.seleccionadas.size === 0)) {
       Swal.fire('Atención', this.seleccionadas.size === 0 ? 'Seleccione al menos una orden de mantenimiento.' : 'Revise los campos requeridos.', 'warning');
       return;

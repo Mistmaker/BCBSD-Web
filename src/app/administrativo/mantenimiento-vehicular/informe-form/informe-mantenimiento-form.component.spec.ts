@@ -21,7 +21,7 @@ describe('InformeMantenimientoFormComponent', () => {
         provideRouter([]),
         { provide: AuthService, useValue: { tienePermiso: () => true, getUsuario: () => ({}) } },
         { provide: MantenimientoService, useValue: mant },
-        { provide: PersonalService, useValue: { getAll: () => of([]) } },
+        { provide: PersonalService, useValue: { getTodos: () => of([]) } },
         { provide: PdfService, useValue: jasmine.createSpyObj<PdfService>('PdfService', ['abrir']) },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }) } } },
       ]
@@ -50,10 +50,10 @@ describe('InformeMantenimientoFormComponent', () => {
     expect(c.totalSeleccionado).toBe(125);
   });
 
-  it('bitácora nueva: precarga director y cargo; +1 sugiere el número', () => {
+  it('bitácora nueva: muestra el director vigente y precarga el cargo; +1 sugiere el número', () => {
     mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'CBSD26INF00002', informe_serie: 2 }));
     const c = crear('nuevo');
-    expect(c.informe.director_administrativo).toBe(44);
+    expect(c.directorNombre).toBe('D');
     expect(c.informe.tecnico_cargo).toBe('ADMINISTRADOR DE LA ORDEN DE COMPRA');
     c.siguienteNumero();
     expect(c.informe.informe_numero).toBe('CBSD26INF00002');
