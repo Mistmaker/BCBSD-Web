@@ -1,5 +1,5 @@
 import {
-  ConfiguracionMantenimiento, ContratoMantenimientoModel, contratoParaGuardar, listaParametro, numeroInforme, PartidaContratoModel, saldoParaOrden, totalesPorRubro, totalesRubroOrdenes,
+  ConfiguracionMantenimiento, ContratoMantenimientoModel, contratoParaGuardar, permisoOrden, listaParametro, numeroInforme, PartidaContratoModel, saldoParaOrden, totalesPorRubro, totalesRubroOrdenes,
   colorEstadoMantenimiento, FacturaMantenimientoModel, OrdenMantenimientoModel, ordenParaGuardar, PlanMantenimientoModel,
   planParaGuardar, ReglaMantenimientoModel
 } from './mantenimiento.model';
@@ -111,5 +111,14 @@ describe('mantenimiento.model', () => {
     expect(d.administrador_nombre).toBeUndefined();
     expect(d.partidas).toEqual([{ partida_rubro: 'REPUESTOS', partida_codigo: null, partida_monto: 150.5 }]);
     expect(d.vehiculos).toEqual([3, 4]);
+  });
+
+  it('privilegio necesario según el estado (igual que el API)', () => {
+    expect(permisoOrden(null, 'MANTENIMIENTO')).toBe('MANT_ORDEN_CREAR');
+    expect(permisoOrden('MANTENIMIENTO', 'RECIBIDO')).toBe('MANT_ORDEN_RECIBIR');
+    expect(permisoOrden('RECIBIDO', 'ENTREGADO')).toBe('MANT_ORDEN_ACTA');
+    expect(permisoOrden('ENTREGADO', 'RECIBIDO')).toBe('MANT_ORDEN_ACTA');
+    expect(permisoOrden('RECIBIDO', 'MANTENIMIENTO')).toBe('MANT_ORDEN_CREAR');
+    expect(permisoOrden('RECIBIDO', 'ANULADA')).toBe('MANT_ORDEN_ANULAR');
   });
 });

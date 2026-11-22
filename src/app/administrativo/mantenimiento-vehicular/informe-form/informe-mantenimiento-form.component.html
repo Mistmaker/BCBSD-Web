@@ -87,7 +87,7 @@
               </table>
             </div>
           </fieldset>
-          <div *ngIf="!soloLectura" class="d-flex gap-2 justify-content-end mt-3">
+          <div *ngIf="!soloLectura && auth.tienePermiso('MANT_BITACORA_GESTIONAR')" class="d-flex gap-2 justify-content-end mt-3">
             <button *ngIf="!esNuevo" cButton type="button" color="danger" variant="outline" [disabled]="guardando" (click)="anular(form)">Anular</button>
             <button cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
           </div>

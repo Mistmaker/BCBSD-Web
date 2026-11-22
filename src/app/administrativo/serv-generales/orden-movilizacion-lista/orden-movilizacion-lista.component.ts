@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { PdfService } from '../../../core/pdf.service';
 // import { VehiculosModel } from './../../models/vehiculos.model';
 // import { VehiculosService } from './../../services/vehiculos.service';
@@ -57,7 +58,7 @@ export class OrdenMovilizacionListaComponent implements OnInit {
   errorMessage: string = '';
   page: number = 1;
 
-  constructor(private _pdfService: PdfService, private _ordenesMovilizacionService: OrdenesMovilizacionService) { }
+  constructor(public auth: AuthService, private _pdfService: PdfService, private _ordenesMovilizacionService: OrdenesMovilizacionService) { }
 
   ngOnInit(): void {
     this.cargarDatos();

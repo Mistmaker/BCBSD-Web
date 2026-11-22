@@ -4,7 +4,7 @@
       <c-card-header style="background-color: #bf0411; color: white;">
         <c-row class="align-items-center">
           <c-col xs="7"><strong>Planes de mantenimiento preventivo</strong></c-col>
-          <c-col xs="5" class="text-end"><a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo plan</a></c-col>
+          <c-col xs="5" class="text-end"><a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('MANT_PLAN_GESTIONAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo plan</a></c-col>
         </c-row>
       </c-card-header>
       <c-card-body>
@@ -31,7 +31,7 @@
       <c-card-header>
         <c-row class="align-items-center">
           <c-col xs="7"><strong>Catálogo de recursos</strong></c-col>
-          <c-col xs="5" class="text-end"><button cButton size="sm" color="primary" variant="outline" (click)="editarRecurso()"><i class="fa-solid fa-plus"></i> Recurso</button></c-col>
+          <c-col xs="5" class="text-end"><button *ngIf="auth.tienePermiso('MANT_PLAN_GESTIONAR')" cButton size="sm" color="primary" variant="outline" (click)="editarRecurso()"><i class="fa-solid fa-plus"></i> Recurso</button></c-col>
         </c-row>
       </c-card-header>
       <c-card-body>
@@ -50,7 +50,7 @@
         <div style="max-height: 420px; overflow-y: auto;">
           <table cTable hover small>
             <tbody>
-              <tr *ngFor="let r of recursos | filtroGeneral: filtroRecursos" (click)="editarRecurso(r)" style="cursor: pointer">
+              <tr *ngFor="let r of recursos | filtroGeneral: filtroRecursos" (click)="auth.tienePermiso('MANT_PLAN_GESTIONAR') && editarRecurso(r)" style="cursor: pointer">
                 <td><small class="text-body-secondary">{{ r.recurso_codigo }}</small></td>
                 <td>{{ r.recurso_descripcion }}</td>
                 <td><small class="text-body-secondary">{{ r.recurso_tipo }}</small></td>

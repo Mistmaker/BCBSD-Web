@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -41,6 +42,7 @@ describe('OrdenMantenimientoFormComponent', () => {
       imports: [OrdenMantenimientoFormComponent],
       providers: [
         provideRouter([]),
+        { provide: AuthService, useValue: { tienePermiso: () => true, getUsuario: () => ({}) } },
         { provide: MantenimientoService, useValue: mant },
         { provide: PersonalService, useValue: { getAll: () => of([]) } },
         { provide: PdfService, useValue: pdf },

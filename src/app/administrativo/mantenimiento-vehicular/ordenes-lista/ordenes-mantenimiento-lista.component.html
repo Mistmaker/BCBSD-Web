@@ -5,7 +5,7 @@
         <c-row class="align-items-center">
           <c-col md="6"><strong>Mantenimiento vehicular - Órdenes de mantenimiento</strong></c-col>
           <c-col md="6" class="text-md-end">
-            <a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva orden</a>
+            <a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('MANT_ORDEN_CREAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva orden</a>
           </c-col>
         </c-row>
       </c-card-header>
@@ -83,7 +83,7 @@
                     <c-badge [color]="color(v.estado_mantenimiento)">{{ v.estado_mantenimiento }}</c-badge>
                     <small *ngIf="v.ordenes_abiertas > 0" class="ms-1 text-body-secondary" title="Órdenes en mantenimiento">({{ v.ordenes_abiertas }} abierta)</small>
                   </td>
-                  <td class="text-end"><button cButton color="primary" size="sm" variant="outline" (click)="crearOrden(v)"><i class="fa-solid fa-wrench"></i> Orden</button></td>
+                  <td class="text-end"><button *ngIf="auth.tienePermiso('MANT_ORDEN_CREAR')" cButton color="primary" size="sm" variant="outline" (click)="crearOrden(v)"><i class="fa-solid fa-wrench"></i> Orden</button></td>
                 </tr>
               </tbody>
             </table>

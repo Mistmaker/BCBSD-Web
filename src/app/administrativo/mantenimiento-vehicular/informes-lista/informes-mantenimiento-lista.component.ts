@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ export class InformesMantenimientoListaComponent implements OnInit {
   filtro = '';
   readonly color = colorEstadoMantenimiento;
 
-  constructor(private mantenimiento: MantenimientoService, private pdf: PdfService) { }
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private pdf: PdfService) { }
 
   imprimir(id: number): void {
     this.pdf.abrir(this.mantenimiento.urlReporteBitacora(id));

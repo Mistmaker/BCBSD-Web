@@ -181,6 +181,17 @@ export interface EstadoVehiculoModel {
   estado_mantenimiento: EstadoVehiculoMantenimiento;
 }
 
+/**
+ * Privilegio necesario para guardar la orden (igual que mantPermisoOrden() del API):
+ * MANTENIMIENTO -> MANT_ORDEN_CREAR; RECIBIDO -> MANT_ORDEN_RECIBIR; acta / reabrir -> MANT_ORDEN_ACTA; anular -> MANT_ORDEN_ANULAR.
+ */
+export function permisoOrden(actual: EstadoOrdenMantenimiento | null, nuevo: EstadoOrdenMantenimiento): string {
+  if (nuevo === 'ANULADA') { return 'MANT_ORDEN_ANULAR'; }
+  if (nuevo === 'ENTREGADO' || actual === 'ENTREGADO') { return 'MANT_ORDEN_ACTA'; }
+  if (nuevo === 'RECIBIDO') { return 'MANT_ORDEN_RECIBIR'; }
+  return 'MANT_ORDEN_CREAR';
+}
+
 /** Color de CoreUI para cada estado (badges). */
 export function colorEstadoMantenimiento(estado: string | null | undefined): string {
   switch (estado) {

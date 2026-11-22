@@ -4,7 +4,7 @@
       <c-card-header style="background-color: #bf0411; color: white;">
         <c-row class="align-items-center">
           <c-col md="6"><strong>Mantenimiento vehicular - Informes de mantenimiento (bitácoras)</strong></c-col>
-          <c-col md="6" class="text-md-end"><a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo informe</a></c-col>
+          <c-col md="6" class="text-md-end"><a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('MANT_BITACORA_GESTIONAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo informe</a></c-col>
         </c-row>
       </c-card-header>
       <c-card-body>

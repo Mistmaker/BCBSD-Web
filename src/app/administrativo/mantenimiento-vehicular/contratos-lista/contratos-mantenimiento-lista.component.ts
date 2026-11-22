@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +28,7 @@ export class ContratosMantenimientoListaComponent implements OnInit {
   readonly color = colorEstadoMantenimiento;
   readonly porcentaje = porcentajeUsado;
 
-  constructor(private mantenimiento: MantenimientoService) { }
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService) { }
 
   ngOnInit(): void {
     this.mantenimiento.getContratos().subscribe({

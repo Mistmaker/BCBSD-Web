@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +26,7 @@ export class OrdenesMantenimientoListaComponent implements OnInit {
   readonly color = colorEstadoMantenimiento;
   readonly numero = numeroInforme;
 
-  constructor(private mantenimiento: MantenimientoService, private router: Router) { }
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private router: Router) { }
 
   ngOnInit(): void {
     this.cargando = true;

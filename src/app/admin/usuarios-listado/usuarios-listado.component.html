@@ -80,8 +80,9 @@
                         <div class="col-md-4" *ngFor="let rol of submod.roles">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" [(ngModel)]="rol.asignado" [name]="'rol_' + rol.rol_id" />
-                                <label class="form-check-label">
-                                    <i class="fa fa-key"></i> {{ rol.rol_nombre }}
+                                <label class="form-check-label" [title]="rol.rol_path ? 'Acceso a la pantalla ' + rol.rol_path : 'Permiso de acción dentro de la pantalla'">
+                                    <i class="fa" [class.fa-desktop]="rol.rol_path" [class.fa-key]="!rol.rol_path"></i> {{ rol.rol_nombre }}
+                                    <span class="badge ms-1" [class.bg-primary]="rol.rol_path" [class.bg-secondary]="!rol.rol_path">{{ rol.rol_path ? 'Pantalla' : 'Acción' }}</span>
                                 </label>
                             </div>
                         </div>

@@ -290,17 +290,17 @@
           </fieldset>
 
           <div class="d-flex flex-wrap gap-2 justify-content-end mt-3">
-            <button *ngIf="!esNueva && orden.orden_estado !== 'ANULADA' && orden.orden_estado !== 'ENTREGADO' && !orden.informe_id" cButton type="button" color="danger" variant="outline"
+            <button *ngIf="!esNueva && orden.orden_estado !== 'ANULADA' && orden.orden_estado !== 'ENTREGADO' && !orden.informe_id && puede('ANULADA')" cButton type="button" color="danger" variant="outline"
                     [disabled]="guardando" (click)="cambiarEstado(form, 'ANULADA')">Anular</button>
-            <button *ngIf="orden.orden_estado === 'RECIBIDO'" cButton type="button" color="secondary" variant="outline" [disabled]="guardando"
+            <button *ngIf="orden.orden_estado === 'RECIBIDO' && puede('MANTENIMIENTO')" cButton type="button" color="secondary" variant="outline" [disabled]="guardando"
                     (click)="cambiarEstado(form, 'MANTENIMIENTO')">Volver a mantenimiento</button>
-            <button *ngIf="orden.orden_estado === 'ENTREGADO'" cButton type="button" color="secondary" variant="outline" [disabled]="guardando"
+            <button *ngIf="orden.orden_estado === 'ENTREGADO' && puede('RECIBIDO')" cButton type="button" color="secondary" variant="outline" [disabled]="guardando"
                     (click)="cambiarEstado(form, 'RECIBIDO')"><i class="fa-solid fa-lock-open"></i> Reabrir</button>
-            <button *ngIf="!esNueva && orden.orden_estado === 'MANTENIMIENTO'" cButton type="button" color="info" [disabled]="guardando"
+            <button *ngIf="!esNueva && orden.orden_estado === 'MANTENIMIENTO' && puede('RECIBIDO')" cButton type="button" color="info" [disabled]="guardando"
                     (click)="cambiarEstado(form, 'RECIBIDO')"><i class="fa-solid fa-car"></i> Vehículo recibido</button>
-            <button *ngIf="orden.orden_estado === 'RECIBIDO'" cButton type="button" color="success" [disabled]="guardando"
+            <button *ngIf="orden.orden_estado === 'RECIBIDO' && puede('ENTREGADO')" cButton type="button" color="success" [disabled]="guardando"
                     (click)="cambiarEstado(form, 'ENTREGADO')"><i class="fa-solid fa-file-signature"></i> Generar acta</button>
-            <button *ngIf="!soloLectura" cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
+            <button *ngIf="!soloLectura && puede(orden.orden_estado)" cButton type="submit" color="primary" [disabled]="guardando"><i class="fa-solid fa-save"></i> Guardar</button>
           </div>
           <p *ngIf="orden.informe_id" class="small text-body-secondary mt-2 mb-0">Esta orden está en la bitácora {{ orden.informe_numero }}; para anularla, primero quítela de la bitácora.</p>
         </form>

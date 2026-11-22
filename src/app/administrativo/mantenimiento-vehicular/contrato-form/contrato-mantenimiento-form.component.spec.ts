@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
@@ -17,6 +18,7 @@ describe('ContratoMantenimientoFormComponent', () => {
       imports: [ContratoMantenimientoFormComponent],
       providers: [
         provideRouter([]),
+        { provide: AuthService, useValue: { tienePermiso: () => true, getUsuario: () => ({}) } },
         { provide: MantenimientoService, useValue: mant },
         { provide: PersonalService, useValue: { getAll: () => of([]) } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }) } } },

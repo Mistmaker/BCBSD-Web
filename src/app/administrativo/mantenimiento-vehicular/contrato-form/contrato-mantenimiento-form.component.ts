@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -33,7 +34,7 @@ export class ContratoMantenimientoFormComponent implements OnInit {
   readonly color = colorEstadoMantenimiento;
   readonly porcentaje = porcentajeUsado;
 
-  constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService,
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private personalService: PersonalService,
               private route: ActivatedRoute, private router: Router) { }
 
   get rubros(): string[] { return listaParametro(this.configuracion, 'MANT_RUBROS', RUBROS_POR_DEFECTO); }

@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -33,7 +34,7 @@ export class PlanMantenimientoFormComponent implements OnInit {
   guardando = false;
   readonly puntos = puntosRegla;
 
-  constructor(private mantenimiento: MantenimientoService,
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService,
               private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {

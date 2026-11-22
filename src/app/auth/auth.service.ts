@@ -57,6 +57,16 @@ export class AuthService {
     return this.http.get<any[]>(`${environment.API_URL}/servicios/auth/getMenuUsuario.php?id=${usuario_id}&id_vol=${voluntario_id}`);
   }
 
+  /**
+   * ¿El usuario tiene alguno de estos privilegios? Usa los códigos de admin.tb_roles.rol_codigo
+   * (llegan en el login como usuario.permisos), que no dependen del rol_id de cada base de datos.
+   */
+  tienePermiso(...codigos: string[]): boolean {
+    const permisos: string[] = this.getUsuario()?.usuario?.permisos ?? [];
+    return codigos.some(c => permisos.includes(c));
+  }
+
+  /** @deprecated usar tienePermiso() con el código del privilegio; el rol_id cambia entre bases de datos. */
   ExisteRol(rol_id: number): boolean {
     const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
     const roles = userData.usuario.roles

@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -36,7 +37,7 @@ export class InformeMantenimientoFormComponent implements OnInit {
   readonly color = colorEstadoMantenimiento;
   readonly numero = numeroInforme;
 
-  constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService, private pdf: PdfService,
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private personalService: PersonalService, private pdf: PdfService,
               private route: ActivatedRoute, private router: Router) { }
 
   get esNuevo(): boolean { return !this.informe.informe_id; }

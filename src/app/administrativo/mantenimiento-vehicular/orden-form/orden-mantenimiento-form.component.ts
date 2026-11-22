@@ -1,3 +1,4 @@
+import { AuthService } from '../../../auth/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -11,7 +12,7 @@ import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import {
   AnexoMantenimientoModel, colorEstadoMantenimiento, ConfiguracionMantenimiento, ContratoMantenimientoModel, EstadoOrdenMantenimiento, EstadoVehiculoModel,
-  mantTotalesGuardados, saldoParaOrden, SaldoRubro,
+  mantTotalesGuardados, permisoOrden, saldoParaOrden, SaldoRubro,
   FacturaMantenimientoModel, listaParametro, numeroInforme, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, TIPOS_MANTENIMIENTO, totalesPorRubro, TrabajoMantenimientoModel
 } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
@@ -68,10 +69,14 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   }
   get totalesRubro() { return totalesPorRubro(this.orden.facturas, this.rubros); }
 
-  constructor(private mantenimiento: MantenimientoService, private personalService: PersonalService, private pdf: PdfService,
+  constructor(public auth: AuthService, private mantenimiento: MantenimientoService, private personalService: PersonalService, private pdf: PdfService,
               private route: ActivatedRoute, private router: Router) { }
 
   get esNueva(): boolean { return !this.orden.orden_id; }
+  /** ¿Puede el usuario guardar la orden llevándola a este estado? (privilegios de admin.tb_roles) */
+  puede(estado: EstadoOrdenMantenimiento): boolean {
+    return this.auth.tienePermiso(permisoOrden(this.esNueva ? null : this.orden.orden_estado, estado));
+  }
   /** Anulada o con acta generada (ENTREGADO): solo se puede reabrir o imprimir */
   get soloLectura(): boolean { return this.orden.orden_estado === 'ANULADA' || this.orden.orden_estado === 'ENTREGADO'; }
   get contrato(): ContratoMantenimientoModel | undefined { return this.contratos.find(c => c.contrato_id === this.orden.fk_contrato_id); }
