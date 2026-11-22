@@ -5,7 +5,7 @@
         <c-row class="align-items-center">
           <c-col md="8"><strong>Operadores - {{ esNuevo ? 'Nuevo operador' : (puedeEditar ? 'Actualizar licencia' : 'Operador') }}</strong></c-col>
           <c-col md="4" class="text-md-end">
-            <a cButton color="light" size="sm" variant="outline" routerLink="/admin/operadores"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+            <a cButton color="primary" size="sm" routerLink="/admin/operadores"><i class="fa-solid fa-arrow-left"></i> Volver</a>
           </c-col>
         </c-row>
       </c-card-header>
@@ -34,7 +34,7 @@
               <c-input-group>
                 <input cFormControl id="cedula" name="cedula" required [(ngModel)]="datos.persona_doc_identidad" (ngModelChange)="alCambiarCedula()" maxlength="10" inputmode="numeric"
                        autocomplete="off" [class.is-invalid]="(validado || (datos.persona_doc_identidad?.length ?? 0) === 10) && !cedulaOk" />
-                <button cButton type="button" color="secondary" variant="outline" (click)="buscar()" [disabled]="!cedulaOk || buscando" aria-label="Buscar cédula">
+                <button cButton type="button" color="primary" (click)="buscar()" [disabled]="!cedulaOk || buscando" aria-label="Buscar cédula">
                   <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
               </c-input-group>
