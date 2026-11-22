@@ -25,6 +25,7 @@
               <option value="POR VENCER">Licencia por vencer ({{ cuenta('POR VENCER') }})</option>
               <option value="VENCIDA">Licencia vencida ({{ cuenta('VENCIDA') }})</option>
               <option value="INACTIVOS">Inactivos o sin funciones ({{ cuenta('INACTIVOS') }})</option>
+              <option value="SIN SUSTENTO">Sin PDF de licencia ({{ cuenta('SIN SUSTENTO') }})</option>
             </select>
           </c-col>
         </c-row>
@@ -32,10 +33,10 @@
         <div class="table-responsive" *ngIf="!cargando">
           <table cTable hover small class="align-middle">
             <thead>
-              <tr><th>Operador</th><th>Cédula</th><th>Puesto</th><th>Licencia</th><th>Válida hasta</th><th>Estado</th><th></th></tr>
+              <tr><th>Operador</th><th>Cédula</th><th>Puesto</th><th>Licencia</th><th>Válida hasta</th><th>Sustento</th><th>Estado</th><th></th></tr>
             </thead>
             <tbody>
-              <tr *ngIf="!filas.length"><td colspan="7" class="text-center text-body-secondary">No hay operadores para mostrar</td></tr>
+              <tr *ngIf="!filas.length"><td colspan="8" class="text-center text-body-secondary">No hay operadores para mostrar</td></tr>
               <tr *ngFor="let o of filas | filtroGeneral: filtro">
                 <td><strong>{{ o.persona_apellidos }}</strong> {{ o.persona_nombres }}</td>
                 <td>{{ o.persona_doc_identidad }}</td>
@@ -49,6 +50,13 @@
                     {{ o.licencia_vigencia }}
                     <ng-container *ngIf="o.licencia_vigencia === 'POR VENCER'"> · {{ diasParaVencer(o.conductor_licencia_validez) }} días</ng-container>
                   </c-badge>
+                </td>
+                <td>
+                  <button *ngIf="o.tiene_sustento" cButton type="button" color="secondary" variant="ghost" size="sm" (click)="verLicencia(o)"
+                          [attr.aria-label]="'Ver PDF de la licencia de ' + o.nombre_completo">
+                    <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> PDF
+                  </button>
+                  <small *ngIf="!o.tiene_sustento" class="text-danger"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Sin PDF</small>
                 </td>
                 <td>
                   <c-badge [color]="o.conductor_estado === 'ACTIVO' ? 'secondary' : 'dark'">{{ o.conductor_estado }}</c-badge>

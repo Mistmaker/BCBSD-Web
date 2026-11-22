@@ -7,6 +7,7 @@ import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, Card
 import Swal from 'sweetalert2';
 
 import { AuthService } from '../../../auth/auth.service';
+import { PdfService } from '../../../core/pdf.service';
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
 import { colorVigencia, diasParaVencer, FiltroOperadores, filtrarOperadores, OperadorModel, textoLicencia } from '../../models/operadores.model';
 import { OperadoresService } from '../../services/operadores.service';
@@ -26,7 +27,7 @@ export class OperadoresListaComponent implements OnInit {
   readonly textoLicencia = textoLicencia;
   readonly diasParaVencer = diasParaVencer;
 
-  constructor(public auth: AuthService, private operadoresService: OperadoresService) { }
+  constructor(public auth: AuthService, private operadoresService: OperadoresService, private pdf: PdfService) { }
 
   ngOnInit(): void {
     this.operadoresService.getOperadores().subscribe({
@@ -37,6 +38,10 @@ export class OperadoresListaComponent implements OnInit {
 
   get filas(): OperadorModel[] {
     return filtrarOperadores(this.operadores, this.vigencia);
+  }
+
+  verLicencia(o: OperadorModel): void {
+    this.pdf.abrir(this.operadoresService.urlLicencia(o.conductor_id));
   }
 
   cuenta(f: FiltroOperadores): number {

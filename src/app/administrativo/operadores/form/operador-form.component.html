@@ -105,8 +105,36 @@
                 </select>
               </c-col>
             </c-row>
-            <c-alert color="danger" class="mt-3 py-2 small" *ngIf="validado && erroresLicencia().length">
+            <!-- Sustento -->
+            <h6 class="text-body-secondary mt-4">Sustento: licencia escaneada (PDF)</h6>
+            <c-row class="g-3 align-items-start">
+              <c-col md="6">
+                <label cLabel for="pdf">{{ esNuevo ? 'Licencia escaneada' : 'Nueva licencia escaneada' }}</label>
+                <input cFormControl type="file" id="pdf" name="pdf" accept="application/pdf,.pdf" (change)="alElegirArchivo($event)" [disabled]="!puedeEditar"
+                       [required]="pdfObligatorio" [class.is-invalid]="validado && !!errorArchivo()" />
+                <small class="text-body-secondary d-block">
+                  Solo PDF, máximo {{ pdfMaxMb }} MB. Escanee la licencia por ambos lados en un solo archivo.
+                  <ng-container *ngIf="!esNuevo && !pdfObligatorio"> Opcional: adjunte uno solo si quiere reemplazar el actual.</ng-container>
+                </small>
+                <small class="text-danger d-block" *ngIf="validado && errorArchivo()">{{ errorArchivo() }}</small>
+              </c-col>
+              <c-col md="6">
+                <label cLabel>Se guardará como</label>
+                <div class="pt-1"><code>{{ nombreArchivo }}</code></div>
+                <div class="mt-2" *ngIf="!esNuevo && operador">
+                  <button *ngIf="operador.tiene_sustento" cButton type="button" color="secondary" variant="outline" size="sm" (click)="verPdfActual()">
+                    <i class="fa-solid fa-file-pdf"></i> Ver PDF actual
+                  </button>
+                  <span *ngIf="!operador.tiene_sustento" class="small text-danger">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Este operador aún no tiene el PDF de su licencia.
+                  </span>
+                </div>
+              </c-col>
+            </c-row>
+
+            <c-alert color="danger" class="mt-3 py-2 small" *ngIf="validado && (erroresLicencia().length || errorArchivo())">
               <div *ngFor="let e of erroresLicencia()"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ e }}</div>
+              <div *ngIf="errorArchivo()"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ errorArchivo() }}</div>
             </c-alert>
             <div class="text-end mt-4" *ngIf="puedeEditar">
               <button cButton color="primary" type="submit" [disabled]="guardando">

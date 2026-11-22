@@ -1,4 +1,4 @@
-import { cedulaValida, colorVigencia, diasParaVencer, filtrarOperadores, OperadorModel, textoLicencia } from './operadores.model';
+import { cedulaValida, colorVigencia, diasParaVencer, errorArchivoPdf, filtrarOperadores, nombreArchivoLicencia, OperadorModel, textoLicencia } from './operadores.model';
 import { validezSugerida } from '../operadores/form/operador-form.component';
 
 const op = (id: number, extra: Partial<OperadorModel>): OperadorModel =>
@@ -36,6 +36,25 @@ describe('operadores.model', () => {
     expect(filtrarOperadores(lista, 'VENCIDA').map(o => o.conductor_id)).toEqual([2]);
     expect(filtrarOperadores(lista, 'POR VENCER').length).toBe(0); // sin funciones va a inactivos
     expect(filtrarOperadores(lista, 'INACTIVOS').map(o => o.conductor_id)).toEqual([3, 4]);
+  });
+
+  it('filtra los que no tienen el PDF de la licencia', () => {
+    const lista = [op(1, { tiene_sustento: true }), op(2, { tiene_sustento: false })];
+    expect(filtrarOperadores(lista, 'SIN SUSTENTO').map(o => o.conductor_id)).toEqual([2]);
+  });
+
+  it('nombre del archivo de la licencia igual que el API', () => {
+    expect(nombreArchivoLicencia('c1', '1712345675')).toBe('LIC-C1-1712345675.pdf');
+    expect(nombreArchivoLicencia(' E ', '1712345675')).toBe('LIC-E-1712345675.pdf');
+  });
+
+  it('valida el PDF antes de subirlo', () => {
+    const pdf = (nombre: string, tipo: string, tam: number) => new File([new Uint8Array(tam)], nombre, { type: tipo });
+    expect(errorArchivoPdf(null, 5)).toBeNull();
+    expect(errorArchivoPdf(pdf('lic.pdf', 'application/pdf', 2048), 5)).toBeNull();
+    expect(errorArchivoPdf(pdf('lic.jpg', 'image/jpeg', 2048), 5)).toContain('PDF');
+    expect(errorArchivoPdf(pdf('lic.pdf', 'application/pdf', 6 * 1024 * 1024), 5)).toContain('5 MB');
+    expect(errorArchivoPdf(pdf('lic.pdf', 'application/pdf', 10), 5)).toContain('vacío');
   });
 
   it('sugiere 5 años de validez', () => {

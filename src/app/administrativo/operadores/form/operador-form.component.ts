@@ -9,8 +9,10 @@ import { forkJoin, of } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { AuthService } from '../../../auth/auth.service';
+import { PdfService } from '../../../core/pdf.service';
 import {
-  cedulaValida, colorVigencia, LicenciaModel, OperadorGuardar, OperadorModel, PersonaOperador, PuestoModel, textoLicencia
+  cedulaValida, colorVigencia, errorArchivoPdf, LicenciaModel, nombreArchivoLicencia, OperadorGuardar, OperadorModel, PersonaOperador, PuestoModel,
+  textoLicencia
 } from '../../models/operadores.model';
 import { OperadoresService } from '../../services/operadores.service';
 
@@ -36,6 +38,10 @@ export class OperadorFormComponent implements OnInit {
   puestos: PuestoModel[] = [];
   datos: OperadorGuardar = { persona_doc_identidad: '', persona_nombres: '', persona_apellidos: '', fk_puesto_id: null, fk_licencia_id: null,
                              conductor_licencia_emision: '', conductor_licencia_validez: '', conductor_estado: 'ACTIVO' };
+  /** PDF escaneado de la licencia (sustento) */
+  archivo: File | null = null;
+  exigirPdf = true;
+  pdfMaxMb = 5;
   hoy = new Date().toISOString().slice(0, 10);
   cargando = true;
   buscando = false;
@@ -44,7 +50,8 @@ export class OperadorFormComponent implements OnInit {
   readonly colorVigencia = colorVigencia;
   readonly textoLicencia = textoLicencia;
 
-  constructor(public auth: AuthService, private operadoresService: OperadoresService, private route: ActivatedRoute, private router: Router) { }
+  constructor(public auth: AuthService, private operadoresService: OperadoresService, private pdf: PdfService, private route: ActivatedRoute,
+              private router: Router) { }
 
   get puedeEditar(): boolean { return this.auth.tienePermiso('ADM_OPERADOR_GESTIONAR'); }
   get esNuevo(): boolean { return !this.operador; }
@@ -53,6 +60,20 @@ export class OperadorFormComponent implements OnInit {
   get listoParaDatos(): boolean { return !!this.busqueda; }
   get personaExistente() { return this.busqueda?.persona ?? null; }
   get necesitaPuesto(): boolean { return !this.personaExistente?.ppersonal_id; }
+  /** En la edición: cambió el tipo, la emisión o la validez de la licencia */
+  get cambiaLicencia(): boolean {
+    const o = this.operador;
+    return !!o && (o.fk_licencia_id !== this.datos.fk_licencia_id || o.conductor_licencia_emision !== this.datos.conductor_licencia_emision
+                   || o.conductor_licencia_validez !== this.datos.conductor_licencia_validez);
+  }
+  /** El PDF es obligatorio al registrar y al cambiar los datos de la licencia */
+  get pdfObligatorio(): boolean { return this.exigirPdf && (this.esNuevo || this.cambiaLicencia); }
+  get cedulaArchivo(): string { return (this.operador?.persona_doc_identidad ?? this.datos.persona_doc_identidad) || ''; }
+  /** Nombre con el que se guardará el PDF */
+  get nombreArchivo(): string {
+    const categoria = this.licencias.find(l => l.licencia_id === this.datos.fk_licencia_id)?.licencia_categoria;
+    return nombreArchivoLicencia(categoria ?? '?', this.cedulaArchivo || '?');
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -64,6 +85,8 @@ export class OperadorFormComponent implements OnInit {
       next: ({ catalogos, operador }) => {
         this.licencias = catalogos.licencias;
         this.puestos = catalogos.puestos;
+        this.exigirPdf = catalogos.exigir_pdf ?? true;
+        this.pdfMaxMb = catalogos.pdf_max_mb ?? 5;
         if (operador) {
           this.operador = operador;
           this.datos = { conductor_id: operador.conductor_id, fk_licencia_id: operador.fk_licencia_id, conductor_licencia_emision: operador.conductor_licencia_emision,
@@ -109,6 +132,29 @@ export class OperadorFormComponent implements OnInit {
     if (this.cedulaOk) { this.buscar(); }
   }
 
+  alElegirArchivo(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    this.archivo = input.files?.[0] ?? null;
+    const error = errorArchivoPdf(this.archivo, this.pdfMaxMb);
+    if (error) {
+      Swal.fire('Archivo no válido', error, 'warning');
+      this.archivo = null;
+      input.value = '';
+    }
+  }
+
+  verPdfActual(): void {
+    if (this.operador) { this.pdf.abrir(this.operadoresService.urlLicencia(this.operador.conductor_id)); }
+  }
+
+  /** Error del PDF de sustento o null */
+  errorArchivo(): string | null {
+    if (this.pdfObligatorio && !this.archivo) {
+      return this.esNuevo ? 'Adjunte el PDF escaneado de la licencia' : 'Cambió la licencia: adjunte el PDF de la licencia actualizada';
+    }
+    return errorArchivoPdf(this.archivo, this.pdfMaxMb);
+  }
+
   alCambiarEmision(): void {
     if (this.datos.conductor_licencia_emision && !this.datos.conductor_licencia_validez) {
       this.datos.conductor_licencia_validez = validezSugerida(this.datos.conductor_licencia_emision);
@@ -140,7 +186,8 @@ export class OperadorFormComponent implements OnInit {
 
   guardar(form: NgForm): void {
     this.validado = true;
-    const errores = [...this.erroresPersona(), ...this.erroresLicencia()];
+    const errorPdf = this.errorArchivo();
+    const errores = [...this.erroresPersona(), ...this.erroresLicencia(), ...(errorPdf ? [errorPdf] : [])];
     if (errores.length) {
       Swal.fire('Atención', errores.join('<br>'), 'warning');
       return;
@@ -149,7 +196,7 @@ export class OperadorFormComponent implements OnInit {
     const datos: OperadorGuardar = { ...this.datos };
     if (!this.necesitaPuesto) { delete datos.fk_puesto_id; }
     this.guardando = true;
-    this.operadoresService.guardar(datos).subscribe({
+    this.operadoresService.guardar(datos, this.archivo).subscribe({
       next: (r) => {
         this.guardando = false;
         Swal.fire('Listo', r.msg, 'success');

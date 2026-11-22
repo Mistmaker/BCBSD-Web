@@ -24,11 +24,15 @@ export interface OperadorModel {
   en_funciones: boolean;
   habilitado: boolean;
   nombre_completo: string;
+  /** Ruta relativa del PDF de la licencia (documentos/licencias/...) */
+  conductor_pdf: string | null;
+  /** El PDF de la licencia existe en el servidor */
+  tiene_sustento: boolean;
 }
 
 export interface LicenciaModel { licencia_id: number; licencia_tipo: string; licencia_categoria: string; licencia_descripcion: string | null; }
 export interface PuestoModel { puesto_id: number; puesto_nombre: string; puesto_modalidad: string | null; }
-export interface CatalogosOperador { licencias: LicenciaModel[]; puestos: PuestoModel[]; dias_aviso: number; }
+export interface CatalogosOperador { licencias: LicenciaModel[]; puestos: PuestoModel[]; dias_aviso: number; exigir_pdf: boolean; pdf_max_mb: number; }
 
 export interface PersonaOperador {
   cedula_valida: boolean;
@@ -83,10 +87,27 @@ export function diasParaVencer(validez: string, hoy = new Date()): number {
   return Math.round((Date.UTC(a, m - 1, d) - inicio) / 86400000);
 }
 
-export type FiltroOperadores = 'TODOS' | VigenciaLicencia | 'INACTIVOS';
+export type FiltroOperadores = 'TODOS' | VigenciaLicencia | 'INACTIVOS' | 'SIN SUSTENTO';
 
 export function filtrarOperadores(lista: OperadorModel[], filtro: FiltroOperadores): OperadorModel[] {
   if (filtro === 'TODOS') { return lista; }
+  if (filtro === 'SIN SUSTENTO') { return lista.filter(o => !o.tiene_sustento); }
   if (filtro === 'INACTIVOS') { return lista.filter(o => o.conductor_estado !== 'ACTIVO' || !o.en_funciones); }
   return lista.filter(o => o.conductor_estado === 'ACTIVO' && o.en_funciones && o.licencia_vigencia === filtro);
+}
+
+/** Nombre con el que el servidor guarda el PDF: LIC-{CATEGORÍA}-{CÉDULA}.pdf */
+export function nombreArchivoLicencia(categoria: string | null | undefined, cedula: string | null | undefined): string {
+  const limpio = (v: string | null | undefined) => (v ?? '').toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return ['LIC', limpio(categoria), limpio(cedula)].filter(Boolean).join('-') + '.pdf';
+}
+
+/** Valida el PDF antes de subirlo (el servidor vuelve a validarlo). Devuelve el error o null. */
+export function errorArchivoPdf(archivo: File | null, maxMb: number): string | null {
+  if (!archivo) { return null; }
+  const esPdf = archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf');
+  if (!esPdf) { return 'El archivo debe ser un PDF'; }
+  if (archivo.size > maxMb * 1024 * 1024) { return `El archivo supera ${maxMb} MB`; }
+  if (archivo.size < 100) { return 'El archivo está vacío o dañado'; }
+  return null;
 }
