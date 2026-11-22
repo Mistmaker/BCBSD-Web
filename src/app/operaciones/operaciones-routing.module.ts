@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from '../auth/auth.guard';
+import { permisoGuard } from '../auth/permiso.guard';
 
 const routes: Routes = [
   {
@@ -20,16 +21,17 @@ const routes: Routes = [
   {
     path: 'partes',
     loadComponent: () => import('./parte-listado/parte-listado.component').then(m => m.ParteListadoComponent),
-    data: {
-      title: 'Parte de Auxilio'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'OPE_PARTES', title: 'Partes de servicio' }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
+    path: 'partes-estadisticas',
+    loadComponent: () => import('./partes-estadisticas/partes-estadisticas.component').then(m => m.PartesEstadisticasComponent),
+    data: { permiso: 'OPE_PARTES_ESTADISTICAS', title: 'Estadística de partes' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'partes/:id',
     loadComponent: () => import('./parte-mantenimiento/parte-mantenimiento.component').then(m => m.ParteMantenimientoComponent),
-    data: {
-      title: 'Parte de Auxilio'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'OPE_PARTES', title: 'Parte de servicio' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'estaciones',
