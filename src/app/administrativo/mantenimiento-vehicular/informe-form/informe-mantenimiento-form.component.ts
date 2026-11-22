@@ -109,7 +109,7 @@ export class InformeMantenimientoFormComponent implements OnInit {
     this.disponibles = c ? this.todas.filter(o => o.fk_contrato_id === c) : this.todas;
   }
 
-  /** Botón +1: siguiente número sugerido ("BITÁCORA NN - CÓDIGO" si hay contrato) */
+  /** Botón +1: siguiente número sugerido (con contrato: "BITÁCORA NN-NOMBRE CORTO CÓDIGO", formato MANT_FORMATO_BITACORA) */
   siguienteNumero(): void {
     this.mantenimiento.getSiguienteNumeroInforme(this.informe.fk_contrato_id).subscribe({
       next: (r) => this.informe.informe_numero = r.informe_numero,

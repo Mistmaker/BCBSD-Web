@@ -30,7 +30,12 @@
                 <option>VIGENTE</option><option>FINALIZADO</option><option>ANULADO</option>
               </select>
             </c-col>
-            <c-col md="12">
+            <c-col md="5">
+              <label cLabel for="corto">Nombre corto</label>
+              <input cFormControl id="corto" name="corto" [(ngModel)]="contrato.contrato_nombre_corto" placeholder="Ej.: MANTENIMIENTO MOTOCICLETAS" />
+              <small class="text-body-secondary">Se usa en el número sugerido de las bitácoras.</small>
+            </c-col>
+            <c-col md="7">
               <label cLabel for="objeto">Objeto del contrato</label>
               <input cFormControl id="objeto" name="objeto" [(ngModel)]="contrato.contrato_objeto" placeholder="Ej.: Servicio de mantenimiento preventivo y correctivo del parque automotor" />
             </c-col>

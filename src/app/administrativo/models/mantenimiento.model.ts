@@ -290,6 +290,8 @@ export class ContratoMantenimientoModel {
   contrato_id?: number;
   contrato_estado: 'VIGENTE' | 'FINALIZADO' | 'ANULADO' = 'VIGENTE';
   contrato_codigo = '';
+  /** Nombre corto para el número de bitácora, ej. MANTENIMIENTO MOTOCICLETAS */
+  contrato_nombre_corto: string | null = null;
   contrato_tipo = 'GENERAL';
   contrato_objeto: string | null = null;
   contrato_fecha_inicio: string | null = null;

@@ -74,7 +74,7 @@ describe('InformeMantenimientoFormComponent', () => {
 
   it('al elegir el contrato filtra sus órdenes, usa su taller y quita selecciones de otros contratos', () => {
     mant.getOrdenes.and.returnValue(of([Object.assign(orden(2), { fk_contrato_id: 20 }), Object.assign(orden(3), { fk_contrato_id: 21 })]));
-    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'BITÁCORA 01 - C-20', informe_serie: 0 }));
+    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'BITÁCORA 01-MANTENIMIENTO MOTOCICLETAS C-20', informe_serie: 0 }));
     const c = crear('nuevo');
     c.alternar(3);
     c.informe.fk_contrato_id = 20;
@@ -84,7 +84,7 @@ describe('InformeMantenimientoFormComponent', () => {
     expect(c.informe.informe_taller).toBe('TALLER 20');
     c.siguienteNumero();
     expect(mant.getSiguienteNumeroInforme).toHaveBeenCalledWith(20);
-    expect(c.informe.informe_numero).toBe('BITÁCORA 01 - C-20');
+    expect(c.informe.informe_numero).toBe('BITÁCORA 01-MANTENIMIENTO MOTOCICLETAS C-20');
   });
 
   it('exige al menos una orden', () => {
