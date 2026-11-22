@@ -81,6 +81,38 @@ describe('AuthService', () => {
     expect(service.tienePermiso('MANT_ORDENES')).withContext('sesión anterior sin permisos').toBeFalse();
   });
 
+  it('tieneAccesoRuta: el rol con ruta cubre la pantalla y sus subrutas, no otras', () => {
+    guardarSesion({ token: 'x', usuario: { usuario_id: 1, rutas: ['/admin/ordenes-movilizacion'] } });
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion/nuevo?x=1')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion-otra')).toBeFalse();
+    expect(service.tieneAccesoRuta('/admin/ordenes-abastecimiento')).toBeFalse();
+  });
+
+  it('refrescarPermisos actualiza la sesión con los privilegios actuales', () => {
+    guardarSesion({ token: 't', usuario: { usuario_id: 1, permisos: [] } });
+    service.refrescarPermisos().subscribe();
+    http.expectOne(`${environment.API_URL}/servicios/auth/getPermisos.php`).flush({ permisos: ['ADM_COMBUSTIBLE'], rutas: ['/admin/ordenes-abastecimiento'] });
+    expect(service.tienePermiso('ADM_COMBUSTIBLE')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-abastecimiento/3')).toBeTrue();
+    expect(service.getToken()).toBe('t');
+  });
+
+  it('si cambian las pantallas asignadas avisa para recargar el menú; si no cambian, no', () => {
+    const avisos: number[] = [];
+    service.privilegiosCambiados$.subscribe(() => avisos.push(1));
+    guardarSesion({ token: 't', usuario: { usuario_id: 1 } });
+    service.refrescarPermisos().subscribe();
+    http.expectOne(() => true).flush({ permisos: [], rutas: ['/a'] });
+    expect(avisos.length).withContext('primera carga: no avisa').toBe(0);
+    service.refrescarPermisos().subscribe();
+    http.expectOne(() => true).flush({ permisos: [], rutas: ['/a'] });
+    expect(avisos.length).withContext('sin cambios').toBe(0);
+    service.refrescarPermisos().subscribe();
+    http.expectOne(() => true).flush({ permisos: [], rutas: ['/a', '/b'] });
+    expect(avisos.length).withContext('pantalla nueva asignada').toBe(1);
+  });
+
   it('getRoles consulta el endpoint correcto', () => {
     service.getRoles(7).subscribe(roles => expect(roles).toEqual([1, 2]));
     http.expectOne(`${environment.API_URL}/servicios/auth/getRoles.php?id=7`).flush([1, 2]);

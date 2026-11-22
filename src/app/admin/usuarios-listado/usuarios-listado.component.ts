@@ -1,3 +1,4 @@
+import { AuthService } from '../../auth/auth.service';
 import { UsuariosModel } from './../models/usuarios.model';
 import { Component, OnInit } from '@angular/core';
 
@@ -75,7 +76,7 @@ export class UsuariosListadoComponent {
   usuarioSeleccionado: any = null;
   cargandoPrivilegios = false;
 
-  constructor(private adminService: AdminService) { }
+  constructor(private adminService: AdminService, private authService: AuthService) { }
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -127,6 +128,10 @@ export class UsuariosListadoComponent {
 
     this.adminService.guardarPrivilegios(this.usuarioSeleccionado, rolesSeleccionados).subscribe({
       next: () => {
+        // Si son los privilegios del usuario conectado, el menú y los permisos se actualizan de inmediato
+        if (Number(this.usuarioSeleccionado) === this.authService.getUsuarioId()) {
+          this.authService.notificarCambioPrivilegios();
+        }
         Swal.fire('Éxito', 'Privilegios actualizados correctamente', 'success');
       },
       error: () => {

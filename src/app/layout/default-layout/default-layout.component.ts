@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgScrollbar } from 'ngx-scrollbar';
 
@@ -16,7 +17,6 @@ import {
 } from '@coreui/angular';
 
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
-import { navItems } from './_nav';
 import { AuthService } from '../../auth/auth.service';
 
 function isOverflown(element: HTMLElement) {
@@ -49,59 +49,47 @@ function isOverflown(element: HTMLElement) {
   ]
 })
 export class DefaultLayoutComponent {
-  public navItems = [...navItems];
+  /** Se llena con el menú del usuario (getMenuUsuario.php); nunca con el menú completo de ejemplo. */
+  public navItems: any[] = [];
 
-  constructor(private _authService: AuthService) {
+  constructor(private _authService: AuthService, private destroyRef: DestroyRef) {
+    this.cargarMenu();
+    // Si cambian los privilegios del usuario conectado (se los asigna o quita el administrador, o una
+    // pantalla le niega el acceso), se recargan el menú y los permisos sin volver a iniciar sesión.
+    this._authService.privilegiosCambiados$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.cargarMenu());
+  }
 
+  /** El menú se arma solo con las pantallas (roles con ruta) asignadas al usuario. */
+  cargarMenu(): void {
     const user = this._authService.getUsuario();
-
-    // console.log(user);
-
-    this.navItems = []
-    // this.navItems = [...user.usuario.menus]
-
-    if (user.usuario.voluntario_id) {
-      this.navItems = [...user.usuario.menus]
-    } else {
-      this._authService.getMenus(user.usuario.usuario_id, user.usuario.voluntario_id).subscribe({
-        next: (data: any[]) => {
-          // console.log(data);
-          this.navItems = [...data];
-          if (user.usuario.usuario_id === 113) { // solo para el usuario administrador, se agrega el menu de administrador
-            this.navItems.push(
-              {
-                name: 'Administrador',
-                url: '/adm',
-                iconComponent: { name: 'cil-notes' },
-                children: [
-                  {
-                    name: 'Dashboard',
-                    url: '/adm/dashboard',
-                    icon: 'nav-icon-bullet'
-                  },
-                  {
-                    name: 'Usuarios',
-                    url: '/adm/usuarios',
-                    icon: 'nav-icon-bullet'
-                  },
-                  {
-                    name: 'Perfiles',
-                    url: '/adm/perfiles',
-                    icon: 'nav-icon-bullet'
-                  },
-
-                ]
-              }
-            );
-          }
-        },
-        error: (e: any) => {
-          console.error(e);
-        },
-        complete: () => console.info('complete')
-      })
-
+    if (!user?.usuario) {
+      this.navItems = [];
+      return;
     }
-
+    if (user.usuario.voluntario_id) {
+      this.navItems = [...(user.usuario.menus ?? [])];
+      return;
+    }
+    // Privilegios actuales: los asignados después del login se aplican sin volver a entrar
+    this._authService.refrescarPermisos().subscribe({ error: (e) => console.error(e) });
+    this._authService.getMenus(user.usuario.usuario_id, user.usuario.voluntario_id).subscribe({
+      next: (data: any[]) => {
+        const menu = [...data];
+        if (user.usuario.usuario_id === 113) { // solo para el usuario administrador, se agrega el menu de administrador
+          menu.push({
+            name: 'Administrador',
+            url: '/adm',
+            iconComponent: { name: 'cil-notes' },
+            children: [
+              { name: 'Dashboard', url: '/adm/dashboard', icon: 'nav-icon-bullet' },
+              { name: 'Usuarios', url: '/adm/usuarios', icon: 'nav-icon-bullet' },
+              { name: 'Perfiles', url: '/adm/perfiles', icon: 'nav-icon-bullet' },
+            ]
+          });
+        }
+        this.navItems = menu;
+      },
+      error: (e: any) => console.error(e)
+    });
   }
 }

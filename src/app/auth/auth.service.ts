@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { map, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -8,7 +9,15 @@ import { environment } from '../../environments/environment';
 })
 export class AuthService {
 
+  /** Se emite cuando cambian los privilegios del usuario conectado: el layout recarga el menú y los permisos. */
+  readonly privilegiosCambiados$ = new Subject<void>();
+
   constructor(private http: HttpClient, private router: Router) { }
+
+  /** Avisa que los privilegios del usuario conectado cambiaron (menú y permisos se recargan). */
+  notificarCambioPrivilegios(): void {
+    this.privilegiosCambiados$.next();
+  }
 
   login(credentials: { usuario: string; password: string }) {
     return this.http.post<any>(`${environment.API_URL}/servicios/auth/login.php`, credentials);
@@ -64,6 +73,36 @@ export class AuthService {
   tienePermiso(...codigos: string[]): boolean {
     const permisos: string[] = this.getUsuario()?.usuario?.permisos ?? [];
     return codigos.some(c => permisos.includes(c));
+  }
+
+  /** ¿Tiene asignado un rol de acceso cuya ruta (rol_path) cubre esta URL? Misma regla con la que se arma el menú. */
+  tieneAccesoRuta(url: string): boolean {
+    const rutas: string[] = this.getUsuario()?.usuario?.rutas ?? [];
+    const limpia = url.split('?')[0].split('#')[0];
+    return rutas.some(r => limpia === r || limpia.startsWith(r.endsWith('/') ? r : r + '/'));
+  }
+
+  /**
+   * Actualiza los privilegios guardados en la sesión con los ACTUALES del servidor, para que un privilegio
+   * asignado después de iniciar sesión se aplique sin volver a entrar.
+   */
+  refrescarPermisos(): Observable<void> {
+    return this.http.get<{ permisos: string[]; rutas: string[] }>(`${environment.API_URL}/servicios/auth/getPermisos.php`).pipe(
+      map(r => {
+        const sesion = this.getUsuario();
+        if (sesion?.usuario) {
+          const antes: string[] | undefined = sesion.usuario.rutas;
+          sesion.usuario.permisos = r.permisos ?? [];
+          sesion.usuario.rutas = r.rutas ?? [];
+          this.setSession(sesion);
+          // Si cambiaron las pantallas asignadas, el menú se recarga (no aplica a la primera carga)
+          const clave = (x: string[]) => [...x].sort().join('|');
+          if (antes !== undefined && clave(antes) !== clave(sesion.usuario.rutas)) {
+            this.notificarCambioPrivilegios();
+          }
+        }
+      })
+    );
   }
 
   /** @deprecated usar tienePermiso() con el código del privilegio; el rol_id cambia entre bases de datos. */
