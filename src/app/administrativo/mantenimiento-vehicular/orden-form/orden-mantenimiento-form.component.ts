@@ -63,7 +63,7 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   }
   /** Cargos posibles del responsable (parámetro MANT_CARGOS_RESPONSABLE) más el actual de la orden */
   get cargos(): string[] {
-    const base = listaParametro(this.configuracion, 'MANT_CARGOS_RESPONSABLE', ['PROFESIONAL TÉCNICO EN SERVICIOS GENERALES']);
+    const base = listaParametro(this.configuracion, 'MANT_CARGOS_RESPONSABLE', ['ANALISTA DE SERVICIOS GENERALES']);
     const actual = this.orden.tecnico_puesto;
     return actual && !base.includes(actual) ? [...base, actual] : base;
   }
@@ -104,7 +104,7 @@ export class OrdenMantenimientoFormComponent implements OnInit {
 
     forkJoin({
       vehiculos: this.mantenimiento.getEstadoVehiculos(),
-      personal: this.personalService.getAll(),
+      personal: this.personalService.getTodos(),
       configuracion: this.mantenimiento.getConfiguracion(),
       orden: ordenId ? this.mantenimiento.getOrden(ordenId) : of(null),
     }).subscribe({
@@ -122,7 +122,6 @@ export class OrdenMantenimientoFormComponent implements OnInit {
           this.cargarEstadoVehiculo(this.orden.fk_vehiculo_id);
         } else {
           this.orden.orden_fecha_mantenimiento = ahoraLocal();
-          this.orden.director_administrativo = configuracion.director_administrativo?.ppersonal_id ?? null;
           this.orden.tecnico_puesto = this.cargos[0] ?? null;
           const query = this.route.snapshot.queryParamMap;
           const tipo = query.get('tipo');
@@ -292,12 +291,17 @@ export class OrdenMantenimientoFormComponent implements OnInit {
       });
   }
 
+  /** Director que firma: el de la orden si ya existe; en una nueva, quien ocupa el puesto EN FUNCIONES (lo asigna el servidor). */
+  get directorNombre(): string | null {
+    return (this.orden.orden_id ? this.orden.da_nombre : this.configuracion?.director_administrativo?.nombre_completo) ?? null;
+  }
+
   /** Campos obligatorios del formulario de registro que faltan. */
   camposFaltantes(): string[] {
     const o = this.orden;
     const faltan: [unknown, string][] = [
       [o.fk_vehiculo_id, 'unidad'], [o.orden_fecha_mantenimiento, 'fecha'], [o.orden_km_mantenimiento !== null && o.orden_km_mantenimiento !== undefined ? 1 : null, 'kilometraje'],
-      [o.director_administrativo, 'director administrativo'], [o.personal_solicita, 'persona que solicita'], [o.tecnico_servicios, 'responsable del registro'],
+      [this.directorNombre, 'director administrativo EN FUNCIONES'], [o.personal_solicita, 'persona que solicita'], [o.tecnico_servicios, 'responsable del registro'],
       [o.fk_contrato_id, 'contrato'],
     ];
     return faltan.filter(([v]) => !v).map(([, n]) => n);

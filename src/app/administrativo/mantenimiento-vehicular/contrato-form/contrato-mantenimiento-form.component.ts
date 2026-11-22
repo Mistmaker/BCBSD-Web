@@ -49,7 +49,7 @@ export class ContratoMantenimientoFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     const contratoId = id && id !== 'nuevo' ? Number(id) : null;
     forkJoin({
-      personal: this.personalService.getAll(),
+      personal: this.personalService.getTodos(),
       vehiculos: this.mantenimiento.getEstadoVehiculos(),
       configuracion: this.mantenimiento.getConfiguracion(),
       contrato: contratoId ? this.mantenimiento.getContrato(contratoId) : of(null),
