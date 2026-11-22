@@ -1,0 +1,116 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <strong>Unidades - Bitácora de vehículos</strong>
+      </c-card-header>
+      <c-card-body>
+        <p class="small text-body-secondary mb-3">
+          Rendimiento de combustible, gasto de mantenimiento y costo por kilómetro de cada vehículo en el período, comparados con los vehículos
+          de la misma marca, modelo y año. Seleccione un vehículo para ver su historial completo.
+        </p>
+        <form class="row g-2 align-items-end mb-3" (ngSubmit)="consultar()">
+          <div class="col-6 col-md-2">
+            <label cLabel for="desde" class="small">Desde</label>
+            <input cFormControl sizing="sm" type="date" id="desde" name="desde" [(ngModel)]="desde" required />
+          </div>
+          <div class="col-6 col-md-2">
+            <label cLabel for="hasta" class="small">Hasta</label>
+            <input cFormControl sizing="sm" type="date" id="hasta" name="hasta" [(ngModel)]="hasta" required />
+          </div>
+          <div class="col-12 col-md-2">
+            <button cButton color="primary" size="sm" type="submit" [disabled]="cargando" class="w-100">
+              <i class="fa-solid fa-magnifying-glass"></i> Consultar
+            </button>
+          </div>
+          <div class="col-12 col-md-3">
+            <label cLabel for="filtro" class="small">Buscar</label>
+            <input cFormControl sizing="sm" id="filtro" name="filtro" placeholder="Sigla, placa, marca, modelo..." [(ngModel)]="filtro" />
+          </div>
+          <div class="col-7 col-md-2">
+            <label cLabel for="orden" class="small">Ordenar por</label>
+            <select cFormControl sizing="sm" id="orden" name="orden" [(ngModel)]="orden" class="form-select form-select-sm">
+              <option value="alertas">Alertas</option>
+              <option value="costo_total_km">Costo por km</option>
+              <option value="rendimiento_dif_pct">Rendimiento vs. iguales</option>
+              <option value="gasto_mantenimiento">Gasto de mantenimiento</option>
+              <option value="km_recorridos">Km recorridos</option>
+              <option value="sigla">Sigla</option>
+            </select>
+          </div>
+          <div class="col-5 col-md-1">
+            <c-form-check>
+              <input cFormCheckInput type="checkbox" id="soloAlertas" name="soloAlertas" [(ngModel)]="soloAlertas" />
+              <label cFormCheckLabel for="soloAlertas" class="small">Con alertas</label>
+            </c-form-check>
+          </div>
+        </form>
+
+        <p class="small mb-2" *ngIf="!cargando && vehiculos.length">
+          <i class="fa-solid fa-triangle-exclamation text-danger" aria-hidden="true"></i>
+          <strong> {{ totalConAlertas }}</strong> de {{ vehiculos.length }} vehículos requieren revisión
+          <span class="text-body-secondary" *ngIf="parametros">
+            (trabajo repetido en menos de {{ parametros.ventana }} días, rendimiento {{ parametros.pct_rendimiento }} % menor
+            o mantenimiento por km {{ parametros.pct_costo }} % mayor que sus iguales)</span>.
+        </p>
+
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Calculando...</div>
+        <div class="table-responsive" *ngIf="!cargando">
+          <table cTable hover small class="align-middle">
+            <thead>
+              <tr>
+                <th>Vehículo</th>
+                <th class="text-end">Km recorridos</th>
+                <th class="text-end">Rendimiento</th>
+                <th class="text-end">Combustible</th>
+                <th class="text-end">Mantenimiento</th>
+                <th class="text-end">Costo por km</th>
+                <th>Alertas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="!filas.length"><td colspan="8" class="text-center text-body-secondary">Sin vehículos para mostrar</td></tr>
+              <tr *ngFor="let v of filas | filtroGeneral: filtro">
+                <td>
+                  <strong>{{ v.vehiculo_sigla || v.vehiculo_placa }}</strong>
+                  <span class="text-body-secondary" *ngIf="v.vehiculo_sigla"> · {{ v.vehiculo_placa }}</span><br />
+                  <small class="text-body-secondary">{{ v.vehiculo_marca }} {{ v.vehiculo_modelo }} {{ v.vehiculo_anio }}</small>
+                </td>
+                <td class="text-end">{{ v.km_recorridos | number: '1.0-0' }}</td>
+                <td class="text-end">
+                  <span *ngIf="v.rendimiento !== null; else sinDato">{{ v.rendimiento | number: '1.1-1' }} km/gal</span>
+                  <br />
+                  <small *ngIf="v.rendimiento_dif_pct !== null" [class.text-danger]="v.rendimiento_dif_pct <= -(parametros?.pct_rendimiento ?? 15)"
+                         [class.text-body-secondary]="v.rendimiento_dif_pct > -(parametros?.pct_rendimiento ?? 15)"
+                         [title]="'Promedio de ' + v.pares + ' vehículo(s) igual(es): ' + (v.rendimiento_pares | number: '1.1-1') + ' km/gal'">
+                    {{ v.rendimiento_dif_pct > 0 ? '+' : '' }}{{ v.rendimiento_dif_pct | number: '1.0-1' }} % vs. iguales
+                  </small>
+                </td>
+                <td class="text-end">{{ v.gasto_combustible | currency: 'USD' }}<br /><small class="text-body-secondary">{{ v.cargas }} cargas</small></td>
+                <td class="text-end">
+                  {{ v.gasto_mantenimiento | currency: 'USD' }}<br />
+                  <small class="text-body-secondary">{{ v.mantenimientos }} órdenes<span *ngIf="v.km_entre_mantenimientos"> · cada {{ v.km_entre_mantenimientos | number: '1.0-0' }} km</span></small>
+                </td>
+                <td class="text-end">
+                  <span *ngIf="v.costo_total_km !== null; else sinDato">{{ v.costo_total_km | currency: 'USD':'symbol':'1.3-3' }}</span><br />
+                  <small class="text-body-secondary">{{ v.costo_total | currency: 'USD' }} total</small>
+                </td>
+                <td [title]="resumenAlertas(v)">
+                  <c-badge *ngIf="graves(v)" color="danger" class="me-1"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ graves(v) }} revisar</c-badge>
+                  <c-badge *ngIf="v.alertas.length - graves(v)" color="warning" textColor="dark"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ v.alertas.length - graves(v) }} atención</c-badge>
+                  <small *ngIf="!v.alertas.length" class="text-body-secondary">—</small>
+                </td>
+                <td class="text-end">
+                  <a cButton color="secondary" size="sm" variant="outline" [routerLink]="['./', v.vehiculo_id]" [queryParams]="{ desde: desde, hasta: hasta }"
+                     [attr.aria-label]="'Ver bitácora de ' + (v.vehiculo_sigla || v.vehiculo_placa)"><i class="fa-solid fa-chart-line"></i> Bitácora</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #sinDato><small class="text-body-secondary">sin datos</small></ng-template>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

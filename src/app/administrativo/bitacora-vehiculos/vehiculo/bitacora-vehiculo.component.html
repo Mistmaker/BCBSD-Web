@@ -1,0 +1,255 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8">
+            <strong>Bitácora del vehículo</strong>
+            <span *ngIf="datos() as d"> — {{ nombreVehiculo(d.vehiculo) }}</span>
+          </c-col>
+          <c-col md="4" class="text-md-end">
+            <a cButton color="light" size="sm" variant="outline" routerLink="/admin/bitacora-vehiculos" [queryParams]="{ desde: desde, hasta: hasta }">
+              <i class="fa-solid fa-arrow-left"></i> Todos los vehículos
+            </a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <form class="row g-2 align-items-end mb-3" (ngSubmit)="consultar()">
+          <div class="col-6 col-md-2">
+            <label cLabel for="desde" class="small">Desde</label>
+            <input cFormControl sizing="sm" type="date" id="desde" name="desde" [(ngModel)]="desde" required />
+          </div>
+          <div class="col-6 col-md-2">
+            <label cLabel for="hasta" class="small">Hasta</label>
+            <input cFormControl sizing="sm" type="date" id="hasta" name="hasta" [(ngModel)]="hasta" required />
+          </div>
+          <div class="col-12 col-md-2">
+            <button cButton color="primary" size="sm" type="submit" [disabled]="cargando" class="w-100"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+          </div>
+          <div class="col-12 col-md-6 small text-body-secondary" *ngIf="datos() as d">
+            {{ d.vehiculo.vehiculo_tipo }} · {{ d.vehiculo.vehiculo_combustible }}
+            <span *ngIf="d.vehiculo.vehiculo_motor"> · Motor {{ d.vehiculo.vehiculo_motor }}</span>
+            <span *ngIf="d.vehiculo.vehiculo_estado"> · {{ d.vehiculo.vehiculo_estado }}</span>
+          </div>
+        </form>
+
+        <div class="text-center py-4" *ngIf="cargando && !datos()"><c-spinner size="sm"></c-spinner> Calculando...</div>
+
+        <ng-container *ngIf="datos() as d">
+          <!-- Indicadores -->
+          <c-row class="g-3 mb-3">
+            <c-col xs="6" lg="3">
+              <div class="border rounded p-3 h-100">
+                <div class="small text-body-secondary">Km recorridos</div>
+                <div class="kpi">{{ d.indicadores.km_recorridos | number: '1.0-0' }}</div>
+                <div class="small text-body-secondary" *ngIf="d.indicadores.km_actual">Último registro: {{ d.indicadores.km_actual | number: '1.0-0' }} km</div>
+              </div>
+            </c-col>
+            <c-col xs="6" lg="3">
+              <div class="border rounded p-3 h-100">
+                <div class="small text-body-secondary">Rendimiento de combustible</div>
+                <div class="kpi">
+                  <ng-container *ngIf="d.indicadores.combustible.rendimiento !== null; else sinDato">{{ d.indicadores.combustible.rendimiento | number: '1.1-1' }} <small class="fs-6">km/gal</small></ng-container>
+                </div>
+                <div class="small" *ngIf="d.comparacion.rendimiento.diferencia_pct !== null">
+                  <span [class.text-danger]="d.comparacion.rendimiento.diferencia_pct <= -d.parametros.pct_rendimiento">
+                    <i class="fa-solid" [class.fa-arrow-down]="d.comparacion.rendimiento.diferencia_pct < 0" [class.fa-arrow-up]="d.comparacion.rendimiento.diferencia_pct >= 0" aria-hidden="true"></i>
+                    {{ d.comparacion.rendimiento.diferencia_pct | number: '1.0-1' }} %</span>
+                  <span class="text-body-secondary"> vs. {{ d.comparacion.rendimiento.promedio_pares | number: '1.1-1' }} km/gal de {{ d.comparacion.rendimiento.pares_con_dato }} igual(es)</span>
+                </div>
+                <div class="small text-body-secondary" *ngIf="d.comparacion.rendimiento.diferencia_pct === null">{{ d.indicadores.combustible.galones | number: '1.0-2' }} gal en {{ d.indicadores.combustible.cargas }} cargas</div>
+              </div>
+            </c-col>
+            <c-col xs="6" lg="3">
+              <div class="border rounded p-3 h-100">
+                <div class="small text-body-secondary">Gasto total</div>
+                <div class="kpi">{{ d.indicadores.costo_total | currency: 'USD' }}</div>
+                <div class="small text-body-secondary">
+                  Combustible {{ d.indicadores.combustible.valor | currency: 'USD' }} · Mantenimiento {{ d.indicadores.mantenimiento.total | currency: 'USD' }}
+                </div>
+              </div>
+            </c-col>
+            <c-col xs="6" lg="3">
+              <div class="border rounded p-3 h-100">
+                <div class="small text-body-secondary">Costo por km</div>
+                <div class="kpi"><ng-container *ngIf="d.indicadores.costo_total_km !== null; else sinDato">{{ d.indicadores.costo_total_km | currency: 'USD':'symbol':'1.3-3' }}</ng-container></div>
+                <div class="small" *ngIf="d.comparacion.costo_total_km.diferencia_pct !== null">
+                  <span [class.text-danger]="d.comparacion.costo_total_km.diferencia_pct >= d.parametros.pct_costo">{{ d.comparacion.costo_total_km.diferencia_pct > 0 ? '+' : '' }}{{ d.comparacion.costo_total_km.diferencia_pct | number: '1.0-1' }} %</span>
+                  <span class="text-body-secondary"> vs. {{ d.comparacion.costo_total_km.promedio_pares | currency: 'USD':'symbol':'1.3-3' }} de sus iguales</span>
+                </div>
+              </div>
+            </c-col>
+          </c-row>
+
+          <!-- Alertas -->
+          <c-alert *ngFor="let a of d.alertas" [color]="colorAlerta(a.nivel)" class="py-2 small d-flex align-items-start gap-2">
+            <i class="fa-solid mt-1" [class.fa-triangle-exclamation]="a.nivel === 'serious'" [class.fa-circle-info]="a.nivel === 'warning'" aria-hidden="true"></i>
+            <div><strong>{{ a.nivel === 'serious' ? 'Revisar' : 'Atención' }}:</strong> {{ a.mensaje }}</div>
+          </c-alert>
+
+          <!-- Gráficos -->
+          <c-row class="g-3 mb-3">
+            <c-col lg="6">
+              <div class="border rounded p-3 h-100">
+                <h6 class="mb-1">Rendimiento por carga</h6>
+                <p class="small text-body-secondary mb-2">Km recorridos desde la carga anterior divididos para los galones cargados (tanque lleno).</p>
+                <div class="grafico" *ngIf="(graficoRend()?.labels?.length ?? 0) > 0; else sinTramos">
+                  <c-chart type="line" [data]="graficoRend()!" [options]="opcionesRend()" [height]="280"></c-chart>
+                </div>
+                <ng-template #sinTramos><p class="text-body-secondary small py-5 text-center">Se necesitan al menos dos cargas con kilometraje para calcular el rendimiento.</p></ng-template>
+                <p class="small text-body-secondary mb-0 mt-2" *ngIf="tramosInvalidos().length">
+                  <i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ tramosInvalidos().length }} carga(s) sin lectura válida de kilometraje no se grafican; su combustible se suma a la siguiente carga.
+                </p>
+              </div>
+            </c-col>
+            <c-col lg="6">
+              <div class="border rounded p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1">Gasto mensual</h6>
+                    <p class="small text-body-secondary mb-2">Combustible y mantenimiento por rubro.</p>
+                  </div>
+                  <c-button-group size="sm" role="group" aria-label="Vista del gasto mensual">
+                    <button cButton color="secondary" variant="outline" type="button" [active]="!verTablaGasto" (click)="verTablaGasto = false"><i class="fa-solid fa-chart-column"></i> Gráfico</button>
+                    <button cButton color="secondary" variant="outline" type="button" [active]="verTablaGasto" (click)="verTablaGasto = true"><i class="fa-solid fa-table"></i> Tabla</button>
+                  </c-button-group>
+                </div>
+                <div class="grafico" *ngIf="!verTablaGasto">
+                  <c-chart type="bar" [data]="graficoGasto()!" [options]="opcionesGasto()" [height]="280"></c-chart>
+                </div>
+                <div class="table-responsive" *ngIf="verTablaGasto" style="max-height: 300px">
+                  <table cTable small class="mb-0">
+                    <thead><tr><th>Mes</th><th class="text-end" *ngFor="let s of seriesGasto()">{{ etiquetaSerie(s) }}</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                      <tr *ngFor="let m of d.gasto_mensual">
+                        <td>{{ nombreMes(m.mes) }}</td>
+                        <td class="text-end" *ngFor="let s of seriesGasto()">{{ valorSerie(m, s) | currency: 'USD' }}</td>
+                        <td class="text-end fw-semibold">{{ m.total | currency: 'USD' }}</td>
+                      </tr>
+                    </tbody>
+                    <tfoot><tr class="fw-semibold"><td>Total</td><td class="text-end" *ngFor="let s of seriesGasto()">{{ totalSerie(s) | currency: 'USD' }}</td><td class="text-end">{{ totalGasto() | currency: 'USD' }}</td></tr></tfoot>
+                  </table>
+                </div>
+              </div>
+            </c-col>
+          </c-row>
+
+          <c-row class="g-3 mb-3">
+            <!-- Mantenimiento -->
+            <c-col lg="6">
+              <div class="border rounded p-3 h-100">
+                <h6>Mantenimiento</h6>
+                <p class="small mb-2">
+                  {{ d.indicadores.mantenimiento.ordenes }} orden(es)
+                  <span *ngFor="let t of d.indicadores.mantenimiento.por_tipo | keyvalue" class="text-body-secondary"> · {{ t.value }} {{ t.key | lowercase }}</span>
+                  <span *ngIf="d.indicadores.mantenimiento.km_entre"> · una cada {{ d.indicadores.mantenimiento.km_entre | number: '1.0-0' }} km</span>
+                  <span *ngIf="d.indicadores.mantenimiento.dias_entre"> / {{ d.indicadores.mantenimiento.dias_entre | number: '1.0-0' }} días</span>
+                </p>
+                <table cTable small class="mb-3" *ngIf="d.indicadores.mantenimiento.total > 0">
+                  <tbody>
+                    <tr *ngFor="let r of d.indicadores.mantenimiento.por_rubro | keyvalue">
+                      <td>{{ etiquetaSerie(r.key) }}</td><td class="text-end">{{ r.value | currency: 'USD' }}</td>
+                    </tr>
+                    <tr class="fw-semibold"><td>Total</td><td class="text-end">{{ d.indicadores.mantenimiento.total | currency: 'USD' }}</td></tr>
+                  </tbody>
+                </table>
+                <h6 class="small fw-semibold">Trabajos repetidos</h6>
+                <p class="small text-body-secondary" *ngIf="!d.indicadores.trabajos_repetidos.length">Ningún trabajo se repitió en el período.</p>
+                <table cTable small class="mb-0" *ngIf="d.indicadores.trabajos_repetidos.length">
+                  <thead><tr><th>Trabajo</th><th class="text-end">Veces</th><th>Repetición más cercana</th></tr></thead>
+                  <tbody>
+                    <tr *ngFor="let t of d.indicadores.trabajos_repetidos">
+                      <td>
+                        <i *ngIf="t.en_ventana" class="fa-solid fa-triangle-exclamation text-danger" aria-label="Dentro del plazo de alerta"></i> {{ t.trabajo }}<br />
+                        <small class="text-body-secondary"><span *ngFor="let o of t.ocurrencias; let ultimo = last">{{ o.fecha | date: 'dd/MM/yyyy' }} ({{ o.km | number: '1.0-0' }} km){{ ultimo ? '' : ', ' }}</span></small>
+                      </td>
+                      <td class="text-end">{{ t.veces }}</td>
+                      <td>{{ t.dias_min }} días · {{ t.km_min | number: '1.0-0' }} km</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </c-col>
+            <!-- Comparación -->
+            <c-col lg="6">
+              <div class="border rounded p-3 h-100">
+                <h6>Vehículos iguales <small class="text-body-secondary fw-normal">({{ d.vehiculo.vehiculo_marca }} {{ d.vehiculo.vehiculo_modelo }} {{ d.vehiculo.vehiculo_anio }})</small></h6>
+                <p class="small text-body-secondary" *ngIf="!d.pares.length">No hay otros vehículos de la misma marca, modelo y año para comparar.</p>
+                <div class="table-responsive" *ngIf="d.pares.length">
+                  <table cTable small class="mb-0">
+                    <thead><tr><th>Vehículo</th><th class="text-end">Km</th><th class="text-end">km/gal</th><th class="text-end">Mant. por km</th><th class="text-end">Costo por km</th></tr></thead>
+                    <tbody>
+                      <tr class="fw-semibold">
+                        <td>{{ d.vehiculo.vehiculo_sigla || d.vehiculo.vehiculo_placa }} <small class="text-body-secondary fw-normal">(este)</small></td>
+                        <td class="text-end">{{ d.indicadores.km_recorridos | number: '1.0-0' }}</td>
+                        <td class="text-end">{{ d.indicadores.combustible.rendimiento ?? '—' }}</td>
+                        <td class="text-end">{{ d.indicadores.costo_mant_km === null ? '—' : (d.indicadores.costo_mant_km | currency: 'USD':'symbol':'1.3-3') }}</td>
+                        <td class="text-end">{{ d.indicadores.costo_total_km === null ? '—' : (d.indicadores.costo_total_km | currency: 'USD':'symbol':'1.3-3') }}</td>
+                      </tr>
+                      <tr *ngFor="let p of d.pares">
+                        <td><a [routerLink]="['/admin/bitacora-vehiculos', p.vehiculo_id]" [queryParams]="{ desde: desde, hasta: hasta }">{{ p.vehiculo_sigla || p.vehiculo_placa }}</a></td>
+                        <td class="text-end">{{ p.km_recorridos | number: '1.0-0' }}</td>
+                        <td class="text-end">{{ p.rendimiento ?? '—' }}</td>
+                        <td class="text-end">{{ p.costo_mant_km === null ? '—' : (p.costo_mant_km | currency: 'USD':'symbol':'1.3-3') }}</td>
+                        <td class="text-end">{{ p.costo_total_km === null ? '—' : (p.costo_total_km | currency: 'USD':'symbol':'1.3-3') }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </c-col>
+          </c-row>
+
+          <!-- Historial -->
+          <div class="border rounded p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+              <h6 class="mb-0">Historial <small class="text-body-secondary fw-normal">(más reciente primero)</small></h6>
+              <div class="d-flex flex-wrap gap-1" role="group" aria-label="Filtrar historial por tipo">
+                <button *ngFor="let t of tipos" cButton size="sm" type="button" color="secondary" [variant]="tiposVisibles().has(t.tipo) ? undefined : 'outline'"
+                        [attr.aria-pressed]="tiposVisibles().has(t.tipo)" (click)="alternarTipo(t.tipo)">
+                  <i class="fa-solid" [ngClass]="t.icono" aria-hidden="true"></i> {{ t.etiqueta }} ({{ conteoTipos()[t.tipo] ?? 0 }})
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive" style="max-height: 520px">
+              <table cTable small hover class="align-middle mb-0">
+                <thead class="sticky-top"><tr><th>Fecha</th><th class="text-end">Km</th><th>Tipo</th><th>Documento</th><th>Detalle</th><th class="text-end">Valor</th></tr></thead>
+                <tbody>
+                  <tr *ngIf="!eventos().length"><td colspan="6" class="text-center text-body-secondary">Sin registros</td></tr>
+                  <tr *ngFor="let e of eventos()">
+                    <td class="text-nowrap">{{ e.fecha | date: 'dd/MM/yyyy' }}</td>
+                    <td class="text-end text-nowrap">{{ e.km === null ? '—' : (e.km | number: '1.0-0') }}<small class="text-body-secondary" *ngIf="e.km_fin"> → {{ e.km_fin | number: '1.0-0' }}</small></td>
+                    <td class="text-nowrap"><i class="fa-solid text-body-secondary" [ngClass]="icono(e.tipo)" aria-hidden="true"></i> {{ etiquetaTipo(e.tipo) }}</td>
+                    <td class="text-nowrap">
+                      <a *ngIf="e.tipo === 'MANTENIMIENTO'" [routerLink]="['/admin/ordenes-mantenimiento', e.id]">{{ e.codigo }}</a>
+                      <span *ngIf="e.tipo !== 'MANTENIMIENTO'">{{ e.codigo }}</span>
+                    </td>
+                    <td>
+                      <span>{{ e.detalle }}</span>
+                      <ng-container *ngIf="e.tipo === 'COMBUSTIBLE'">
+                        <small class="d-block text-body-secondary">
+                          {{ e.galones | number: '1.0-3' }} gal
+                          <span *ngIf="e.km_desde_anterior !== null && e.km_desde_anterior !== undefined"> · {{ e.km_desde_anterior | number: '1.0-0' }} km desde la anterior</span>
+                          <span *ngIf="e.rendimiento"> · <strong>{{ e.rendimiento | number: '1.1-1' }} km/gal</strong></span>
+                        </small>
+                        <small class="d-block text-warning-emphasis" *ngIf="e.observacion"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ e.observacion }}</small>
+                      </ng-container>
+                      <ng-container *ngIf="e.tipo === 'MANTENIMIENTO'">
+                        <small class="d-block" *ngIf="e.trabajos?.length">{{ e.trabajos!.join('; ') }}</small>
+                        <small class="d-block text-body-secondary" *ngIf="e.sugeridos?.length">Sugeridos: {{ e.sugeridos!.join('; ') }}</small>
+                        <small class="d-block text-body-secondary" *ngIf="rubros(e).length"><span *ngFor="let r of rubros(e); let ultimo = last">{{ etiquetaSerie(r.rubro) }} {{ r.valor | currency: 'USD' }}{{ ultimo ? '' : ' · ' }}</span></small>
+                      </ng-container>
+                    </td>
+                    <td class="text-end text-nowrap">{{ e.valor === undefined ? '' : (e.valor | currency: 'USD') }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #sinDato><span class="text-body-secondary fs-6">sin datos</span></ng-template>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
