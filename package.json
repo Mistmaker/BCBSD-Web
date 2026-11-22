@@ -20,7 +20,8 @@
     "test:auth": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/auth/**/*.spec.ts' --include='src/app/core/**/*.spec.ts'",
     "test:mantenimiento": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/mantenimiento.model.spec.ts' --include='src/app/administrativo/services/mantenimiento.service.spec.ts' --include='src/app/administrativo/mantenimiento-vehicular/**/*.spec.ts'",
     "test:bitacora": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/bitacora.model.spec.ts' --include='src/app/administrativo/services/bitacora.service.spec.ts' --include='src/app/administrativo/bitacora-vehiculos/**/*.spec.ts'",
-    "test:operadores": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/operadores.model.spec.ts' --include='src/app/administrativo/services/operadores.service.spec.ts'"
+    "test:operadores": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/operadores.model.spec.ts' --include='src/app/administrativo/services/operadores.service.spec.ts'",
+    "test:admin": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/admin/**/*.spec.ts'"
   },
   "private": true,
   "dependencies": {

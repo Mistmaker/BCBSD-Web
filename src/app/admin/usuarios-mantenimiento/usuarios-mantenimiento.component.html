@@ -1,1 +1,155 @@
-<p>usuarios-mantenimiento works!</p>
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8">
+            <strong>Usuarios - {{ esNuevo ? 'Nuevo usuario' : nombrePersona(usuario!) }}</strong>
+            <span *ngIf="usuario"> · <code class="text-white">{{ usuario.usuario_login }}</code></span>
+          </c-col>
+          <c-col md="4" class="text-md-end">
+            <a cButton color="light" size="sm" variant="outline" routerLink="/adm/usuarios"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <ng-container *ngIf="!cargando">
+          <c-button-group class="mb-4" role="tablist" aria-label="Secciones del usuario" *ngIf="!esNuevo">
+            <button cButton type="button" color="secondary" [variant]="pestana === 'datos' ? undefined : 'outline'" role="tab" [attr.aria-selected]="pestana === 'datos'"
+                    (click)="pestana = 'datos'"><i class="fa-solid fa-id-card"></i> Datos</button>
+            <button cButton type="button" color="secondary" [variant]="pestana === 'privilegios' ? undefined : 'outline'" role="tab" [attr.aria-selected]="pestana === 'privilegios'"
+                    (click)="pestana = 'privilegios'"><i class="fa-solid fa-key"></i> Privilegios</button>
+          </c-button-group>
+
+          <!-- DATOS -->
+          <form *ngIf="pestana === 'datos'" (ngSubmit)="guardar()" novalidate>
+            <h6 class="text-body-secondary">Persona</h6>
+            <c-row class="g-3 mb-4">
+              <ng-container *ngIf="esNuevo">
+                <c-col md="3">
+                  <label cLabel for="tipoDoc">Tipo de documento</label>
+                  <select cSelect id="tipoDoc" name="tipoDoc" [(ngModel)]="datos.persona_tipo_doc" (ngModelChange)="alCambiarDocumento()">
+                    <option value="CEDULA">Cédula</option>
+                    <option value="PASAPORTE">Pasaporte</option>
+                  </select>
+                </c-col>
+                <c-col md="4">
+                  <label cLabel for="doc">Número de documento</label>
+                  <c-input-group>
+                    <input cFormControl id="doc" name="doc" required [(ngModel)]="datos.persona_doc_identidad" (ngModelChange)="alCambiarDocumento()" autocomplete="off"
+                           [maxlength]="datos.persona_tipo_doc === 'CEDULA' ? 10 : 20"
+                           [class.is-invalid]="(validado || (datos.persona_doc_identidad?.length ?? 0) >= 10) && !docValido" />
+                    <button cButton type="button" color="secondary" variant="outline" (click)="buscar()" [disabled]="!docValido || buscando" aria-label="Buscar documento">
+                      <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                  </c-input-group>
+                  <small class="text-body-secondary">Si la persona ya está registrada (funcionario o no), se usan sus datos.</small>
+                </c-col>
+                <c-col md="5" class="d-flex align-items-end" *ngIf="buscando"><span><c-spinner size="sm"></c-spinner> Buscando...</span></c-col>
+                <c-col md="5" class="d-flex align-items-end" *ngIf="busqueda">
+                  <c-alert [color]="personaExistente ? 'info' : 'secondary'" class="py-2 mb-0 w-100 small">
+                    <ng-container *ngIf="personaExistente?.ppersonal_id"><i class="fa-solid fa-id-badge" aria-hidden="true"></i> Funcionario: {{ personaExistente!.puesto_nombre }}.</ng-container>
+                    <ng-container *ngIf="personaExistente && !personaExistente.ppersonal_id"><i class="fa-solid fa-user" aria-hidden="true"></i> Persona registrada (no es funcionario).</ng-container>
+                    <ng-container *ngIf="!personaExistente"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Persona nueva (externa): ingrese sus datos.</ng-container>
+                  </c-alert>
+                </c-col>
+              </ng-container>
+              <ng-container *ngIf="!esNuevo">
+                <c-col md="3"><label cLabel>Documento</label><input cFormControl [value]="(usuario!.persona_tipo_doc || '') + ' ' + (usuario!.persona_doc_identidad || '')" readonly /></c-col>
+                <c-col md="9">
+                  <label cLabel>Vínculo con la institución</label>
+                  <input cFormControl readonly [value]="usuario!.es_funcionario ? 'Funcionario: ' + usuario!.puesto_nombre + ' (' + usuario!.puesto_modalidad + ')' : 'Externo (no es funcionario)'" />
+                </c-col>
+              </ng-container>
+
+              <ng-container *ngIf="listoParaDatos">
+                <c-col md="6">
+                  <label cLabel for="apellidos">Apellidos</label>
+                  <input cFormControl id="apellidos" name="apellidos" [(ngModel)]="datos.persona_apellidos" [required]="nombresEditables" [readonly]="!nombresEditables || !puedeEditar"
+                         (ngModelChange)="sugerirLogin()" style="text-transform: uppercase" autocomplete="off" [class.is-invalid]="validado && nombresEditables && !datos.persona_apellidos.trim()" />
+                </c-col>
+                <c-col md="6">
+                  <label cLabel for="nombres">Nombres</label>
+                  <input cFormControl id="nombres" name="nombres" [(ngModel)]="datos.persona_nombres" [required]="nombresEditables" [readonly]="!nombresEditables || !puedeEditar"
+                         (ngModelChange)="sugerirLogin()" style="text-transform: uppercase" autocomplete="off" [class.is-invalid]="validado && nombresEditables && !datos.persona_nombres.trim()" />
+                </c-col>
+                <c-col xs="12" *ngIf="!nombresEditables"><small class="text-body-secondary">Los nombres de los funcionarios se actualizan en la ficha de Talento Humano.</small></c-col>
+                <c-col md="6">
+                  <label cLabel for="correo">Correo</label>
+                  <input cFormControl id="correo" name="correo" type="email" [(ngModel)]="datos.persona_correo" [readonly]="!puedeEditar" autocomplete="off" />
+                </c-col>
+                <c-col md="6">
+                  <label cLabel for="celular">Celular</label>
+                  <input cFormControl id="celular" name="celular" inputmode="tel" [(ngModel)]="datos.persona_celular" [readonly]="!puedeEditar" autocomplete="off" />
+                </c-col>
+              </ng-container>
+            </c-row>
+
+            <ng-container *ngIf="listoParaDatos">
+              <h6 class="text-body-secondary">Acceso al sistema</h6>
+              <c-row class="g-3">
+                <c-col md="4">
+                  <label cLabel for="login">Usuario</label>
+                  <input cFormControl id="login" name="login" required [(ngModel)]="datos.usuario_login" (input)="loginEditado = true" [readonly]="!puedeEditar" autocomplete="off"
+                         style="text-transform: lowercase" [class.is-invalid]="validado && !datos.usuario_login" />
+                  <small class="text-body-secondary">Letras sin tildes, números, punto, guion o guion bajo.</small>
+                </c-col>
+                <c-col md="4" *ngIf="esNuevo">
+                  <label cLabel for="clave">Clave temporal</label>
+                  <c-input-group>
+                    <input cFormControl id="clave" name="clave" required [type]="mostrarClave ? 'text' : 'password'" [(ngModel)]="datos.clave" autocomplete="new-password" />
+                    <button cButton type="button" color="secondary" variant="outline" (click)="mostrarClave = !mostrarClave" [attr.aria-label]="mostrarClave ? 'Ocultar clave' : 'Mostrar clave'">
+                      <i class="fa-solid" [class.fa-eye]="!mostrarClave" [class.fa-eye-slash]="mostrarClave"></i>
+                    </button>
+                    <button cButton type="button" color="secondary" variant="outline" (click)="generarClave()">Generar</button>
+                  </c-input-group>
+                  <small class="text-body-secondary">Mínimo 8 caracteres con letras y números. Deberá cambiarla al ingresar.</small>
+                </c-col>
+                <c-col md="4" *ngIf="!esNuevo && puedeEditar" class="d-flex align-items-end">
+                  <button cButton type="button" color="secondary" variant="outline" (click)="restablecerClave()"><i class="fa-solid fa-rotate"></i> Restablecer clave</button>
+                </c-col>
+                <c-col md="4">
+                  <label cLabel for="estado">Estado</label>
+                  <select cSelect id="estado" name="estado" [(ngModel)]="datos.usuario_estado" [disabled]="!puedeEditar || esUnoMismo">
+                    <option value="ACTIVO">ACTIVO</option>
+                    <option value="INACTIVO">INACTIVO (no puede ingresar)</option>
+                  </select>
+                </c-col>
+                <c-col md="8">
+                  <label cLabel for="perfil">Perfil</label>
+                  <select cSelect id="perfil" name="perfil" required [(ngModel)]="datos.fk_perfil_id" [disabled]="!puedeEditar">
+                    <option *ngFor="let p of perfilesElegibles" [ngValue]="p.perfil_id">{{ p.perfil_nombre }}{{ p.perfil_estado === 'INACTIVO' ? ' (inactivo)' : '' }}</option>
+                  </select>
+                  <small class="text-body-secondary" *ngIf="perfilSeleccionado as p">
+                    {{ p.perfil_descripcion || 'Sin descripción' }} · {{ p.pantallas }} pantalla(s) y {{ p.privilegios - p.pantallas }} acción(es).
+                    El usuario recibe estos privilegios automáticamente.
+                  </small>
+                </c-col>
+              </c-row>
+              <div class="text-end mt-4" *ngIf="puedeEditar">
+                <button cButton color="primary" type="submit" [disabled]="guardando"><i class="fa-solid fa-floppy-disk"></i> {{ esNuevo ? 'Crear usuario' : 'Guardar' }}</button>
+              </div>
+            </ng-container>
+          </form>
+
+          <!-- PRIVILEGIOS -->
+          <ng-container *ngIf="pestana === 'privilegios' && usuario">
+            <c-alert color="info" class="small py-2">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              Los privilegios marcados como <c-badge color="info">del perfil</c-badge> vienen del perfil <strong>{{ usuario.perfil_nombre }}</strong>
+              y se cambian en <a routerLink="/adm/perfiles/{{ usuario.fk_perfil_id }}" *ngIf="auth.tienePermiso('SIS_PERFILES'); else sinEnlace">Perfiles</a>
+              <ng-template #sinEnlace>Perfiles</ng-template>. Aquí solo se asignan privilegios <strong>adicionales</strong> para este usuario.
+              <span *ngIf="usuario.perfil_estado === 'INACTIVO'" class="text-danger d-block">El perfil está inactivo: sus privilegios no se aplican.</span>
+              <span *ngIf="usuario.usuario_estado === 'INACTIVO'" class="text-danger d-block">El usuario está inactivo: no tiene ningún privilegio mientras lo esté.</span>
+            </c-alert>
+            <app-privilegios-arbol [arbol]="privilegios" [soloLectura]="!puedeAsignar"></app-privilegios-arbol>
+            <div class="text-end mt-3" *ngIf="puedeAsignar">
+              <button cButton color="primary" type="button" (click)="guardarPrivilegios()" [disabled]="guardando"><i class="fa-solid fa-floppy-disk"></i> Guardar privilegios adicionales</button>
+            </div>
+          </ng-container>
+        </ng-container>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

@@ -100,7 +100,7 @@ describe('OrdenMantenimientoFormComponent', () => {
 
   it('sin director EN FUNCIONES no se puede emitir', () => {
     const c = crear('nuevo');
-    c.configuracion!.director_administrativo = null;
+    c.configuracion = { ...c.configuracion!, director_administrativo: null }; // copia: no alterar la configuración compartida
     expect(c.directorNombre).toBeNull();
     expect(c.camposFaltantes()).toContain('director administrativo EN FUNCIONES');
   });

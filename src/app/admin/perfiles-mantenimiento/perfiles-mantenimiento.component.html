@@ -1,1 +1,46 @@
-<p>perfiles-mantenimiento works!</p>
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8"><strong>Perfiles - {{ perfil ? perfil.perfil_nombre : 'Nuevo perfil' }}</strong></c-col>
+          <c-col md="4" class="text-md-end">
+            <a cButton color="light" size="sm" variant="outline" routerLink="/adm/perfiles"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <form *ngIf="!cargando" (ngSubmit)="guardar()" novalidate>
+          <c-row class="g-3 mb-4">
+            <c-col md="5">
+              <label cLabel for="nombre">Nombre del perfil</label>
+              <input cFormControl id="nombre" name="nombre" required [(ngModel)]="nombre" [readonly]="!puedeEditar" style="text-transform: uppercase"
+                     placeholder="Ej. ANALISTA DE MANTENIMIENTO VEHICULAR" [class.is-invalid]="validado && nombre.trim().length < 3" />
+            </c-col>
+            <c-col md="5">
+              <label cLabel for="descripcion">Descripción</label>
+              <input cFormControl id="descripcion" name="descripcion" [(ngModel)]="descripcion" [readonly]="!puedeEditar" />
+            </c-col>
+            <c-col md="2">
+              <label cLabel for="estado">Estado</label>
+              <select cSelect id="estado" name="estado" [(ngModel)]="estado" [disabled]="!puedeEditar">
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+              </select>
+            </c-col>
+          </c-row>
+          <c-alert color="info" class="small py-2" *ngIf="perfil">
+            <i class="fa-solid fa-users" aria-hidden="true"></i> {{ perfil.usuarios_activos }} usuario(s) activo(s) con este perfil.
+            <span *ngIf="estado === 'INACTIVO'"> Con el perfil INACTIVO, sus usuarios solo conservan sus privilegios adicionales.</span>
+          </c-alert>
+          <h6 class="text-body-secondary">Privilegios predefinidos</h6>
+          <app-privilegios-arbol [arbol]="arbol" [soloLectura]="!puedeEditar"></app-privilegios-arbol>
+          <div class="text-end mt-3" *ngIf="puedeEditar">
+            <button cButton color="primary" type="submit" [disabled]="guardando"><i class="fa-solid fa-floppy-disk"></i> Guardar perfil</button>
+          </div>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

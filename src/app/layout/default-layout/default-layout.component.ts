@@ -74,19 +74,8 @@ export class DefaultLayoutComponent {
     this._authService.refrescarPermisos().subscribe({ error: (e) => console.error(e) });
     this._authService.getMenus(user.usuario.usuario_id, user.usuario.voluntario_id).subscribe({
       next: (data: any[]) => {
+        // Incluye Administración > Usuarios / Perfiles para quien tenga esos privilegios (antes estaba fijo para el usuario 113)
         const menu = [...data];
-        if (user.usuario.usuario_id === 113) { // solo para el usuario administrador, se agrega el menu de administrador
-          menu.push({
-            name: 'Administrador',
-            url: '/adm',
-            iconComponent: { name: 'cil-notes' },
-            children: [
-              { name: 'Dashboard', url: '/adm/dashboard', icon: 'nav-icon-bullet' },
-              { name: 'Usuarios', url: '/adm/usuarios', icon: 'nav-icon-bullet' },
-              { name: 'Perfiles', url: '/adm/perfiles', icon: 'nav-icon-bullet' },
-            ]
-          });
-        }
         this.navItems = menu;
       },
       error: (e: any) => console.error(e)

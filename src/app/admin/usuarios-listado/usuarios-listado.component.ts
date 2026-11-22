@@ -1,144 +1,62 @@
-import { AuthService } from '../../auth/auth.service';
-import { UsuariosModel } from './../models/usuarios.model';
 import { Component, OnInit } from '@angular/core';
-
-import { RouterLink } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-import {
-  BadgeComponent,
-  BorderDirective,
-  ButtonDirective,
-  ButtonGroupComponent,
-  ThemeDirective,
-  DropdownComponent,
-  DropdownToggleDirective,
-  DropdownMenuDirective,
-  DropdownItemDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TableDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,
-  ModalBodyComponent,
-  ModalComponent,
-  ModalFooterComponent,
-  ModalHeaderComponent,
-  ModalTitleDirective,
-  ModalToggleDirective,
-  ButtonCloseDirective
-} from '@coreui/angular';
-import { AdminService } from '../services/admin.service';
+import { RouterLink } from '@angular/router';
+import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, FormControlDirective, FormSelectDirective,
+  RowComponent, SpinnerComponent, TableDirective } from '@coreui/angular';
 import Swal from 'sweetalert2';
+
+import { AuthService } from '../../auth/auth.service';
 import { FiltroGeneralPipe } from '../../pipes/filtro-general.pipe';
+import { nombrePersona, UsuarioModel } from '../models/usuarios.model';
+import { AdminService } from '../services/admin.service';
 
+export type FiltroUsuarios = 'TODOS' | 'ACTIVO' | 'INACTIVO' | 'FUNCIONARIOS' | 'EXTERNOS';
 
+export function filtrarUsuarios(lista: UsuarioModel[], estado: FiltroUsuarios, perfilId: number | null): UsuarioModel[] {
+  return lista.filter(u =>
+    (perfilId === null || u.fk_perfil_id === perfilId)
+    && (estado === 'TODOS' || (estado === 'FUNCIONARIOS' ? u.es_funcionario : estado === 'EXTERNOS' ? !u.es_funcionario : u.usuario_estado === estado)));
+}
 
 @Component({
   selector: 'app-usuarios-listado',
-  imports: [FormsModule, ThemeDirective, DropdownComponent, DropdownToggleDirective, DropdownMenuDirective, DropdownItemDirective, BadgeComponent, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, ButtonGroupComponent, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent, TableDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,
-    ModalBodyComponent,
-    ModalComponent,
-    ModalFooterComponent,
-    ModalHeaderComponent,
-    ModalTitleDirective,
-    ModalToggleDirective,
-    ButtonCloseDirective, FiltroGeneralPipe
-  ],
-  templateUrl: './usuarios-listado.component.html',
-  styleUrl: './usuarios-listado.component.scss'
+  imports: [CommonModule, FormsModule, RouterLink, FiltroGeneralPipe, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent,
+    ButtonDirective, BadgeComponent, TableDirective, FormControlDirective, FormSelectDirective, SpinnerComponent],
+  templateUrl: './usuarios-listado.component.html'
 })
-export class UsuariosListadoComponent {
-
-  usuarios: UsuariosModel[] = [];
+export class UsuariosListadoComponent implements OnInit {
+  usuarios: UsuarioModel[] = [];
   filtroBusqueda = '';
-  errorMessage: string = '';
-  page: number = 1;
+  estado: FiltroUsuarios = 'ACTIVO';
+  perfilId: number | null = null;
+  cargando = true;
+  readonly nombrePersona = nombrePersona;
 
-  privilegios: any[] = [];
-  usuarioSeleccionado: any = null;
-  cargandoPrivilegios = false;
-
-  constructor(private adminService: AdminService, private authService: AuthService) { }
+  constructor(private adminService: AdminService, public auth: AuthService) { }
 
   ngOnInit(): void {
-    this.cargarDatos();
-  }
-
-  cargarDatos() {
-    this.usuarios = [];
-    this.errorMessage = '';
     this.adminService.getAll().subscribe({
-      next: (data) => this.usuarios = data,
-      error: (e) => {
-        console.error(e);
-        this.errorMessage = e.message;
-      },
-      complete: () => console.info('complete')
-    })
-  }
-
-  cargarPrivilegios(usuario_id: number) {
-    this.usuarioSeleccionado = usuario_id;
-    this.adminService.getPrivilegios(usuario_id).subscribe({
-      next: (data) => {
-        this.privilegios = data;
-        this.cargandoPrivilegios = false;
-      },
-      error: (e) => {
-        console.error(e);
-        this.errorMessage = e.message;
-        console.error(e);
-        Swal.fire('Error', 'No se pudieron cargar los privilegios', 'error');
-        this.cargandoPrivilegios = false;
-      },
-      complete: () => console.info('complete')
-    })
-  }
-
-  guardarPrivilegios() {
-    const rolesSeleccionados: number[] = [];
-
-    this.privilegios.forEach(modulo => {
-      modulo.submodulos.forEach((sub: { roles: any[]; }) => {
-        sub.roles.forEach((rol: any) => {
-          if (rol.asignado) {
-            rolesSeleccionados.push(rol.rol_id);
-          }
-        });
-      });
-    });
-
-    this.adminService.guardarPrivilegios(this.usuarioSeleccionado, rolesSeleccionados).subscribe({
-      next: () => {
-        // Si son los privilegios del usuario conectado, el menú y los permisos se actualizan de inmediato
-        if (Number(this.usuarioSeleccionado) === this.authService.getUsuarioId()) {
-          this.authService.notificarCambioPrivilegios();
-        }
-        Swal.fire('Éxito', 'Privilegios actualizados correctamente', 'success');
-      },
-      error: () => {
-        Swal.fire('Error', 'No se pudieron guardar los privilegios', 'error');
-      }
+      next: (d) => { this.usuarios = d; this.cargando = false; },
+      error: (e) => { this.cargando = false; Swal.fire('Error', 'No se pudieron cargar los usuarios. ' + (e.error?.msg ?? e.message), 'error'); }
     });
   }
 
+  get perfiles(): { id: number; nombre: string; cantidad: number }[] {
+    const mapa = new Map<number, { id: number; nombre: string; cantidad: number }>();
+    for (const u of this.usuarios) {
+      const p = mapa.get(u.fk_perfil_id) ?? { id: u.fk_perfil_id, nombre: u.perfil_nombre ?? `Perfil ${u.fk_perfil_id}`, cantidad: 0 };
+      p.cantidad++;
+      mapa.set(u.fk_perfil_id, p);
+    }
+    return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  }
 
+  get filas(): UsuarioModel[] {
+    return filtrarUsuarios(this.usuarios, this.estado, this.perfilId);
+  }
+
+  cuenta(f: FiltroUsuarios): number {
+    return filtrarUsuarios(this.usuarios, f, this.perfilId).length;
+  }
 }
