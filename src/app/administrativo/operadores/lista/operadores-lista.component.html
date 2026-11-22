@@ -1,0 +1,70 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Dirección Administrativa - Operadores</strong></c-col>
+          <c-col md="6" class="text-md-end">
+            <a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('ADM_OPERADOR_GESTIONAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo operador</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="small text-body-secondary">
+          Funcionarios, operativos o administrativos, habilitados para conducir vehículos institucionales. Solo quienes tienen la licencia vigente,
+          están activos y en funciones pueden asignarse en órdenes de movilización y de combustible.
+        </p>
+        <c-row class="g-2 mb-3">
+          <c-col md="8">
+            <input cFormControl placeholder="Buscar por nombre, cédula, puesto o licencia..." [(ngModel)]="filtro" name="filtro" aria-label="Buscar operador" />
+          </c-col>
+          <c-col md="4">
+            <select cSelect [(ngModel)]="vigencia" name="vigencia" aria-label="Filtrar por estado de la licencia">
+              <option value="TODOS">Todos ({{ cuenta('TODOS') }})</option>
+              <option value="VIGENTE">Licencia vigente ({{ cuenta('VIGENTE') }})</option>
+              <option value="POR VENCER">Licencia por vencer ({{ cuenta('POR VENCER') }})</option>
+              <option value="VENCIDA">Licencia vencida ({{ cuenta('VENCIDA') }})</option>
+              <option value="INACTIVOS">Inactivos o sin funciones ({{ cuenta('INACTIVOS') }})</option>
+            </select>
+          </c-col>
+        </c-row>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <div class="table-responsive" *ngIf="!cargando">
+          <table cTable hover small class="align-middle">
+            <thead>
+              <tr><th>Operador</th><th>Cédula</th><th>Puesto</th><th>Licencia</th><th>Válida hasta</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="!filas.length"><td colspan="7" class="text-center text-body-secondary">No hay operadores para mostrar</td></tr>
+              <tr *ngFor="let o of filas | filtroGeneral: filtro">
+                <td><strong>{{ o.persona_apellidos }}</strong> {{ o.persona_nombres }}</td>
+                <td>{{ o.persona_doc_identidad }}</td>
+                <td>{{ o.puesto_nombre || '—' }}<br /><small class="text-body-secondary">{{ o.puesto_modalidad }}</small></td>
+                <td>{{ textoLicencia(o) }}</td>
+                <td>
+                  {{ o.conductor_licencia_validez | date: 'dd/MM/yyyy' }}<br />
+                  <c-badge [color]="colorVigencia(o.licencia_vigencia)" [textColor]="o.licencia_vigencia === 'POR VENCER' ? 'dark' : 'white'">
+                    <i class="fa-solid" [class.fa-circle-check]="o.licencia_vigencia === 'VIGENTE'" [class.fa-clock]="o.licencia_vigencia === 'POR VENCER'"
+                       [class.fa-circle-xmark]="o.licencia_vigencia === 'VENCIDA'" aria-hidden="true"></i>
+                    {{ o.licencia_vigencia }}
+                    <ng-container *ngIf="o.licencia_vigencia === 'POR VENCER'"> · {{ diasParaVencer(o.conductor_licencia_validez) }} días</ng-container>
+                  </c-badge>
+                </td>
+                <td>
+                  <c-badge [color]="o.conductor_estado === 'ACTIVO' ? 'secondary' : 'dark'">{{ o.conductor_estado }}</c-badge>
+                  <small class="d-block text-danger" *ngIf="!o.en_funciones">Sin puesto en funciones</small>
+                </td>
+                <td class="text-end">
+                  <a cButton [routerLink]="['./', o.conductor_id]" color="secondary" size="sm" variant="outline"
+                     [attr.aria-label]="(auth.tienePermiso('ADM_OPERADOR_GESTIONAR') ? 'Actualizar licencia de ' : 'Ver ') + o.nombre_completo">
+                    <i class="fa-solid" [class.fa-pen]="auth.tienePermiso('ADM_OPERADOR_GESTIONAR')" [class.fa-eye]="!auth.tienePermiso('ADM_OPERADOR_GESTIONAR')"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

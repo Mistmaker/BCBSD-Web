@@ -44,6 +44,22 @@ const routes: Routes = [
     }, canActivate: [AuthGuard, permisoGuard]
   },
   {
+    path: 'operadores',
+    loadComponent: () => import('./operadores/lista/operadores-lista.component').then(m => m.OperadoresListaComponent),
+    data: {
+      permiso: 'ADM_OPERADORES',
+      title: 'Operadores'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
+    path: 'operadores/:id',
+    loadComponent: () => import('./operadores/form/operador-form.component').then(m => m.OperadorFormComponent),
+    data: {
+      permiso: 'ADM_OPERADORES',
+      title: 'Operador'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
     path: 'ordenes-movilizacion',
     loadComponent: () => import('./serv-generales/orden-movilizacion-lista/orden-movilizacion-lista.component').then(m => m.OrdenMovilizacionListaComponent),
     data: {
