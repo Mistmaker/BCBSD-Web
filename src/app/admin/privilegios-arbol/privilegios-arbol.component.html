@@ -1,0 +1,46 @@
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  <input cFormControl sizing="sm" class="flex-grow-1" style="max-width: 420px" placeholder="Buscar privilegio, pantalla o código..."
+         [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" aria-label="Buscar privilegio" />
+  <c-form-check>
+    <input cFormCheckInput type="checkbox" id="soloMarcados" [ngModel]="soloMarcados()" (ngModelChange)="soloMarcados.set($event)" />
+    <label cFormCheckLabel for="soloMarcados" class="small">Solo los asignados</label>
+  </c-form-check>
+  <span class="small text-body-secondary ms-auto">
+    {{ totales().pantallas }} pantalla(s) y {{ totales().acciones }} acción(es) asignadas
+  </span>
+</div>
+<p class="small text-body-secondary mb-3">
+  <i class="fa-solid fa-display" aria-hidden="true"></i> <strong>Pantalla</strong>: abre la opción del menú.
+  <i class="fa-solid fa-bolt ms-2" aria-hidden="true"></i> <strong>Acción</strong>: permite registrar, editar o anular dentro de una pantalla
+  (sin la pantalla no se puede usar).
+</p>
+<p class="text-center text-body-secondary small py-3" *ngIf="!visibles().length">No hay privilegios que coincidan.</p>
+
+<div *ngFor="let modulo of visibles()" class="mb-4">
+  <h6 class="border-bottom pb-1">{{ modulo.modulo_nombre }}</h6>
+  <div *ngFor="let sub of modulo.submodulos" class="submodulo ps-3 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+      <strong class="small">{{ sub.submodulo_nombre }}</strong>
+      <span class="small text-body-secondary">{{ efectivos(sub.roles) }}/{{ sub.roles.length }}</span>
+      <ng-container *ngIf="!soloLectura() && editables(sub.roles)">
+        <button cButton type="button" size="sm" color="link" class="p-0 small" (click)="todos(sub, true)">Marcar todos</button>
+        <button cButton type="button" size="sm" color="link" class="p-0 small" (click)="todos(sub, false)">Ninguno</button>
+      </ng-container>
+    </div>
+    <div class="row g-1">
+      <div class="col-md-6 col-xl-4 rol" *ngFor="let rol of sub.roles; trackBy: rastrear">
+        <c-form-check>
+          <input cFormCheckInput type="checkbox" [id]="'rol-' + rol.rol_id" [checked]="rol.asignado || rol.del_perfil"
+                 [disabled]="soloLectura() || rol.del_perfil" (change)="marcar(rol, $any($event.target).checked)" />
+          <label cFormCheckLabel [for]="'rol-' + rol.rol_id" [title]="rol.rol_descripcion || ''">
+            <i class="fa-solid text-body-secondary" [class.fa-display]="rol.tipo === 'ACCESO'" [class.fa-bolt]="rol.tipo === 'ACCION'" aria-hidden="true"></i>
+            <span class="visually-hidden">{{ rol.tipo === 'ACCESO' ? 'Pantalla:' : 'Acción:' }}</span>
+            {{ rol.rol_nombre }}
+            <c-badge *ngIf="rol.del_perfil" color="info" class="ms-1">{{ etiquetaPerfil() }}</c-badge>
+            <span class="d-block text-body-secondary codigo" *ngIf="rol.rol_codigo">{{ rol.rol_codigo }}</span>
+          </label>
+        </c-form-check>
+      </div>
+    </div>
+  </div>
+</div>

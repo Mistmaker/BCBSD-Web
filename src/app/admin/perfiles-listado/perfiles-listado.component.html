@@ -1,1 +1,45 @@
-<p>perfiles-listado works!</p>
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Administración - Perfiles</strong></c-col>
+          <c-col md="6" class="text-md-end">
+            <a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('SIS_PERFIL_GESTIONAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo perfil</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="small text-body-secondary">
+          Un perfil es un grupo de privilegios predefinido (por ejemplo, "Analista de mantenimiento vehicular"). Los usuarios con ese perfil reciben sus
+          privilegios automáticamente; al cambiar el perfil, el cambio se aplica a todos ellos.
+        </p>
+        <input cFormControl class="mb-3" placeholder="Buscar perfil..." [(ngModel)]="filtro" name="filtro" aria-label="Buscar perfil" />
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <div class="table-responsive" *ngIf="!cargando">
+          <table cTable hover small class="align-middle">
+            <thead><tr><th>Perfil</th><th>Descripción</th><th class="text-end">Usuarios</th><th class="text-end">Privilegios</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngIf="!perfiles.length"><td colspan="6" class="text-center text-body-secondary">No hay perfiles</td></tr>
+              <tr *ngFor="let p of perfiles | filtroGeneral: filtro">
+                <td><strong>{{ p.perfil_nombre }}</strong></td>
+                <td><small>{{ p.perfil_descripcion || '—' }}</small></td>
+                <td class="text-end">{{ p.usuarios_activos }}<small class="text-body-secondary" *ngIf="p.usuarios !== p.usuarios_activos"> (+{{ p.usuarios - p.usuarios_activos }} inactivos)</small></td>
+                <td class="text-end">
+                  {{ p.pantallas }} pantalla(s) · {{ p.privilegios - p.pantallas }} acción(es)
+                  <small class="d-block text-warning-emphasis" *ngIf="!p.privilegios"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> sin privilegios definidos</small>
+                </td>
+                <td><c-badge [color]="p.perfil_estado === 'ACTIVO' ? 'success' : 'secondary'">{{ p.perfil_estado }}</c-badge></td>
+                <td class="text-end">
+                  <a cButton [routerLink]="['./', p.perfil_id]" color="secondary" size="sm" variant="outline" [attr.aria-label]="'Ver o editar el perfil ' + p.perfil_nombre">
+                    <i class="fa-solid" [class.fa-pen]="auth.tienePermiso('SIS_PERFIL_GESTIONAR')" [class.fa-eye]="!auth.tienePermiso('SIS_PERFIL_GESTIONAR')"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
