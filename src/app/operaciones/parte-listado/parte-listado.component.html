@@ -78,7 +78,9 @@
               <td>{{ p.al_mando }}</td>
               <td class="text-end">{{ p.parte_total_heridos }} / {{ p.parte_total_muertos }}</td>
               <td><c-badge [color]="colorEstado(p.parte_estado)">{{ p.parte_estado }}</c-badge></td>
-              <td>
+              <td class="text-nowrap">
+                <button cButton type="button" color="secondary" variant="outline" size="sm" class="me-1" (click)="imprimir(p)"
+                        [attr.aria-label]="'Imprimir ' + p.parte_numero"><i class="fa-solid fa-print"></i></button>
                 <a cButton [routerLink]="['./', p.parte_id]" color="primary" variant="outline" size="sm"
                    [attr.aria-label]="(puedeRegistrar && p.parte_estado !== 'ANULADO' ? 'Editar ' : 'Ver ') + p.parte_numero">
                   <i class="fa-solid" [class.fa-pencil]="puedeRegistrar && p.parte_estado !== 'ANULADO'" [class.fa-eye]="!puedeRegistrar || p.parte_estado === 'ANULADO'"></i>

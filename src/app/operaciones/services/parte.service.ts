@@ -38,6 +38,11 @@ export class ParteService {
     return this.http.put<{ msg: string; id: number; parte_numero: string }>(`${this.url}/setParte.php`, parte);
   }
 
+  /** PDF del parte para imprimir y firmar (abrir con PdfService.abrir) */
+  urlPdf(id: number): string {
+    return `${environment.API_URL}/reportes/operaciones/parte.php?id=${id}`;
+  }
+
   anular(id: number, motivo: string) {
     return this.http.put<{ msg: string }>(`${this.url}/setParte.php`, { parte_id: id, parte_estado: 'ANULADO', parte_anulado_motivo: motivo });
   }

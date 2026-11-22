@@ -7,6 +7,7 @@ import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, Card
 import { ParteService, FiltroPartes } from '../services/parte.service';
 import { CatalogosParte, fechaISO, ParteResumen, TIPOS_PARTE } from '../models/partes.model';
 import { AuthService } from '../../auth/auth.service';
+import { PdfService } from '../../core/pdf.service';
 
 /** Listado de partes de servicio (/operaciones/partes, OPE_PARTES) con filtros por fecha, estación, tipo y estado */
 @Component({
@@ -18,6 +19,7 @@ import { AuthService } from '../../auth/auth.service';
 export class ParteListadoComponent implements OnInit {
   private readonly servicio = inject(ParteService);
   private readonly auth = inject(AuthService);
+  private readonly pdf = inject(PdfService);
 
   partes: ParteResumen[] = [];
   estaciones: CatalogosParte['estaciones'] = [];
@@ -40,6 +42,10 @@ export class ParteListadoComponent implements OnInit {
       next: (data) => { this.partes = data; this.cargando = false; },
       error: (e) => { this.errorMessage = e.error?.msg ?? e.error?.error ?? e.message; this.cargando = false; },
     });
+  }
+
+  imprimir(p: ParteResumen): void {
+    this.pdf.abrir(this.servicio.urlPdf(p.parte_id));
   }
 
   colorEstado(estado: string): string {

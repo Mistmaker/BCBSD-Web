@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { AuthService } from '../../auth/auth.service';
+import { PdfService } from '../../core/pdf.service';
 import { ParteService } from '../services/parte.service';
 import { ParteListadoComponent } from './parte-listado.component';
 
@@ -15,15 +16,17 @@ describe('ParteListadoComponent', () => {
 
   function crear(permisos: string[]) {
     const getAll = jasmine.createSpy().and.returnValue(of(partes));
+    const abrir = jasmine.createSpy();
     TestBed.configureTestingModule({
       imports: [ParteListadoComponent],
       providers: [provideRouter([]),
-        { provide: ParteService, useValue: { getAll, getCatalogos: () => of({ estaciones: [{ estacion_id: 1, estacion_nombre: 'X-1' }] }) } },
+        { provide: PdfService, useValue: { abrir } },
+        { provide: ParteService, useValue: { getAll, urlPdf: (id: number) => `pdf/${id}`, getCatalogos: () => of({ estaciones: [{ estacion_id: 1, estacion_nombre: 'X-1' }] }) } },
         { provide: AuthService, useValue: { tienePermiso: (c: string) => permisos.includes(c) } }],
     });
     const f = TestBed.createComponent(ParteListadoComponent);
     f.detectChanges();
-    return { f, getAll, el: f.nativeElement as HTMLElement };
+    return { f, getAll, abrir, el: f.nativeElement as HTMLElement };
   }
 
   it('lista los partes del año con número, clasificación y vehículos', () => {
@@ -41,8 +44,10 @@ describe('ParteListadoComponent', () => {
     expect(getAll).toHaveBeenCalledWith(jasmine.objectContaining({ estacion: 1 }));
   });
 
-  it('sin privilegio de registro: solo consulta', () => {
-    const { el } = crear(['OPE_PARTES']);
+  it('sin privilegio de registro: solo consulta, pero puede imprimir', () => {
+    const { el, abrir } = crear(['OPE_PARTES']);
+    (el.querySelector('[aria-label="Imprimir CBSD-PA-X1-2026-0003"]') as HTMLButtonElement).click();
+    expect(abrir).toHaveBeenCalledWith('pdf/3');
     const texto = el.textContent!;
     expect(texto).not.toContain('Nuevo parte');
     expect(texto).not.toContain('Estadística');

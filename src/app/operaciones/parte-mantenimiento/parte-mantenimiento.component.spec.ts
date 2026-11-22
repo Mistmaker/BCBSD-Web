@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { AuthService } from '../../auth/auth.service';
+import { PdfService } from '../../core/pdf.service';
 import { IntervencionesService } from '../../subjefatura/services/intervenciones.service';
 import { CatalogosParte, ROL_MANDO } from '../models/partes.model';
 import { ParteService } from '../services/parte.service';
@@ -29,12 +30,14 @@ describe('ParteMantenimientoComponent', () => {
       save: jasmine.createSpy().and.returnValue(of({ msg: 'Parte registrado', id: 1, parte_numero: 'CBSD-PA-X1-2026-0001' })),
       update: jasmine.createSpy().and.returnValue(of({ msg: 'Parte actualizado', id: 1, parte_numero: 'CBSD-PA-X1-2026-0001' })),
       anular: jasmine.createSpy(),
+      urlPdf: (n: number) => `pdf/${n}`,
     };
     TestBed.configureTestingModule({
       imports: [ParteMantenimientoComponent],
       providers: [provideRouter([]), provideNoopAnimations(),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id }) } } },
         { provide: ParteService, useValue: servicio },
+        { provide: PdfService, useValue: { abrir: jasmine.createSpy('abrir') } },
         { provide: IntervencionesService, useValue: { getProvincias: () => of([]), getCantones: () => of([]), getParroquias: () => of([]) } },
         { provide: AuthService, useValue: { tienePermiso: (c: string) => permisos.includes(c) } }],
     });
@@ -85,5 +88,8 @@ describe('ParteMantenimientoComponent', () => {
     expect(c.soloLectura).toBeTrue();
     expect(el.textContent).toContain('solo la supervisión puede corregirlo');
     expect(el.textContent).not.toContain('Guardar parte');
+    expect(el.textContent).toContain('Imprimir');
+    c.imprimir();
+    expect(TestBed.inject(PdfService).abrir).toHaveBeenCalledWith('pdf/9');
   });
 });

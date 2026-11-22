@@ -20,6 +20,7 @@ import { formatoMinutos } from '../models/partes-estadisticas.model';
 import { ParteService } from '../services/parte.service';
 import { IntervencionesService } from '../../subjefatura/services/intervenciones.service';
 import { AuthService } from '../../auth/auth.service';
+import { PdfService } from '../../core/pdf.service';
 
 /**
  * Parte de servicio (auxilio o incendio) con el formato del área operativa. El número lo asigna el API.
@@ -37,6 +38,7 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
   private readonly parteService = inject(ParteService);
   private readonly ubicacionService = inject(IntervencionesService);
   private readonly auth = inject(AuthService);
+  private readonly pdf = inject(PdfService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -314,7 +316,11 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
     request.subscribe({
       next: (r) => {
         this.isSaving = false;
-        Swal.fire('Listo', r.msg, 'success').then(() => this.router.navigate(['../'], { relativeTo: this.route }));
+        Swal.fire({ title: 'Listo', text: r.msg, icon: 'success', showCancelButton: true, confirmButtonText: 'Imprimir el parte', cancelButtonText: 'Cerrar' })
+          .then(res => {
+            if (res.isConfirmed) this.pdf.abrir(this.parteService.urlPdf(r.id));
+            this.router.navigate(['../'], { relativeTo: this.route });
+          });
       },
       error: (error) => {
         this.isSaving = false;
@@ -322,6 +328,10 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
         Swal.fire('Error', this.errorMessage, 'error');
       }
     });
+  }
+
+  imprimir(): void {
+    if (this.parte.parte_id) this.pdf.abrir(this.parteService.urlPdf(this.parte.parte_id));
   }
 
   anular(): void {
