@@ -1,0 +1,56 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Servicios generales - Peticiones de materiales</strong></c-col>
+          <c-col md="6" class="text-md-end">
+            <a cButton routerLink="./nuevo" *ngIf="auth.tienePermiso('ADM_PETICION_MATERIALES_GESTIONAR')" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nueva petición</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <c-row class="g-2 mb-3">
+          <c-col md="9">
+            <input cFormControl placeholder="Buscar por código, destino o solicitante..." [(ngModel)]="filtro" name="filtro" aria-label="Buscar petición" />
+          </c-col>
+          <c-col md="3">
+            <select cSelect [(ngModel)]="anio" (ngModelChange)="cargar()" name="anio" aria-label="Año">
+              <option *ngFor="let a of anios" [ngValue]="a">{{ a }}</option>
+              <option [ngValue]="null">Todos los años</option>
+            </select>
+          </c-col>
+        </c-row>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <div class="table-responsive" *ngIf="!cargando">
+          <table cTable hover small class="align-middle">
+            <thead><tr><th>Código</th><th>Fecha</th><th>Para ser utilizados en</th><th>Solicitante</th><th class="text-end">Ítems</th><th>Autorizado para</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngIf="!peticiones.length"><td colspan="8" class="text-center text-body-secondary">No hay peticiones de materiales</td></tr>
+              <tr *ngFor="let p of peticiones | filtroGeneral: filtro">
+                <td class="text-nowrap"><strong>{{ p.peticion_codigo }}</strong></td>
+                <td class="text-nowrap">{{ p.peticion_fecha | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ p.peticion_destino }}</td>
+                <td>{{ p.solicitante_nombre }}<small class="d-block text-body-secondary">{{ p.solicitante_cargo || p.solicitante_puesto }}</small></td>
+                <td class="text-end">{{ p.items }}</td>
+                <td>{{ textoAutorizadoPara(p.peticion_autorizado_para) }}</td>
+                <td>
+                  <c-badge [color]="p.peticion_estado === 'EMITIDA' ? 'success' : 'secondary'">{{ p.peticion_estado }}</c-badge>
+                  <small class="d-block text-body-secondary" *ngIf="p.peticion_estado === 'ANULADA'">{{ p.peticion_observaciones }}</small>
+                </td>
+                <td class="text-end text-nowrap">
+                  <button cButton type="button" color="secondary" size="sm" variant="outline" class="me-1" (click)="imprimir(p)"
+                          [attr.aria-label]="'Imprimir ' + p.peticion_codigo"><i class="fa-solid fa-print"></i></button>
+                  <a cButton [routerLink]="['./', p.peticion_id]" color="secondary" size="sm" variant="outline" [attr.aria-label]="'Abrir ' + p.peticion_codigo">
+                    <i class="fa-solid" [class.fa-pen]="p.peticion_estado === 'EMITIDA' && auth.tienePermiso('ADM_PETICION_MATERIALES_GESTIONAR')"
+                       [class.fa-eye]="p.peticion_estado !== 'EMITIDA' || !auth.tienePermiso('ADM_PETICION_MATERIALES_GESTIONAR')"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

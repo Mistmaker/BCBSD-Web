@@ -60,6 +60,22 @@ const routes: Routes = [
     }, canActivate: [AuthGuard, permisoGuard]
   },
   {
+    path: 'peticiones-materiales',
+    loadComponent: () => import('./serv-generales/peticiones-materiales-lista/peticiones-materiales-lista.component').then(m => m.PeticionesMaterialesListaComponent),
+    data: {
+      permiso: 'ADM_PETICIONES_MATERIALES',
+      title: 'Peticiones de materiales'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
+    path: 'peticiones-materiales/:id',
+    loadComponent: () => import('./serv-generales/peticion-materiales-form/peticion-materiales-form.component').then(m => m.PeticionMaterialesFormComponent),
+    data: {
+      permiso: 'ADM_PETICIONES_MATERIALES',
+      title: 'Petición de materiales'
+    }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
     path: 'ordenes-movilizacion',
     loadComponent: () => import('./serv-generales/orden-movilizacion-lista/orden-movilizacion-lista.component').then(m => m.OrdenMovilizacionListaComponent),
     data: {

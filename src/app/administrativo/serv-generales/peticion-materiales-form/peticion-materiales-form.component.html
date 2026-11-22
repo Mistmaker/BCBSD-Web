@@ -1,0 +1,119 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="7"><strong>Petición de materiales - {{ peticion ? peticion.peticion_codigo : 'Nueva' }}</strong>
+            <c-badge *ngIf="peticion" [color]="peticion.peticion_estado === 'EMITIDA' ? 'light' : 'dark'" [textColor]="peticion.peticion_estado === 'EMITIDA' ? 'dark' : 'white'" class="ms-2">{{ peticion.peticion_estado }}</c-badge>
+          </c-col>
+          <c-col md="5" class="text-md-end">
+            <button *ngIf="peticion" cButton type="button" color="light" size="sm" class="me-1" (click)="imprimir()"><i class="fa-solid fa-print"></i> Imprimir</button>
+            <button *ngIf="peticion && puedeEditar" cButton type="button" color="light" size="sm" variant="outline" class="me-1" (click)="anular()"><i class="fa-solid fa-ban"></i> Anular</button>
+            <a cButton color="light" size="sm" variant="outline" routerLink="/admin/peticiones-materiales"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <c-alert color="secondary" class="small py-2" *ngIf="peticion?.peticion_estado === 'ANULADA'">
+          <i class="fa-solid fa-ban" aria-hidden="true"></i> Anulada: {{ peticion?.peticion_observaciones }}
+        </c-alert>
+        <form *ngIf="!cargando" (ngSubmit)="guardar()" novalidate>
+          <c-row class="g-3 mb-3">
+            <c-col md="12">
+              <label cLabel for="destino">Sírvase autorizar los siguientes materiales, para ser utilizados en</label>
+              <textarea cFormControl id="destino" name="destino" rows="2" required [(ngModel)]="datos.peticion_destino" [readonly]="!puedeEditar"
+                        placeholder="Ej. Mantenimiento de la Estación N.° 1" [class.is-invalid]="validado && !datos.peticion_destino.trim()"></textarea>
+            </c-col>
+          </c-row>
+
+          <h6 class="text-body-secondary">Materiales</h6>
+          <div class="table-responsive">
+            <table cTable small class="align-middle mb-2">
+              <thead><tr><th class="col-cantidad">Cantidad</th><th class="col-unidad">Unidad</th><th>Descripción</th><th class="col-accion"></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let item of datos.detalle; let i = index; trackBy: rastrear">
+                  <td><input cFormControl sizing="sm" type="number" min="0" step="0.01" [id]="'cantidad-' + i" [name]="'cantidad-' + i" [(ngModel)]="item.detalle_cantidad"
+                             [readonly]="!puedeEditar" [attr.aria-label]="'Cantidad del ítem ' + (i + 1)" /></td>
+                  <td><input cFormControl sizing="sm" [id]="'unidad-' + i" [name]="'unidad-' + i" [(ngModel)]="item.detalle_unidad" list="unidades-sugeridas" style="text-transform: uppercase"
+                             [readonly]="!puedeEditar" [attr.aria-label]="'Unidad del ítem ' + (i + 1)" /></td>
+                  <td><input cFormControl sizing="sm" [id]="'descripcion-' + i" [name]="'descripcion-' + i" [(ngModel)]="item.detalle_descripcion" (keydown.enter)="alEnterDescripcion(i, $event)"
+                             [readonly]="!puedeEditar" [attr.aria-label]="'Descripción del ítem ' + (i + 1)" /></td>
+                  <td class="text-end">
+                    <button *ngIf="puedeEditar" cButton type="button" color="secondary" variant="ghost" size="sm" (click)="quitarFila(i)" [attr.aria-label]="'Quitar el ítem ' + (i + 1)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <datalist id="unidades-sugeridas"><option *ngFor="let u of config.unidades" [value]="u"></option></datalist>
+          <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="puedeEditar">
+            <button cButton type="button" color="secondary" variant="outline" size="sm" (click)="agregarFila()"><i class="fa-solid fa-plus"></i> Agregar fila</button>
+            <small class="text-body-secondary">Las filas en blanco no se guardan. Enter en la descripción pasa a la siguiente fila.</small>
+          </div>
+
+          <c-row class="g-3 mb-4">
+            <c-col md="5">
+              <label cLabel for="lugar">Lugar</label>
+              <input cFormControl id="lugar" name="lugar" [(ngModel)]="datos.peticion_lugar" [readonly]="!puedeEditar" />
+            </c-col>
+            <c-col md="3">
+              <label cLabel for="fecha">Fecha</label>
+              <input cFormControl type="date" id="fecha" name="fecha" required [(ngModel)]="datos.peticion_fecha" [readonly]="!puedeEditar || !esNueva" />
+            </c-col>
+            <c-col md="4">
+              <label cLabel>Autorizado para</label>
+              <div class="d-flex gap-3 pt-1" role="radiogroup" aria-label="Autorizado para">
+                <c-form-check>
+                  <input cFormCheckInput type="radio" id="para-adq" name="para" [value]="'ADQUISICION'" [(ngModel)]="datos.peticion_autorizado_para" [disabled]="!puedeEditar" />
+                  <label cFormCheckLabel for="para-adq">Adquisición</label>
+                </c-form-check>
+                <c-form-check>
+                  <input cFormCheckInput type="radio" id="para-bod" name="para" [value]="'BODEGA'" [(ngModel)]="datos.peticion_autorizado_para" [disabled]="!puedeEditar" />
+                  <label cFormCheckLabel for="para-bod">Bodega</label>
+                </c-form-check>
+                <c-form-check>
+                  <input cFormCheckInput type="radio" id="para-nd" name="para" [value]="null" [(ngModel)]="datos.peticion_autorizado_para" [disabled]="!puedeEditar" />
+                  <label cFormCheckLabel for="para-nd">Lo marca quien autoriza</label>
+                </c-form-check>
+              </div>
+            </c-col>
+          </c-row>
+
+          <c-row class="g-3">
+            <c-col md="6">
+              <h6 class="text-body-secondary">Solicitante</h6>
+              <label cLabel for="solicitante">Nombre</label>
+              <ng-select id="solicitante" name="solicitante" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo" required
+                         [(ngModel)]="datos.solicitante_id" (change)="alElegirPersona('solicitante', $event)" [readonly]="!puedeEditar"
+                         placeholder="Buscar funcionario..." [class.is-invalid]="validado && !datos.solicitante_id"></ng-select>
+              <label cLabel for="cargoSolicitante" class="mt-2">Cargo</label>
+              <input cFormControl id="cargoSolicitante" name="cargoSolicitante" [(ngModel)]="datos.solicitante_cargo" [readonly]="!puedeEditar" />
+            </c-col>
+            <c-col md="6">
+              <h6 class="text-body-secondary">Autorizado</h6>
+              <label cLabel for="autoriza">Nombre</label>
+              <ng-select id="autoriza" name="autoriza" [items]="personal" bindValue="ppersonal_id" bindLabel="nombre_completo"
+                         [(ngModel)]="datos.autoriza_id" (change)="alElegirPersona('autoriza', $event)" [readonly]="!puedeEditar" placeholder="Buscar funcionario..."></ng-select>
+              <label cLabel for="cargoAutoriza" class="mt-2">Cargo</label>
+              <input cFormControl id="cargoAutoriza" name="cargoAutoriza" [(ngModel)]="datos.autoriza_cargo" [readonly]="!puedeEditar" />
+            </c-col>
+            <c-col md="12">
+              <label cLabel for="obs">Observaciones (opcional, se imprimen)</label>
+              <textarea cFormControl id="obs" name="obs" rows="2" [(ngModel)]="datos.peticion_observaciones" [readonly]="!puedeEditar"></textarea>
+            </c-col>
+          </c-row>
+
+          <c-alert color="danger" class="mt-3 py-2 small" *ngIf="validado && errores().length">
+            <div *ngFor="let e of errores()"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ e }}</div>
+          </c-alert>
+          <div class="text-end mt-4" *ngIf="puedeEditar">
+            <button cButton color="primary" type="submit" [disabled]="guardando"><i class="fa-solid fa-floppy-disk"></i> {{ esNueva ? 'Registrar petición' : 'Guardar cambios' }}</button>
+          </div>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
