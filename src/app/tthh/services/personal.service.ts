@@ -24,11 +24,4 @@ export class PersonalService {
     return this.http.get<PersonalModel>(`${environment.API_URL}/servicios/tthh/getPersonal.php?id=${id}`)
   }
 
-  save(vehiculo: PersonalModel) {
-    return this.http.post<any>(`${environment.API_URL}/servicios/tthh/setPersonal.php`, vehiculo)
-  }
-
-  update(vehiculo: PersonalModel) {
-    return this.http.put<any>(`${environment.API_URL}/servicios/tthh/setPersonal.php`, vehiculo)
-  }
 }

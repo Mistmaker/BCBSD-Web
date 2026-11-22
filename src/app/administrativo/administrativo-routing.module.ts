@@ -8,8 +8,9 @@ const routes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./adm-dashboard/adm-dashboard.component').then(m => m.AdmDashboardComponent),
     data: {
-      title: 'Administrativo'
-    }, canActivate: [AuthGuard]
+      permiso: 'ADM_DASHBOARD',
+      title: 'Resumen gerencial'
+    }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'vehiculos',

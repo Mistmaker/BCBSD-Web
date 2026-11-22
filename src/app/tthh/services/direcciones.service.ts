@@ -18,11 +18,4 @@ export class DireccionesService {
     return this.http.get<DireccionesModel>(`${environment.API_URL}/servicios/tthh/getDirecciones.php?id=${id}`)
   }
 
-  save(vehiculo: DireccionesModel) {
-    return this.http.post<any>(`${environment.API_URL}/servicios/tthh/setDireccion.php`, vehiculo)
-  }
-
-  update(vehiculo: DireccionesModel) {
-    return this.http.put<any>(`${environment.API_URL}/servicios/tthh/setDireccion.php`, vehiculo)
-  }
 }

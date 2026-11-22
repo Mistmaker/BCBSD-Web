@@ -24,9 +24,6 @@ export class OrdenesAbastecimientoService {
     return this.http.get<VehiculosModel[]>(`${environment.API_URL}/servicios/administrativo/serv-generales/getVehiculos.php`)
   }
 
-  getVehiculoUltKm(id: number) {
-    return this.http.get<OrdenesAbastecimientoModel>(`${environment.API_URL}/servicios/administrativo/ordenes-abastecimiento/getOrdenUltimoKm.php?id=${id}`)
-  }
   
   getConductores() {
     return this.http.get<PersonalModel[]>(`${environment.API_URL}/servicios/tthh/getConductores.php`)

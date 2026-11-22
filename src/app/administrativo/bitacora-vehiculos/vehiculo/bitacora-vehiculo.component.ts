@@ -36,6 +36,8 @@ export class BitacoraVehiculoComponent implements OnInit {
   desde = rangoPorDefecto().desde;
   hasta = rangoPorDefecto().hasta;
   cargando = false;
+  /** Ya se hizo la primera consulta: las siguientes vienen del formulario */
+  private consultado = false;
   verTablaGasto = false;
   readonly datos = signal<RespuestaVehiculo | null>(null);
   readonly tiposVisibles = signal(new Set<TipoEvento>(TIPOS_EVENTO.map(t => t.tipo)));
@@ -85,7 +87,14 @@ export class BitacoraVehiculoComponent implements OnInit {
       Swal.fire('Fechas', 'Seleccione un rango válido: la fecha inicial no puede ser posterior a la final.', 'warning');
       return;
     }
-    this.router.navigate([], { queryParams: { desde: this.desde, hasta: this.hasta }, replaceUrl: true });
+    // Solo si el usuario cambió las fechas (al abrir sin fechas en la URL se usan las por defecto sin reescribirla:
+    // hacerlo inicia una transición de vista que interrumpe la de la navegación)
+    const q = this.route.snapshot.queryParamMap;
+    const enUrl = q.get('desde') !== null;
+    if ((enUrl || this.consultado) && (q.get('desde') !== this.desde || q.get('hasta') !== this.hasta)) {
+      this.router.navigate([], { queryParams: { desde: this.desde, hasta: this.hasta }, replaceUrl: true });
+    }
+    this.consultado = true;
     this.cargando = true;
     this.bitacora.getVehiculo(this.id, this.desde, this.hasta).subscribe({
       next: (r) => { this.datos.set(r); this.cargando = false; },

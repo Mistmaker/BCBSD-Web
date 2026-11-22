@@ -150,6 +150,11 @@ export class SbjDashboardComponent implements AfterViewInit {
       },
       complete: () => console.info('complete')
     });
+
+  }
+
+  ngAfterViewInit() {
+    // El mapa necesita su contenedor en la vista: se crea aquí y no en ngOnInit
     this.initMap();
     const estacionesCoords = [
       { lat: -0.269, lng: -79.182, name: "Estación X-1", icon: "fa-fire" },
@@ -157,10 +162,6 @@ export class SbjDashboardComponent implements AfterViewInit {
       { lat: -0.275, lng: -79.185, name: "Estación X-3", icon: "fa-building" }
     ];
     this.addMarkers(estacionesCoords);
-
-  }
-
-  ngAfterViewInit() {
     this._intervencionesService.getEstadisticas().subscribe({
       next: (data: any) => {
 
@@ -199,6 +200,10 @@ export class SbjDashboardComponent implements AfterViewInit {
   }
 
   private initMap(): void {
+    // El contenedor del mapa está comentado en la plantilla: sin él, Leaflet lanza "Map container not found"
+    if (!document.getElementById('map')) {
+      return;
+    }
 
     let locations = [
       { lat: -0.269, lng: -79.182, name: "Estación X-1" },

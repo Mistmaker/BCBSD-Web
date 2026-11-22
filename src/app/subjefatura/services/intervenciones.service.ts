@@ -59,7 +59,7 @@ export class IntervencionesService {
   }
 
   update(intervencion: IntervencionesModel) {
-    return this.http.put<any>(`${environment.API_URL}/servicios/subjefatura/estadisticas/setOrden.php`, intervencion)
+    return this.http.put<any>(`${environment.API_URL}/servicios/subjefatura/estadisticas/setIntervencion.php`, intervencion)
   }
 
   getEstadisticas() {
