@@ -2,7 +2,8 @@
 
 export type TipoMantenimiento = 'CORRECTIVO' | 'PREVENTIVO' | 'PREVENTIVO Y CORRECTIVO';
 export const TIPOS_MANTENIMIENTO: TipoMantenimiento[] = ['CORRECTIVO', 'PREVENTIVO', 'PREVENTIVO Y CORRECTIVO'];
-export type EstadoOrdenMantenimiento = 'MANTENIMIENTO' | 'FINALIZADA' | 'ANULADA';
+/** MANTENIMIENTO (en taller) -> RECIBIDO (valores y facturas) -> ENTREGADO (acta generada); ANULADA */
+export type EstadoOrdenMantenimiento = 'MANTENIMIENTO' | 'RECIBIDO' | 'ENTREGADO' | 'ANULADA';
 export type EstadoVehiculoMantenimiento = 'VENCIDO' | 'PROXIMO' | 'AL DIA' | 'SIN PLAN';
 
 export class RecursoMantenimientoModel {
@@ -68,8 +69,15 @@ export class OrdenMantenimientoModel {
   orden_codigo?: string;
   /** Número de informe individual: se imprime como "No. 005" en la orden, el informe y el acta */
   orden_serie: number | null = null;
-  /** Taller o contratista que realizó el mantenimiento */
+  /** Taller de órdenes del sistema anterior (las nuevas lo toman del contrato) */
   orden_taller: string | null = null;
+  /** Contrato de mantenimiento bajo el que se hace la orden */
+  fk_contrato_id: number | null = null;
+  /** Número del informe de pago (ej. CBSD-26-RUPIF-007-M) */
+  orden_informe_numero: string | null = null;
+  orden_informe_serie: number | null = null;
+  /** SISTEMA: fecha/hora actual al registrar; USUARIO: la ingresa el usuario */
+  orden_fecha_mantenimiento_tipo: 'SISTEMA' | 'USUARIO' = 'SISTEMA';
   orden_estado: EstadoOrdenMantenimiento = 'MANTENIMIENTO';
   orden_registro?: string;
   fk_vehiculo_id: number | null = null;
@@ -110,6 +118,10 @@ export class OrdenMantenimientoModel {
   total_facturas?: number;
   /** { rubro: total } (la vista lo envía como JSON en texto) */
   totales_rubro?: Record<string, number> | string;
+  contrato_codigo?: string | null;
+  contrato_tipo?: string | null;
+  /** Taller del contrato (o de la orden antigua) */
+  taller?: string | null;
   /** Bitácora (informe de grupo) en la que está incluida la orden */
   informe_id?: number | null;
   informe_numero?: string | null;
@@ -127,6 +139,8 @@ export class InformeMantenimientoModel {
   tecnico_servicios: number | null = null;
   tecnico_cargo: string | null = null;
   director_administrativo: number | null = null;
+  /** Contrato de las órdenes agrupadas (el taller se toma de él) */
+  fk_contrato_id: number | null = null;
   /** ids de las órdenes incluidas (al guardar) */
   ordenes: number[] = [];
   ordenes_detalle?: OrdenMantenimientoModel[];
@@ -172,7 +186,8 @@ export function colorEstadoMantenimiento(estado: string | null | undefined): str
   switch (estado) {
     case 'VENCIDO': case 'ANULADA': case 'ANULADO': return 'danger';
     case 'PROXIMO': case 'MANTENIMIENTO': return 'warning';
-    case 'AL DIA': case 'FINALIZADA': case 'GENERADO': return 'success';
+    case 'RECIBIDO': return 'info';
+    case 'AL DIA': case 'ENTREGADO': case 'GENERADO': case 'VIGENTE': return 'success';
     default: return 'secondary';
   }
 }
@@ -182,7 +197,7 @@ export function ordenParaGuardar(orden: OrdenMantenimientoModel): Partial<OrdenM
   const limpio = (t: string | null | undefined) => (t ?? '').trim();
   const {
     vehiculo_sigla, vehiculo_placa, vehiculo_marca, vehiculo_modelo, s_nombre, da_nombre, psg_nombre,
-    total_facturas, totales_rubro, informe_id, informe_numero, informe_fecha, usuario, ...datos
+    total_facturas, totales_rubro, informe_id, informe_numero, informe_fecha, usuario, contrato_codigo, contrato_tipo, taller, ...datos
   } = orden;
   return {
     ...datos,
@@ -253,4 +268,75 @@ export function totalesRubroOrdenes(ordenes: OrdenMantenimientoModel[], rubros: 
     }
   }
   return totalesPorRubro(facturas, rubros);
+}
+
+// ------------------------------------------------------------------ contratos
+
+export const TIPOS_CONTRATO_POR_DEFECTO = ['GENERAL', 'VIGENCIA TECNOLÓGICA'];
+
+/** Partida presupuestaria del contrato por rubro, con su saldo (asignado - consumido). */
+export class PartidaContratoModel {
+  partida_id?: number;
+  partida_rubro = '';
+  partida_codigo: string | null = null;
+  partida_monto: number | string | null = null;
+  // lectura (vista de saldos)
+  asignado?: number | string;
+  consumido?: number | string;
+  saldo?: number | string;
+}
+
+export class ContratoMantenimientoModel {
+  contrato_id?: number;
+  contrato_estado: 'VIGENTE' | 'FINALIZADO' | 'ANULADO' = 'VIGENTE';
+  contrato_codigo = '';
+  contrato_tipo = 'GENERAL';
+  contrato_objeto: string | null = null;
+  contrato_fecha_inicio: string | null = null;
+  contrato_fecha_fin: string | null = null;
+  contrato_taller = '';
+  contrato_ruc: string | null = null;
+  contrato_representante_legal: string | null = null;
+  administrador_contrato: number | null = null;
+  contrato_monto: number | string | null = null;
+  partidas: PartidaContratoModel[] = [];
+  /** ids (al guardar) u objetos (lectura) de los vehículos cubiertos; vacío = todos */
+  vehiculos: (number | { vehiculo_id: number; vehiculo_sigla: string; vehiculo_placa: string })[] = [];
+  // lectura
+  administrador_nombre?: string;
+  asignado?: number | string;
+  consumido?: number | string;
+  saldo?: number | string;
+  ordenes?: number;
+}
+
+export function contratoParaGuardar(c: ContratoMantenimientoModel): any {
+  const { administrador_nombre, asignado, consumido, saldo, ordenes, ...datos } = c;
+  return {
+    ...datos,
+    partidas: c.partidas.filter(p => p.partida_rubro).map(p => ({
+      partida_rubro: p.partida_rubro, partida_codigo: p.partida_codigo || null, partida_monto: Number(p.partida_monto) || 0,
+    })),
+    vehiculos: c.vehiculos.map(v => typeof v === 'number' ? v : Number(v.vehiculo_id)),
+  };
+}
+
+/** { rubro: total } de las facturas guardadas de una orden. */
+export function mantTotalesGuardados(facturas: FacturaMantenimientoModel[]): Record<string, number> {
+  return Object.fromEntries(totalesPorRubro(facturas, []).map(t => [t.rubro, t.total]));
+}
+
+export interface SaldoRubro { rubro: string; disponible: number; estaOrden: number; restante: number; }
+
+/**
+ * Saldo por rubro para una orden: disponible = saldo del contrato + lo que esta orden ya tenía guardado
+ * (el saldo del contrato ya lo descuenta); restante = disponible - valores actuales de la orden.
+ */
+export function saldoParaOrden(partidas: PartidaContratoModel[], guardado: Record<string, number>, facturas: FacturaMantenimientoModel[]): SaldoRubro[] {
+  const actual = new Map(totalesPorRubro(facturas, partidas.map(p => p.partida_rubro)).map(t => [t.rubro, t.total]));
+  return partidas.map(p => {
+    const disponible = Math.round(((Number(p.saldo) || 0) + (guardado[p.partida_rubro] ?? 0)) * 100) / 100;
+    const estaOrden = actual.get(p.partida_rubro) ?? 0;
+    return { rubro: p.partida_rubro, disponible, estaOrden, restante: Math.round((disponible - estaOrden) * 100) / 100 };
+  });
 }

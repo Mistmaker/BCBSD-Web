@@ -1,5 +1,5 @@
 import {
-  ConfiguracionMantenimiento, listaParametro, numeroInforme, totalesPorRubro, totalesRubroOrdenes,
+  ConfiguracionMantenimiento, ContratoMantenimientoModel, contratoParaGuardar, listaParametro, numeroInforme, PartidaContratoModel, saldoParaOrden, totalesPorRubro, totalesRubroOrdenes,
   colorEstadoMantenimiento, FacturaMantenimientoModel, OrdenMantenimientoModel, ordenParaGuardar, PlanMantenimientoModel,
   planParaGuardar, ReglaMantenimientoModel
 } from './mantenimiento.model';
@@ -51,7 +51,9 @@ describe('mantenimiento.model', () => {
     expect(colorEstadoMantenimiento('VENCIDO')).toBe('danger');
     expect(colorEstadoMantenimiento('PROXIMO')).toBe('warning');
     expect(colorEstadoMantenimiento('AL DIA')).toBe('success');
-    expect(colorEstadoMantenimiento('FINALIZADA')).toBe('success');
+    expect(colorEstadoMantenimiento('ENTREGADO')).toBe('success');
+    expect(colorEstadoMantenimiento('RECIBIDO')).toBe('info');
+    expect(colorEstadoMantenimiento('MANTENIMIENTO')).toBe('warning');
     expect(colorEstadoMantenimiento('SIN PLAN')).toBe('secondary');
     expect(colorEstadoMantenimiento(undefined)).toBe('secondary');
   });
@@ -82,5 +84,32 @@ describe('mantenimiento.model', () => {
     expect(numeroInforme(1234)).toBe('1234');
     expect(numeroInforme(0)).toBe('—');
     expect(numeroInforme(null)).toBe('—');
+  });
+
+  it('saldo para una orden: suma lo ya guardado de la orden y descuenta los valores actuales', () => {
+    const partidas = [
+      Object.assign(new PartidaContratoModel(), { partida_rubro: 'MANO DE OBRA', saldo: '100.00' }),
+      Object.assign(new PartidaContratoModel(), { partida_rubro: 'REPUESTOS', saldo: '0' }),
+    ];
+    const f = (tipo: string, valor: any) => Object.assign(new FacturaMantenimientoModel(), { factura_tipo: tipo, factura_valor: valor });
+    // la orden ya tenía 50 de repuestos guardados (el saldo del contrato ya los descontó)
+    expect(saldoParaOrden(partidas, { REPUESTOS: 50 }, [f('MANO DE OBRA', 120), f('REPUESTOS', 50)])).toEqual([
+      { rubro: 'MANO DE OBRA', disponible: 100, estaOrden: 120, restante: -20 },
+      { rubro: 'REPUESTOS', disponible: 50, estaOrden: 50, restante: 0 },
+    ]);
+  });
+
+  it('contratoParaGuardar envía partidas numéricas y vehículos como ids', () => {
+    const c = Object.assign(new ContratoMantenimientoModel(), {
+      contrato_codigo: 'C-1', contrato_taller: 'T', saldo: 5, administrador_nombre: 'X',
+      partidas: [Object.assign(new PartidaContratoModel(), { partida_rubro: 'REPUESTOS', partida_monto: '150.5', partida_codigo: '' }),
+                 Object.assign(new PartidaContratoModel(), { partida_rubro: '' })],
+      vehiculos: [3, { vehiculo_id: 4, vehiculo_sigla: 'A', vehiculo_placa: 'B' }],
+    });
+    const d = contratoParaGuardar(c);
+    expect(d.saldo).toBeUndefined();
+    expect(d.administrador_nombre).toBeUndefined();
+    expect(d.partidas).toEqual([{ partida_rubro: 'REPUESTOS', partida_codigo: null, partida_monto: 150.5 }]);
+    expect(d.vehiculos).toEqual([3, 4]);
   });
 });

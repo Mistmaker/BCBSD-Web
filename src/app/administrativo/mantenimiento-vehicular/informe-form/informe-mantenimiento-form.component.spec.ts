@@ -30,7 +30,8 @@ describe('InformeMantenimientoFormComponent', () => {
   }
 
   beforeEach(() => {
-    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService', ['getOrdenes', 'getInforme', 'guardarInforme', 'getConfiguracion', 'getSiguienteNumeroInforme']);
+    mant = jasmine.createSpyObj<MantenimientoService>('MantenimientoService', ['getOrdenes', 'getInforme', 'guardarInforme', 'getConfiguracion', 'getSiguienteNumeroInforme', 'getContratos']);
+    mant.getContratos.and.returnValue(of([{ contrato_id: 20, contrato_codigo: 'C-20', contrato_taller: 'TALLER 20', contrato_estado: 'VIGENTE', partidas: [], vehiculos: [] } as any]));
     mant.getConfiguracion.and.returnValue(of({ sistema_nombre: '', sistema_siglas: 'CBSD', director_administrativo: { ppersonal_id: 44, nombre_completo: 'D' },
       parametros: [{ param_key: 'MANT_CARGOS_RESPONSABLE', param_value: 'ADMINISTRADOR DE LA ORDEN DE COMPRA|OTRO', param_name: '' }] }));
     mant.getOrdenes.and.returnValue(of([orden(2, 50), orden(3, 25)]));
@@ -69,6 +70,21 @@ describe('InformeMantenimientoFormComponent', () => {
     expect(c.ordenesFiltradas.map(o => o.orden_id)).toEqual([2, 3]);
     c.alternar(3);
     expect(c.ordenesFiltradas.map(o => o.orden_id)).toEqual([2]);
+  });
+
+  it('al elegir el contrato filtra sus órdenes, usa su taller y quita selecciones de otros contratos', () => {
+    mant.getOrdenes.and.returnValue(of([Object.assign(orden(2), { fk_contrato_id: 20 }), Object.assign(orden(3), { fk_contrato_id: 21 })]));
+    mant.getSiguienteNumeroInforme.and.returnValue(of({ informe_numero: 'BITÁCORA 01 - C-20', informe_serie: 0 }));
+    const c = crear('nuevo');
+    c.alternar(3);
+    c.informe.fk_contrato_id = 20;
+    c.alCambiarContrato();
+    expect(c.disponibles.map(o => o.orden_id)).toEqual([2]);
+    expect([...c.seleccionadas]).toEqual([]);
+    expect(c.informe.informe_taller).toBe('TALLER 20');
+    c.siguienteNumero();
+    expect(mant.getSiguienteNumeroInforme).toHaveBeenCalledWith(20);
+    expect(c.informe.informe_numero).toBe('BITÁCORA 01 - C-20');
   });
 
   it('exige al menos una orden', () => {

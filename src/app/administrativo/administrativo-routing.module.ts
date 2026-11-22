@@ -94,6 +94,20 @@ const routes: Routes = [
       title: 'Plan de Mantenimiento'
     }, canActivate: [AuthGuard]
   },
+  {
+    path: 'contratos-mantenimiento',
+    loadComponent: () => import('./mantenimiento-vehicular/contratos-lista/contratos-mantenimiento-lista.component').then(m => m.ContratosMantenimientoListaComponent),
+    data: {
+      title: 'Contratos de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
+  {
+    path: 'contratos-mantenimiento/:id',
+    loadComponent: () => import('./mantenimiento-vehicular/contrato-form/contrato-mantenimiento-form.component').then(m => m.ContratoMantenimientoFormComponent),
+    data: {
+      title: 'Contrato de Mantenimiento'
+    }, canActivate: [AuthGuard]
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

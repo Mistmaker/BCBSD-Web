@@ -1,0 +1,38 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="6"><strong>Mantenimiento vehicular - Contratos de mantenimiento</strong></c-col>
+          <c-col md="6" class="text-md-end"><a cButton routerLink="./nuevo" color="primary" size="sm"><i class="fa-solid fa-plus"></i> Nuevo contrato</a></c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <p class="small text-body-secondary">Contrato general del parque automotor y contratos por vigencia tecnológica. Cada contrato tiene un tope por rubro presupuestario.</p>
+        <input cFormControl class="mb-3" placeholder="Buscar por código, taller, tipo..." [(ngModel)]="filtro" name="filtro" />
+        <div class="table-responsive">
+          <table cTable hover small>
+            <thead><tr><th>Código</th><th>Tipo</th><th>Taller / contratista</th><th>Vigencia</th><th class="text-end">Monto</th><th style="min-width: 160px">Consumido</th><th class="text-end">Saldo</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngIf="!contratos.length"><td colspan="9" class="text-center text-body-secondary">No hay contratos registrados</td></tr>
+              <tr *ngFor="let c of contratos | filtroGeneral: filtro">
+                <td>{{ c.contrato_codigo }}</td>
+                <td>{{ c.contrato_tipo }} <small *ngIf="c.vehiculos" class="text-body-secondary">({{ c.vehiculos }} veh.)</small></td>
+                <td>{{ c.contrato_taller }}</td>
+                <td><small>{{ c.contrato_fecha_inicio | date: 'dd/MM/yyyy' }} – {{ c.contrato_fecha_fin | date: 'dd/MM/yyyy' }}</small></td>
+                <td class="text-end">{{ c.contrato_monto | currency: 'USD' }}</td>
+                <td>
+                  <c-progress thin [value]="porcentaje(c.asignado, c.consumido)" [color]="porcentaje(c.asignado, c.consumido) >= 90 ? 'danger' : 'success'"></c-progress>
+                  <small>{{ c.consumido | currency: 'USD' }} ({{ porcentaje(c.asignado, c.consumido) }} %)</small>
+                </td>
+                <td class="text-end">{{ c.saldo | currency: 'USD' }}</td>
+                <td><c-badge [color]="color(c.contrato_estado)">{{ c.contrato_estado }}</c-badge></td>
+                <td class="text-end"><a cButton [routerLink]="['./', c.contrato_id]" color="secondary" size="sm" variant="outline" aria-label="Editar contrato"><i class="fa-solid fa-pen"></i></a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

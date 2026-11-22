@@ -10,7 +10,8 @@ import Swal from 'sweetalert2';
 import { PersonalModel } from '../../../tthh/models/personal.model';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import {
-  AnexoMantenimientoModel, colorEstadoMantenimiento, ConfiguracionMantenimiento, EstadoOrdenMantenimiento, EstadoVehiculoModel,
+  AnexoMantenimientoModel, colorEstadoMantenimiento, ConfiguracionMantenimiento, ContratoMantenimientoModel, EstadoOrdenMantenimiento, EstadoVehiculoModel,
+  mantTotalesGuardados, saldoParaOrden, SaldoRubro,
   FacturaMantenimientoModel, listaParametro, numeroInforme, OrdenMantenimientoModel, RUBROS_POR_DEFECTO, TIPOS_MANTENIMIENTO, totalesPorRubro, TrabajoMantenimientoModel
 } from '../../models/mantenimiento.model';
 import { MantenimientoService } from '../../services/mantenimiento.service';
@@ -47,6 +48,10 @@ export class OrdenMantenimientoFormComponent implements OnInit {
   guardando = false;
   cargando = true;
   readonly color = colorEstadoMantenimiento;
+  /** Contratos vigentes que cubren al vehículo (más el contrato actual de la orden) */
+  contratos: ContratoMantenimientoModel[] = [];
+  /** Valores por rubro guardados de esta orden (ya descontados del saldo del contrato) */
+  private totalesGuardados: Record<string, number> = {};
   readonly tipos = TIPOS_MANTENIMIENTO;
   readonly numero = numeroInforme;
 
@@ -67,7 +72,23 @@ export class OrdenMantenimientoFormComponent implements OnInit {
               private route: ActivatedRoute, private router: Router) { }
 
   get esNueva(): boolean { return !this.orden.orden_id; }
-  get soloLectura(): boolean { return this.orden.orden_estado === 'ANULADA'; }
+  /** Anulada o con acta generada (ENTREGADO): solo se puede reabrir o imprimir */
+  get soloLectura(): boolean { return this.orden.orden_estado === 'ANULADA' || this.orden.orden_estado === 'ENTREGADO'; }
+  get contrato(): ContratoMantenimientoModel | undefined { return this.contratos.find(c => c.contrato_id === this.orden.fk_contrato_id); }
+  /** Disponible, valor de esta orden y saldo restante por rubro del contrato */
+  get saldos(): SaldoRubro[] { return this.contrato ? saldoParaOrden(this.contrato.partidas, this.totalesGuardados, this.orden.facturas) : []; }
+  get excedeContrato(): boolean { return this.saldos.some(s => s.restante < 0) || this.rubrosSinPartida.length > 0; }
+  get rubrosSinPartida(): string[] {
+    if (!this.contrato) { return []; }
+    const conPartida = this.contrato.partidas.map(p => p.partida_rubro);
+    return totalesPorRubro(this.orden.facturas, this.rubros).filter(t => t.total > 0 && !conPartida.includes(t.rubro)).map(t => t.rubro);
+  }
+  /** Próximo mantenimiento preventivo: el calculado al guardar o, en una orden nueva, el del plan del vehículo */
+  get kmProximo(): number | null {
+    const guardado = this.orden.orden_proximomantenimiento;
+    if (guardado !== null && guardado !== undefined) { return Number(guardado); }
+    return this.estadoVehiculo?.proximo?.km_proximo ?? null;
+  }
   get totalFacturas(): number {
     return this.orden.facturas.reduce((t, f) => t + (Number(f.factura_valor) || 0), 0);
   }
@@ -90,7 +111,9 @@ export class OrdenMantenimientoFormComponent implements OnInit {
           this.orden = Object.assign(new OrdenMantenimientoModel(), orden, {
             orden_fecha_mantenimiento: aFechaHoraLocal(orden.orden_fecha_mantenimiento),
             orden_km_mantenimiento: orden.orden_km_mantenimiento !== null ? Number(orden.orden_km_mantenimiento) : null,
+            orden_fecha_mantenimiento_tipo: 'USUARIO',
           });
+          this.totalesGuardados = mantTotalesGuardados(this.orden.facturas);
           this.cargarEstadoVehiculo(this.orden.fk_vehiculo_id);
         } else {
           this.orden.orden_fecha_mantenimiento = ahoraLocal();
@@ -98,7 +121,7 @@ export class OrdenMantenimientoFormComponent implements OnInit {
           this.orden.tecnico_puesto = this.cargos[0] ?? null;
           const query = this.route.snapshot.queryParamMap;
           const tipo = query.get('tipo');
-          if (tipo === 'PREVENTIVO' || tipo === 'CORRECTIVO') { this.orden.orden_tipomantenimiento = tipo; }
+          if ((TIPOS_MANTENIMIENTO as string[]).includes(tipo ?? '')) { this.orden.orden_tipomantenimiento = tipo as any; }
           const vehiculo = Number(query.get('vehiculo'));
           if (vehiculo) {
             this.orden.fk_vehiculo_id = vehiculo;
@@ -118,8 +141,41 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     this.cargarEstadoVehiculo(this.orden.fk_vehiculo_id, true);
   }
 
+  /** Contratos vigentes que cubren al vehículo; en una orden nueva se preselecciona el primero (los específicos van primero). */
+  private cargarContratos(vehiculoId: number | null): void {
+    if (!vehiculoId) { this.contratos = []; return; }
+    this.mantenimiento.getContratos({ vigentes: true, vehiculo_id: vehiculoId }).subscribe({
+      next: (contratos) => {
+        const actual = this.orden.fk_contrato_id;
+        this.contratos = contratos;
+        if (actual && !contratos.some(c => c.contrato_id === actual)) {
+          // contrato ya no vigente: se muestra igual para conservar la referencia
+          this.mantenimiento.getContrato(actual).subscribe(c => this.contratos = [c, ...this.contratos]);
+        }
+        if (this.esNueva && !actual && contratos.length) {
+          this.orden.fk_contrato_id = contratos[0].contrato_id!;
+        }
+      },
+      error: (e) => console.error(e)
+    });
+  }
+
+  /** Hora de salida: SISTEMA usa la fecha y hora actuales. */
+  alCambiarTipoFecha(): void {
+    if (this.orden.orden_fecha_mantenimiento_tipo === 'SISTEMA') { this.orden.orden_fecha_mantenimiento = ahoraLocal(); }
+  }
+
+  /** Botón +1 del número de orden */
+  siguienteNumeroOrden(): void {
+    this.mantenimiento.getSiguienteSerieOrden().subscribe({
+      next: (r) => this.orden.orden_serie = r.orden_serie,
+      error: (e) => Swal.fire('Error', e.error?.msg ?? e.message, 'error')
+    });
+  }
+
   private cargarEstadoVehiculo(vehiculoId: number | null, precargarKm = false): void {
     this.estadoVehiculo = null;
+    this.cargarContratos(vehiculoId);
     if (!vehiculoId) { return; }
     this.mantenimiento.getEstadoVehiculo(vehiculoId).subscribe({
       next: (estado) => {
@@ -140,11 +196,12 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     this.orden.facturas.push(f);
   }
 
-  /** Botón +1: sugiere el siguiente número de informe individual */
+  /** Botón +1 del informe de pago: siguiente número según el formato configurado */
   siguienteInforme(): void {
-    this.mantenimiento.getSiguienteSerieOrden().subscribe({
+    this.mantenimiento.getSiguienteInformeOrden().subscribe({
       next: (r) => {
-        this.orden.orden_serie = r.orden_serie;
+        this.orden.orden_informe_numero = r.orden_informe_numero;
+        this.orden.orden_informe_serie = r.orden_informe_serie;
         this.orden.orden_fecha_entrega ??= new Date().toISOString().substring(0, 10);
       },
       error: (e) => Swal.fire('Error', e.error?.msg ?? e.message, 'error')
@@ -170,10 +227,16 @@ export class OrdenMantenimientoFormComponent implements OnInit {
 
   guardar(form: NgForm, nuevoEstado?: EstadoOrdenMantenimiento): void {
     this.validado = true;
-    if (form.invalid) {
+    if (nuevoEstado === 'ANULADA' || (this.soloLectura && nuevoEstado)) {
+      // anular o reabrir no requiere revalidar el formulario
+    } else if (form.invalid || !this.orden.fk_contrato_id) {
       // los campos obligatorios están en el formulario de registro
       this.pestana = this.camposFaltantes().length ? 'registro' : this.pestana;
       Swal.fire('Atención', 'Revise los campos requeridos antes de guardar.', 'warning');
+      return;
+    } else if (this.excedeContrato) {
+      this.pestana = 'pago';
+      Swal.fire('Atención', 'Los valores registrados superan el saldo del contrato en algún rubro.', 'warning');
       return;
     }
     if (this.guardando) { return; }
@@ -183,6 +246,16 @@ export class OrdenMantenimientoFormComponent implements OnInit {
       next: (r) => {
         this.guardando = false;
         const texto = r.orden_codigo ? `${r.msg}: ${r.orden_codigo}` : r.msg;
+        if (nuevoEstado === 'ENTREGADO') {
+          // el acta se abre con el clic del usuario para que el navegador no bloquee la pestaña
+          Swal.fire({ title: 'Acta generada', text: 'La orden pasó a ENTREGADO.', icon: 'success', showCancelButton: true,
+            confirmButtonText: 'Imprimir acta', cancelButtonText: 'Cerrar' })
+            .then(res => {
+              if (res.isConfirmed) { this.pdf.abrir(this.mantenimiento.urlReporteOrden(r.id, 'acta')); }
+              this.router.navigate(['/admin/ordenes-mantenimiento']);
+            });
+          return;
+        }
         Swal.fire('Listo', texto, 'success').then(() => this.router.navigate(['/admin/ordenes-mantenimiento']));
       },
       error: (e) => {
@@ -192,14 +265,26 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     });
   }
 
+  /** Flujo: MANTENIMIENTO -> RECIBIDO -> ENTREGADO (genera el acta); ANULADA. */
   cambiarEstado(form: NgForm, estado: EstadoOrdenMantenimiento): void {
-    const textos: Record<string, string> = {
-      FINALIZADA: '¿Marcar la orden como finalizada? Registre antes los datos de recepción del vehículo.',
-      ANULADA: '¿Anular la orden? Una orden anulada no se puede modificar.',
-      MANTENIMIENTO: '¿Reabrir la orden?'
+    if (estado === 'ENTREGADO' && !this.orden.orden_fecha_recepcion) {
+      this.pestana = 'pago';
+      Swal.fire('Atención', 'Registre la fecha de entrega del acta antes de generarla.', 'warning');
+      return;
+    }
+    const textos: Record<EstadoOrdenMantenimiento, string> = {
+      RECIBIDO: '¿El taller entregó el vehículo con la documentación? La orden pasa a RECIBIDO para registrar valores y facturas.',
+      ENTREGADO: 'Se generará el acta entrega-recepción y la orden pasará a ENTREGADO. Ya no se podrá editar salvo que se reabra.',
+      MANTENIMIENTO: '¿Devolver la orden a MANTENIMIENTO (vehículo en el taller)?',
+      ANULADA: '¿Anular la orden? Una orden anulada no se puede modificar y libera el saldo del contrato.',
     };
-    Swal.fire({ title: 'Confirmar', text: textos[estado], icon: 'question', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No' })
-      .then(r => { if (r.isConfirmed) { this.guardar(form, estado); } });
+    const reabrir = this.orden.orden_estado === 'ENTREGADO' && estado === 'RECIBIDO';
+    Swal.fire({ title: 'Confirmar', text: reabrir ? '¿Reabrir la orden para corregir valores?' : textos[estado], icon: 'question',
+      showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No' })
+      .then(r => {
+        if (!r.isConfirmed) { return; }
+        this.guardar(form, estado);
+      });
   }
 
   /** Campos obligatorios del formulario de registro que faltan. */
@@ -208,6 +293,7 @@ export class OrdenMantenimientoFormComponent implements OnInit {
     const faltan: [unknown, string][] = [
       [o.fk_vehiculo_id, 'unidad'], [o.orden_fecha_mantenimiento, 'fecha'], [o.orden_km_mantenimiento !== null && o.orden_km_mantenimiento !== undefined ? 1 : null, 'kilometraje'],
       [o.director_administrativo, 'director administrativo'], [o.personal_solicita, 'persona que solicita'], [o.tecnico_servicios, 'responsable del registro'],
+      [o.fk_contrato_id, 'contrato'],
     ];
     return faltan.filter(([v]) => !v).map(([, n]) => n);
   }

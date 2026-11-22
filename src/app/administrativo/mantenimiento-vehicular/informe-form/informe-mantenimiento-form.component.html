@@ -16,8 +16,15 @@
       <c-card-body>
         <form #form="ngForm" cForm [validated]="validado" class="needs-validation" (ngSubmit)="guardar(form)" novalidate>
           <fieldset [disabled]="soloLectura">
-            <p class="small text-body-secondary">Agrupa las órdenes de los vehículos enviados juntos al taller en un solo informe para el pago.</p>
+            <p class="small text-body-secondary">Agrupa las órdenes de los vehículos enviados juntos al taller en un solo informe para el pago. Solo se listan órdenes RECIBIDO o ENTREGADO.</p>
             <c-row class="g-3 mb-3">
+              <c-col md="12">
+                <label cLabel for="contrato">Contrato</label>
+                <ng-select id="contrato" name="contrato" [items]="contratos" bindValue="contrato_id" bindLabel="contrato_codigo" [(ngModel)]="informe.fk_contrato_id"
+                           (change)="alCambiarContrato()" [readonly]="soloLectura" placeholder="Todos los contratos">
+                  <ng-template ng-option-tmp let-item="item">{{ item.contrato_codigo }} <small class="text-body-secondary">{{ item.contrato_tipo }} · {{ item.contrato_taller }}</small></ng-template>
+                </ng-select>
+              </c-col>
               <c-col md="12">
                 <label cLabel class="required-label" for="numero">Número de informe</label>
                 <div class="input-group">
