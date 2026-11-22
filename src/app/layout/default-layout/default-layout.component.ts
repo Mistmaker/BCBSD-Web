@@ -63,6 +63,8 @@ export class DefaultLayoutComponent {
     if (user.usuario.voluntario_id) {
       this.navItems = [...user.usuario.menus]
     } else {
+      // Privilegios actuales: los asignados después del login se aplican sin volver a entrar
+      this._authService.refrescarPermisos().subscribe({ error: (e) => console.error(e) });
       this._authService.getMenus(user.usuario.usuario_id, user.usuario.voluntario_id).subscribe({
         next: (data: any[]) => {
           // console.log(data);

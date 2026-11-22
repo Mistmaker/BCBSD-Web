@@ -81,6 +81,23 @@ describe('AuthService', () => {
     expect(service.tienePermiso('MANT_ORDENES')).withContext('sesión anterior sin permisos').toBeFalse();
   });
 
+  it('tieneAccesoRuta: el rol con ruta cubre la pantalla y sus subrutas, no otras', () => {
+    guardarSesion({ token: 'x', usuario: { usuario_id: 1, rutas: ['/admin/ordenes-movilizacion'] } });
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion/nuevo?x=1')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-movilizacion-otra')).toBeFalse();
+    expect(service.tieneAccesoRuta('/admin/ordenes-abastecimiento')).toBeFalse();
+  });
+
+  it('refrescarPermisos actualiza la sesión con los privilegios actuales', () => {
+    guardarSesion({ token: 't', usuario: { usuario_id: 1, permisos: [] } });
+    service.refrescarPermisos().subscribe();
+    http.expectOne(`${environment.API_URL}/servicios/auth/getPermisos.php`).flush({ permisos: ['ADM_COMBUSTIBLE'], rutas: ['/admin/ordenes-abastecimiento'] });
+    expect(service.tienePermiso('ADM_COMBUSTIBLE')).toBeTrue();
+    expect(service.tieneAccesoRuta('/admin/ordenes-abastecimiento/3')).toBeTrue();
+    expect(service.getToken()).toBe('t');
+  });
+
   it('getRoles consulta el endpoint correcto', () => {
     service.getRoles(7).subscribe(roles => expect(roles).toEqual([1, 2]));
     http.expectOne(`${environment.API_URL}/servicios/auth/getRoles.php?id=7`).flush([1, 2]);
