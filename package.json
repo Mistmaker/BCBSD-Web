@@ -21,7 +21,8 @@
     "test:mantenimiento": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/mantenimiento.model.spec.ts' --include='src/app/administrativo/services/mantenimiento.service.spec.ts' --include='src/app/administrativo/mantenimiento-vehicular/**/*.spec.ts'",
     "test:bitacora": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/bitacora.model.spec.ts' --include='src/app/administrativo/services/bitacora.service.spec.ts' --include='src/app/administrativo/bitacora-vehiculos/**/*.spec.ts'",
     "test:operadores": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/operadores.model.spec.ts' --include='src/app/administrativo/services/operadores.service.spec.ts'",
-    "test:admin": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/admin/**/*.spec.ts'"
+    "test:admin": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/admin/**/*.spec.ts'",
+    "test:peticion-materiales": "ng test --watch=false --browsers=ChromeHeadlessCI --include='src/app/administrativo/models/peticion-materiales.model.spec.ts' --include='src/app/administrativo/services/peticion-materiales.service.spec.ts' --include='src/app/administrativo/serv-generales/peticion*/**/*.spec.ts'"
   },
   "private": true,
   "dependencies": {
