@@ -3,37 +3,9 @@ import { VehiculosService } from './../../services/vehiculos.service';
 import { Component, OnInit } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
-import {
-  BadgeComponent,
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TableDirective,
-  InputGroupComponent,
-  InputGroupTextDirective
-} from '@coreui/angular';
-import { IconDirective } from '@coreui/icons-angular';
+import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TableDirective, InputGroupComponent, InputGroupTextDirective } from '@coreui/angular';
 import { AuthService } from '../../../auth/auth.service';
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
 import { FormsModule } from '@angular/forms';
@@ -45,7 +17,8 @@ type CardColor = {
 
 @Component({
   selector: 'app-vehiculos-listado',
-  imports: [BadgeComponent,CommonModule, IconDirective, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent, TableDirective, FiltroGeneralPipe, InputGroupComponent, InputGroupTextDirective, FormsModule ],
+  imports: [BadgeComponent, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective, RouterLink,
+    TableDirective, FiltroGeneralPipe, InputGroupComponent, InputGroupTextDirective, FormsModule],
   templateUrl: './vehiculos-listado.component.html',
   styleUrl: './vehiculos-listado.component.scss'
 })

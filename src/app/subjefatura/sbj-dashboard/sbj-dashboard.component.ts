@@ -1,36 +1,13 @@
-import { AfterViewInit, Component, DestroyRef, effect, inject, OnDestroy, OnInit, Renderer2, signal, WritableSignal } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 
-import { DOCUMENT, NgStyle, CommonModule } from '@angular/common';
+import { NgStyle, CommonModule } from '@angular/common';
 import { ChartjsComponent } from '@coreui/angular-chartjs';
-import { IconDirective } from '@coreui/icons-angular';
-import { ChartData, ChartOptions, ChartType, ScaleOptions } from 'chart.js';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import {
-  AvatarComponent,
-  ButtonDirective,
-  ButtonGroupComponent,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardHeaderComponent,
-  ColComponent,
-  FormCheckLabelDirective,
-  GutterDirective,
-  ProgressBarDirective,
-  ProgressComponent,
-  RowComponent,
-  TableDirective,
-  TextColorDirective,
-  WidgetStatCComponent,
-  TemplateIdDirective,
-  InputGroupComponent, InputGroupTextDirective, FormLabelDirective, FormControlDirective, FormSelectDirective
-} from '@coreui/angular';
-import { WidgetsBrandComponent } from '../../views/widgets/widgets-brand/widgets-brand.component';
-import { WidgetsDropdownComponent } from '../../views/widgets/widgets-dropdown/widgets-dropdown.component';
+import { ChartData, ChartOptions, ChartType } from 'chart.js';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, ProgressBarDirective, ProgressComponent, RowComponent, TextColorDirective, WidgetStatCComponent, TemplateIdDirective, InputGroupComponent, InputGroupTextDirective, FormLabelDirective, FormControlDirective, FormSelectDirective } from '@coreui/angular';
 // import { DashboardChartsData, IChartProps } from '../../views/dashboard/dashboard-charts-data';
 import { IntervencionesService } from '../services/intervenciones.service';
 import Swal from 'sweetalert2';
-import { getStyle } from '@coreui/utils';
 import { EstacionesModel } from '../models/estadisticas.model';
 import * as L from 'leaflet';
 
@@ -61,7 +38,9 @@ interface IChartProps {
 
 @Component({
   selector: 'app-sbj-dashboard',
-  imports: [FormSelectDirective, FormLabelDirective, FormControlDirective, FormsModule, TemplateIdDirective, WidgetStatCComponent, CommonModule, WidgetsDropdownComponent, TextColorDirective, CardComponent, CardBodyComponent, RowComponent, ColComponent, ButtonDirective, IconDirective, ReactiveFormsModule, ButtonGroupComponent, FormCheckLabelDirective, ChartjsComponent, NgStyle, CardFooterComponent, GutterDirective, ProgressBarDirective, ProgressComponent, WidgetsBrandComponent, CardHeaderComponent, TableDirective, AvatarComponent, InputGroupComponent, InputGroupTextDirective],
+  imports: [FormSelectDirective, FormLabelDirective, FormControlDirective, FormsModule, TemplateIdDirective, WidgetStatCComponent, CommonModule,
+    TextColorDirective, CardComponent, CardBodyComponent, RowComponent, ColComponent, ButtonDirective, ReactiveFormsModule, ChartjsComponent,
+    NgStyle, ProgressBarDirective, ProgressComponent, CardHeaderComponent, InputGroupComponent, InputGroupTextDirective],
   templateUrl: './sbj-dashboard.component.html',
   styleUrl: './sbj-dashboard.component.scss'
 })

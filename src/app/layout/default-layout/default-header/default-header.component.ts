@@ -2,25 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
-import {
-  AvatarComponent,
-  BadgeComponent,
-  BreadcrumbRouterComponent,
-  ColorModeService,
-  ContainerComponent,
-  DropdownComponent,
-  DropdownDividerDirective,
-  DropdownHeaderDirective,
-  DropdownItemDirective,
-  DropdownMenuDirective,
-  DropdownToggleDirective,
-  HeaderComponent,
-  HeaderNavComponent,
-  HeaderTogglerDirective,
-  NavItemComponent,
-  NavLinkDirective,
-  SidebarToggleDirective
-} from '@coreui/angular';
+import { AvatarComponent, BreadcrumbRouterComponent, ColorModeService, ContainerComponent, DropdownComponent, DropdownItemDirective, DropdownMenuDirective, DropdownToggleDirective, HeaderComponent, HeaderNavComponent, HeaderTogglerDirective, NavItemComponent, NavLinkDirective, SidebarToggleDirective } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
 import { AuthService } from '../../../auth/auth.service';
@@ -28,7 +10,9 @@ import { AuthService } from '../../../auth/auth.service';
 @Component({
     selector: 'app-default-header',
     templateUrl: './default-header.component.html',
-  imports: [ContainerComponent, HeaderTogglerDirective, SidebarToggleDirective, IconDirective, HeaderNavComponent, NavItemComponent, NavLinkDirective, RouterLink, RouterLinkActive, NgTemplateOutlet, BreadcrumbRouterComponent, DropdownComponent, DropdownToggleDirective, AvatarComponent, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective, BadgeComponent, DropdownDividerDirective]
+  imports: [ContainerComponent, HeaderTogglerDirective, SidebarToggleDirective, IconDirective, HeaderNavComponent, NavItemComponent, NavLinkDirective,
+    RouterLink, RouterLinkActive, NgTemplateOutlet, BreadcrumbRouterComponent, DropdownComponent, DropdownToggleDirective, AvatarComponent,
+    DropdownMenuDirective, DropdownItemDirective]
 })
 export class DefaultHeaderComponent extends HeaderComponent {
 

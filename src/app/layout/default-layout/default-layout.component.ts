@@ -19,13 +19,6 @@ import {
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
 import { AuthService } from '../../auth/auth.service';
 
-function isOverflown(element: HTMLElement) {
-  return (
-    element.scrollHeight > element.clientHeight ||
-    element.scrollWidth > element.clientWidth
-  );
-}
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './default-layout.component.html',

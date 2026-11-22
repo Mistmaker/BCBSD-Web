@@ -4,7 +4,7 @@ import { IconDirective } from '@coreui/icons-angular';
 import { ContainerComponent, RowComponent, ColComponent, CardGroupComponent, TextColorDirective, CardComponent, CardBodyComponent, FormDirective, InputGroupComponent, InputGroupTextDirective, FormControlDirective, ButtonDirective } from '@coreui/angular';
 import { AuthService } from '../../../auth/auth.service';
 import { Router,RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 
 @Component({

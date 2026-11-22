@@ -1,40 +1,15 @@
 import { AuthService } from './../../../auth/auth.service';
-import { OrdenesAbastecimientoDetalleModel, OrdenesAbastecimientoModel } from './../../models/ordenes-abastecimiento.model';
-import { Component, OnInit } from '@angular/core';
+import { OrdenesAbastecimientoModel } from './../../models/ordenes-abastecimiento.model';
+import { Component } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
 
-import {
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective
-} from '@coreui/angular';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective } from '@coreui/angular';
 
 import Swal from 'sweetalert2';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
-import { OrdenesMovilizacionService } from '../../services/ordenes-movilizacion.service';
 import { PersonalService } from '../../../tthh/services/personal.service';
 import { VehiculosModel } from '../../models/vehiculos.model';
 
@@ -42,9 +17,9 @@ import { OrdenesAbastecimientoService } from '../../services/ordenes-abastecimie
 import { PersonalModel } from '../../../tthh/models/personal.model';
 @Component({
   selector: 'app-ordenes-abastecimiento-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective
-  ],
+  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent,
+    ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective, RouterLink, TextColorDirective, FormDirective,
+    FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective],
   templateUrl: './ordenes-abastecimiento-mantenimiento.component.html',
   styleUrl: './ordenes-abastecimiento-mantenimiento.component.scss'
 })

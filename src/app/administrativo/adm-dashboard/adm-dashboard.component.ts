@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, OnInit, Renderer2, signal, WritableSignal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, Renderer2, signal, WritableSignal } from '@angular/core';
 
 import { DOCUMENT, NgStyle, CommonModule } from '@angular/common';
 import { ChartjsComponent } from '@coreui/angular-chartjs';

@@ -1,7 +1,7 @@
 import { DashboardChartsData, IChartProps } from './../../../views/dashboard/dashboard-charts-data';
 import { WidgetsDropdownComponent } from './../../../views/widgets/widgets-dropdown/widgets-dropdown.component';
 import { WidgetsBrandComponent } from './../../../views/widgets/widgets-brand/widgets-brand.component';
-import { Component, DestroyRef, effect, inject, OnInit, Renderer2, signal, WritableSignal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, Renderer2, signal, WritableSignal } from '@angular/core';
 
 import { DOCUMENT, NgStyle, CommonModule } from '@angular/common';
 import { ChartjsComponent } from '@coreui/angular-chartjs';
