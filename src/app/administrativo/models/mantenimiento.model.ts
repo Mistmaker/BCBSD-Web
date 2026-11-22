@@ -73,7 +73,7 @@ export class OrdenMantenimientoModel {
   orden_taller: string | null = null;
   /** Contrato de mantenimiento bajo el que se hace la orden */
   fk_contrato_id: number | null = null;
-  /** Número del informe de pago (ej. CBSD-26-RUPIF-007-M) */
+  /** Número del informe de pago (ej. CBSD-DA-2026-0207-I) */
   orden_informe_numero: string | null = null;
   orden_informe_serie: number | null = null;
   /** SISTEMA: fecha/hora actual al registrar; USUARIO: la ingresa el usuario */
