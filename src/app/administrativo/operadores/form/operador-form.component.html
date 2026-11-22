@@ -1,0 +1,149 @@
+<c-row>
+  <c-col xs="12">
+    <c-card class="mb-4">
+      <c-card-header style="background-color: #bf0411; color: white;">
+        <c-row class="align-items-center">
+          <c-col md="8"><strong>Operadores - {{ esNuevo ? 'Nuevo operador' : (puedeEditar ? 'Actualizar licencia' : 'Operador') }}</strong></c-col>
+          <c-col md="4" class="text-md-end">
+            <a cButton color="light" size="sm" variant="outline" routerLink="/admin/operadores"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+          </c-col>
+        </c-row>
+      </c-card-header>
+      <c-card-body>
+        <div class="text-center py-4" *ngIf="cargando"><c-spinner size="sm"></c-spinner> Cargando...</div>
+        <form cForm #form="ngForm" (ngSubmit)="guardar(form)" *ngIf="!cargando" novalidate>
+          <!-- Persona -->
+          <h6 class="text-body-secondary">Funcionario</h6>
+          <c-row class="g-3 mb-4" *ngIf="!esNuevo && operador">
+            <c-col md="4"><label cLabel>Cédula</label><input cFormControl [value]="operador.persona_doc_identidad" readonly /></c-col>
+            <c-col md="8"><label cLabel>Apellidos y nombres</label><input cFormControl [value]="operador.nombre_completo" readonly /></c-col>
+            <c-col md="8"><label cLabel>Puesto</label><input cFormControl [value]="(operador.puesto_nombre || 'Sin puesto') + (operador.puesto_modalidad ? ' · ' + operador.puesto_modalidad : '')" readonly /></c-col>
+            <c-col md="4">
+              <label cLabel>Licencia actual</label>
+              <div class="pt-1">
+                {{ textoLicencia(operador) }}
+                <c-badge [color]="colorVigencia(operador.licencia_vigencia)" [textColor]="operador.licencia_vigencia === 'POR VENCER' ? 'dark' : 'white'">{{ operador.licencia_vigencia }}</c-badge>
+              </div>
+            </c-col>
+            <c-col xs="12"><small class="text-body-secondary">Los datos personales y el puesto se actualizan en la ficha de Talento Humano.</small></c-col>
+          </c-row>
+
+          <c-row class="g-3 mb-4" *ngIf="esNuevo">
+            <c-col md="4">
+              <label cLabel for="cedula">Cédula</label>
+              <c-input-group>
+                <input cFormControl id="cedula" name="cedula" required [(ngModel)]="datos.persona_doc_identidad" (ngModelChange)="alCambiarCedula()" maxlength="10" inputmode="numeric"
+                       autocomplete="off" [class.is-invalid]="(validado || (datos.persona_doc_identidad?.length ?? 0) === 10) && !cedulaOk" />
+                <button cButton type="button" color="secondary" variant="outline" (click)="buscar()" [disabled]="!cedulaOk || buscando" aria-label="Buscar cédula">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+              </c-input-group>
+              <small class="text-danger" *ngIf="(validado || (datos.persona_doc_identidad?.length ?? 0) === 10) && !cedulaOk">Cédula no válida</small>
+              <small class="text-body-secondary" *ngIf="!datos.persona_doc_identidad">Si ya es funcionario se completan sus datos.</small>
+            </c-col>
+            <c-col md="8" class="d-flex align-items-end" *ngIf="buscando"><span><c-spinner size="sm"></c-spinner> Buscando...</span></c-col>
+            <ng-container *ngIf="listoParaDatos">
+              <c-col md="8" class="d-flex align-items-end">
+                <c-alert [color]="personaExistente ? 'info' : 'secondary'" class="py-2 mb-0 w-100 small">
+                  <ng-container *ngIf="personaExistente?.ppersonal_id">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Funcionario registrado: {{ personaExistente!.puesto_nombre }} ({{ personaExistente!.puesto_modalidad }}). Solo falta la licencia.
+                  </ng-container>
+                  <ng-container *ngIf="personaExistente && !personaExistente.ppersonal_id">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i> La persona está registrada pero no tiene un puesto en funciones: seleccione su puesto.
+                  </ng-container>
+                  <ng-container *ngIf="!personaExistente">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Persona nueva: ingrese sus nombres, apellidos y puesto.
+                  </ng-container>
+                </c-alert>
+              </c-col>
+              <c-col md="6">
+                <label cLabel for="apellidos">Apellidos</label>
+                <input cFormControl id="apellidos" name="apellidos" [(ngModel)]="datos.persona_apellidos" [required]="!personaExistente" [readonly]="!!personaExistente"
+                       [class.is-invalid]="validado && !personaExistente && !datos.persona_apellidos?.trim()" style="text-transform: uppercase" autocomplete="off" />
+              </c-col>
+              <c-col md="6">
+                <label cLabel for="nombres">Nombres</label>
+                <input cFormControl id="nombres" name="nombres" [(ngModel)]="datos.persona_nombres" [required]="!personaExistente" [readonly]="!!personaExistente"
+                       [class.is-invalid]="validado && !personaExistente && !datos.persona_nombres?.trim()" style="text-transform: uppercase" autocomplete="off" />
+              </c-col>
+              <c-col md="6" *ngIf="necesitaPuesto">
+                <label cLabel for="puesto">Puesto</label>
+                <ng-select id="puesto" name="puesto" [items]="puestos" bindValue="puesto_id" bindLabel="puesto_nombre" groupBy="puesto_modalidad"
+                           [(ngModel)]="datos.fk_puesto_id" required placeholder="Buscar puesto..." [class.is-invalid]="validado && !datos.fk_puesto_id"></ng-select>
+              </c-col>
+            </ng-container>
+          </c-row>
+
+          <!-- Licencia -->
+          <ng-container *ngIf="!esNuevo || listoParaDatos">
+            <h6 class="text-body-secondary">Licencia de conducir</h6>
+            <c-row class="g-3">
+              <c-col md="6">
+                <label cLabel for="licencia">Tipo de licencia</label>
+                <ng-select id="licencia" name="licencia" [items]="licencias" bindValue="licencia_id" groupBy="licencia_tipo" [searchFn]="buscarLicencia"
+                           bindLabel="licencia_categoria" [(ngModel)]="datos.fk_licencia_id" required placeholder="Seleccione..." [readonly]="!puedeEditar"
+                           [class.is-invalid]="validado && !datos.fk_licencia_id">
+                  <ng-template ng-option-tmp let-item="item"><strong>{{ item.licencia_categoria }}</strong> <small class="text-body-secondary">— {{ item.licencia_descripcion }}</small></ng-template>
+                </ng-select>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="emision">Fecha de emisión</label>
+                <input cFormControl type="date" id="emision" name="emision" [(ngModel)]="datos.conductor_licencia_emision" required (change)="alCambiarEmision()" [max]="hoy"
+                       [readonly]="!puedeEditar" [class.is-invalid]="validado && (!datos.conductor_licencia_emision || datos.conductor_licencia_emision > hoy)" />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="validez">Válida hasta</label>
+                <input cFormControl type="date" id="validez" name="validez" [(ngModel)]="datos.conductor_licencia_validez" required [readonly]="!puedeEditar"
+                       [class.is-invalid]="validado && (!datos.conductor_licencia_validez || datos.conductor_licencia_validez <= datos.conductor_licencia_emision)" />
+                <small class="text-body-secondary">Se sugiere 5 años desde la emisión.</small>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="estado">Estado</label>
+                <select cSelect id="estado" name="estado" [(ngModel)]="datos.conductor_estado" [disabled]="!puedeEditar">
+                  <option value="ACTIVO">ACTIVO</option>
+                  <option value="INACTIVO">INACTIVO</option>
+                </select>
+              </c-col>
+            </c-row>
+            <!-- Sustento -->
+            <h6 class="text-body-secondary mt-4">Sustento: licencia escaneada (PDF)</h6>
+            <c-row class="g-3 align-items-start">
+              <c-col md="6">
+                <label cLabel for="pdf">{{ esNuevo ? 'Licencia escaneada' : 'Nueva licencia escaneada' }}</label>
+                <input cFormControl type="file" id="pdf" name="pdf" accept="application/pdf,.pdf" (change)="alElegirArchivo($event)" [disabled]="!puedeEditar"
+                       [required]="pdfObligatorio" [class.is-invalid]="validado && !!errorArchivo()" />
+                <small class="text-body-secondary d-block">
+                  Solo PDF, máximo {{ pdfMaxMb }} MB. Escanee la licencia por ambos lados en un solo archivo.
+                  <ng-container *ngIf="!esNuevo && !pdfObligatorio"> Opcional: adjunte uno solo si quiere reemplazar el actual.</ng-container>
+                </small>
+                <small class="text-danger d-block" *ngIf="validado && errorArchivo()">{{ errorArchivo() }}</small>
+              </c-col>
+              <c-col md="6">
+                <label cLabel>Se guardará como</label>
+                <div class="pt-1"><code>{{ nombreArchivo }}</code></div>
+                <div class="mt-2" *ngIf="!esNuevo && operador">
+                  <button *ngIf="operador.tiene_sustento" cButton type="button" color="secondary" variant="outline" size="sm" (click)="verPdfActual()">
+                    <i class="fa-solid fa-file-pdf"></i> Ver PDF actual
+                  </button>
+                  <span *ngIf="!operador.tiene_sustento" class="small text-danger">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Este operador aún no tiene el PDF de su licencia.
+                  </span>
+                </div>
+              </c-col>
+            </c-row>
+
+            <c-alert color="danger" class="mt-3 py-2 small" *ngIf="validado && (erroresLicencia().length || errorArchivo())">
+              <div *ngFor="let e of erroresLicencia()"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ e }}</div>
+              <div *ngIf="errorArchivo()"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ errorArchivo() }}</div>
+            </c-alert>
+            <div class="text-end mt-4" *ngIf="puedeEditar">
+              <button cButton color="primary" type="submit" [disabled]="guardando">
+                <i class="fa-solid fa-floppy-disk"></i> {{ esNuevo ? 'Registrar operador' : 'Guardar licencia' }}
+              </button>
+            </div>
+          </ng-container>
+        </form>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>

@@ -54,7 +54,9 @@
               <ng-template ng-option-tmp let-item="item">
                 <div>
                   <strong>{{ item.vehiculo_sigla }} {{ item.vehiculo_marca }} - {{ item.vehiculo_tipo }} (Placa: {{ item.vehiculo_placa }})</strong><br />
-                  <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                  <!-- <small>Licencia {{ item.licencia_categoria }} · válida hasta {{ item.conductor_licencia_validez | date: 'dd/MM/yyyy' }}
+                      <span *ngIf="item.licencia_vigencia === 'VENCIDA'" class="text-danger fw-semibold"> · VENCIDA: actualícela en Operadores</span>
+                      <span *ngIf="item.licencia_vigencia === 'POR VENCER'" class="text-warning-emphasis fw-semibold"> · por vencer</span></small> -->
                 </div>
               </ng-template>
             </ng-select>
@@ -76,7 +78,9 @@
               <ng-template ng-option-tmp let-item="item">
                 <div>
                   <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
-                  <!-- <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small> -->
+                  <!-- <small>Licencia {{ item.licencia_categoria }} · válida hasta {{ item.conductor_licencia_validez | date: 'dd/MM/yyyy' }}
+                      <span *ngIf="item.licencia_vigencia === 'VENCIDA'" class="text-danger fw-semibold"> · VENCIDA: actualícela en Operadores</span>
+                      <span *ngIf="item.licencia_vigencia === 'POR VENCER'" class="text-warning-emphasis fw-semibold"> · por vencer</span></small> -->
                 </div>
               </ng-template>
             </ng-select>
@@ -99,7 +103,9 @@
               <ng-template ng-option-tmp let-item="item">
                 <div>
                   <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }} - {{ item.puesto_nombre }}</strong><br />
-                  <small>Licencia tipo: {{ item.licencia_categoria }} - Válido hasta: {{ item.conductor_licencia_validez | date }}</small>
+                  <small>Licencia {{ item.licencia_categoria }} · válida hasta {{ item.conductor_licencia_validez | date: 'dd/MM/yyyy' }}
+                      <span *ngIf="item.licencia_vigencia === 'VENCIDA'" class="text-danger fw-semibold"> · VENCIDA: actualícela en Operadores</span>
+                      <span *ngIf="item.licencia_vigencia === 'POR VENCER'" class="text-warning-emphasis fw-semibold"> · por vencer</span></small>
                 </div>
               </ng-template>
             </ng-select>
