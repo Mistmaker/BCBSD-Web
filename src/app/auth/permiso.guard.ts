@@ -7,9 +7,11 @@ import { AuthService } from './auth.service';
 /**
  * Exige el privilegio de acceso a la pantalla.
  * Uso en la ruta: { ..., canActivate: [AuthGuard, permisoGuard], data: { permiso: 'MANT_ORDENES' } }
- * Se permite si el usuario tiene el código (data.permiso, uno o varios) o un rol cuya ruta cubre la URL
- * (la misma regla del menú). Si no, se consultan los privilegios actuales al API antes de negar el acceso,
- * para que un privilegio recién asignado funcione sin volver a iniciar sesión.
+ *
+ * En cada navegación se consultan al API los privilegios ACTUALES del usuario (un privilegio asignado o quitado
+ * con la sesión abierta se aplica de inmediato). Se permite si tiene el código (data.permiso, uno o varios) o un
+ * rol cuya ruta cubre la URL (la misma regla del menú). Si se niega, también se recarga el menú, que pudo quedar
+ * desactualizado. Si el API no responde, se decide con los privilegios guardados en la sesión.
  */
 export const permisoGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -19,16 +21,16 @@ export const permisoGuard: CanActivateFn = (route, state) => {
     return true;
   }
   const codigos = Array.isArray(requerido) ? requerido : [requerido];
-  const permitido = () => auth.tienePermiso(...codigos) || auth.tieneAccesoRuta(state?.url ?? '');
-  const negar = () => {
+  const decidir = () => {
+    if (auth.tienePermiso(...codigos) || auth.tieneAccesoRuta(state?.url ?? '')) {
+      return true;
+    }
+    auth.notificarCambioPrivilegios();
     Swal.fire('Sin acceso', 'No tiene el privilegio para abrir esta pantalla. Solicítelo al administrador del sistema.', 'warning');
     return router.parseUrl('/dashboard');
   };
-  if (permitido()) {
-    return true;
-  }
   return auth.refrescarPermisos().pipe(
-    map(() => permitido() ? true : negar()),
-    catchError(() => of(negar()))
+    map(() => decidir()),
+    catchError(() => of(decidir()))
   );
 };

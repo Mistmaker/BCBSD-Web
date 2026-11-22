@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -9,7 +9,15 @@ import { environment } from '../../environments/environment';
 })
 export class AuthService {
 
+  /** Se emite cuando cambian los privilegios del usuario conectado: el layout recarga el menú y los permisos. */
+  readonly privilegiosCambiados$ = new Subject<void>();
+
   constructor(private http: HttpClient, private router: Router) { }
+
+  /** Avisa que los privilegios del usuario conectado cambiaron (menú y permisos se recargan). */
+  notificarCambioPrivilegios(): void {
+    this.privilegiosCambiados$.next();
+  }
 
   login(credentials: { usuario: string; password: string }) {
     return this.http.post<any>(`${environment.API_URL}/servicios/auth/login.php`, credentials);
@@ -83,9 +91,15 @@ export class AuthService {
       map(r => {
         const sesion = this.getUsuario();
         if (sesion?.usuario) {
+          const antes: string[] | undefined = sesion.usuario.rutas;
           sesion.usuario.permisos = r.permisos ?? [];
           sesion.usuario.rutas = r.rutas ?? [];
           this.setSession(sesion);
+          // Si cambiaron las pantallas asignadas, el menú se recarga (no aplica a la primera carga)
+          const clave = (x: string[]) => [...x].sort().join('|');
+          if (antes !== undefined && clave(antes) !== clave(sesion.usuario.rutas)) {
+            this.notificarCambioPrivilegios();
+          }
         }
       })
     );
