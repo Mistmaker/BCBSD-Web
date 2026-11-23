@@ -15,3 +15,14 @@
 .select-week .calendar-row.current {
   cursor: pointer;
 }
+
+// Menú lateral: nombres largos en dos líneas (no se cortan) y sangría para las pantallas de un subgrupo
+// (Dir. Administrativa > Parámetros > Vehículos)
+.sidebar-nav .nav-link {
+  white-space: normal;
+  line-height: 1.25;
+}
+.sidebar-nav .nav-group-items .nav-group-items .nav-link {
+  padding-left: 3.75rem !important;
+  font-size: .925rem;
+}

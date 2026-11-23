@@ -1,42 +1,33 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from '../auth/auth.guard';
+import { permisoGuard } from '../auth/permiso.guard';
 
 const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () => import('./sbj-dashboard/sbj-dashboard.component').then(m => m.SbjDashboardComponent),
-    data: {
-      title: 'Subjefatura'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'SBJ_ESTADISTICAS', title: 'Estadística de emergencias' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'intervenciones',
     loadComponent: () => import('./intervenciones-listado/intervenciones-listado.component').then(m => m.IntervencionesListadoComponent),
-    data: {
-      title: 'Intervenciones'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'SBJ_INTERVENCIONES', title: 'Intervenciones' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'intervenciones/:id',
     loadComponent: () => import('./intervenciones-mantenimiento/intervenciones-mantenimiento.component').then(m => m.IntervencionesMantenimientoComponent),
-    data: {
-      title: 'Intervenciones'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'SBJ_INTERVENCIONES', title: 'Intervenciones' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'aph-hojas',
     loadComponent: () => import('./aph-hoja-ruta-listado/aph-hoja-ruta-listado.component').then(m => m.AphHojaRutaListadoComponent),
-    data: {
-      title: 'Hojas de Ruta APH'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'SBJ_APH_HOJAS', title: 'Hojas de ruta APH' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'aph-hojas/:id',
     loadComponent: () => import('./aph-hoja-ruta-mantenimiento/aph-hoja-ruta-mantenimiento.component').then(m => m.AphHojaRutaMantenimientoComponent),
-    data: {
-      title: 'Hojas de Ruta APH - Registro'
-    }, canActivate: [AuthGuard]
+    data: { permiso: 'SBJ_APH_HOJAS', title: 'Hoja de ruta APH' }, canActivate: [AuthGuard, permisoGuard]
   },
   {
     path: 'ubv-voluntarios',
