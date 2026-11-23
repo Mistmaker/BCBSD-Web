@@ -1,1 +1,5 @@
-#map { height: 600px; }
+.kpi { font-size: 1.6rem; font-weight: 600; line-height: 1.15; }
+.grafico { position: relative; height: 280px; }
+.tabla-scroll { max-height: 340px; overflow: auto; }
+#mapa-emergencias { height: 360px; width: 100%; z-index: 0; border-radius: .375rem; }
+.marca { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }

@@ -10,12 +10,15 @@ Cada vez que se crea un componente con ruta nueva, o una acción que deba restri
 
 1. Ruta en el routing del módulo con `data: { permiso: 'CODIGO', title: '...' }` y `canActivate: [AuthGuard, permisoGuard]`.
 2. Botones de acción visibles solo con `auth.tienePermiso('CODIGO_ACCION')`.
+   El menú (módulo -> grupo -> pantalla) lo arma el API desde la base; el orden y el grupo se definen en
+   `migrations/admin/03-menu.sql` del API. El primer acceso de cada módulo se llama "Panel".
 3. En BCBSD-Api: migración con el INSERT en `admin.tb_roles` del acceso (`rol_path` = la ruta, `rol_codigo`) y de
    cada permiso de acción (`rol_path` NULL), dentro de su submódulo, re-ejecutable; agregarla a
    `migrations/generar-script-3.py`, regenerar `script-3.sql` y `requirePermiso()` en los endpoints.
    Ver "Nuevas pantallas y privilegios" en el CLAUDE.md del API.
 4. Entregar al usuario el SQL de los privilegios para que pueda asignarlos de inmediato en
-   Administración > Usuarios > Privilegios (el menú se arma con lo asignado).
+   Administración > Usuarios > Privilegios (el menú se arma con lo asignado). Los administradores (parámetro
+   `SIS_ADMINISTRADORES`, nunca un usuario_id fijo) reciben todo con la última sección de `script-3.sql`.
 
 ## Convenciones
 

@@ -75,6 +75,9 @@ export class ParteModel {
   parte_latitud: string | number | null = null;
   parte_longitud: string | number | null = null;
   parte_croquis_url = '';
+  /** Mapa de la imagen impresa: calles (zona urbana) o satelital (zona rural, boscosa, caminos secundarios) */
+  parte_mapa_tipo: TipoMapa = 'CALLES';
+  parte_mapa_archivo: string | null = null;
   parte_novedades = '';
   parte_visita_inspectores: boolean | null = null;
   parte_visita_inspectores_motivo = '';
@@ -182,6 +185,9 @@ export class ParteFallecidoDetalle {
   parte_fallecido_traslado = '';
 }
 
+export type TipoMapa = 'CALLES' | 'SATELITE';
+export interface MapaCatalogo { tipo: TipoMapa; url: string; atribucion: string; }
+
 /** Fila del listado (getPartes.php) */
 export interface ParteResumen {
   parte_id: number;
@@ -223,6 +229,8 @@ export interface CatalogosParte {
   pelotones: string[];
   claves: string[];
   ubicacion: { provincia: number; canton: number; parroquia: number } | null;
+  /** Servidores de mapas (los mismos con los que el API genera la imagen impresa) */
+  mapas?: MapaCatalogo[];
 }
 
 /** Bloques de recursos del formato: clave del parte y tipo en el catálogo */
@@ -322,4 +330,12 @@ export function validarParte(p: ParteModel, hoy = fechaISO(new Date())): string[
 export function fechaHoraAviso(p: Pick<ParteModel, 'parte_fecha' | 'parte_fecha_aviso' | 'parte_hora_aviso'>): string {
   const fecha = p.parte_fecha_aviso || p.parte_fecha;
   return fecha && p.parte_hora_aviso ? `${fecha}T${p.parte_hora_aviso.slice(0, 5)}` : '';
+}
+
+/** Mapa por defecto si el API aún no envía la configuración */
+export const MAPA_CALLES_DEFECTO: MapaCatalogo = { tipo: 'CALLES', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', atribucion: '© colaboradores de OpenStreetMap' };
+
+/** Configuración del tipo de mapa elegido (con respaldo al de calles) */
+export function mapaDeTipo(mapas: MapaCatalogo[] | undefined, tipo: TipoMapa): MapaCatalogo {
+  return mapas?.find(m => m.tipo === tipo) ?? mapas?.find(m => m.tipo === 'CALLES') ?? MAPA_CALLES_DEFECTO;
 }

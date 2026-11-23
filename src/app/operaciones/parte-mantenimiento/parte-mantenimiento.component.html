@@ -628,8 +628,28 @@
                 </div>
               </c-col>
               <c-col xs="12">
-                <p class="small text-body-secondary mb-2">Haga clic en el mapa para marcar el punto de la emergencia o arrastre el marcador.</p>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <p class="small text-body-secondary mb-0">Haga clic en el mapa para marcar el punto de la emergencia o arrastre el marcador.
+                    La imagen del parte impreso se genera al guardar, con el mapa elegido.</p>
+                  <c-button-group size="sm" role="group" aria-label="Tipo de mapa">
+                    <button cButton color="secondary" variant="outline" type="button" [active]="parte.parte_mapa_tipo === 'CALLES'" (click)="elegirMapa('CALLES')">
+                      <i class="fa-solid fa-road"></i> Calles</button>
+                    <button cButton color="secondary" variant="outline" type="button" [active]="parte.parte_mapa_tipo === 'SATELITE'" (click)="elegirMapa('SATELITE')">
+                      <i class="fa-solid fa-satellite"></i> Satélite</button>
+                  </c-button-group>
+                </div>
                 <div id="parte-map" aria-label="Mapa para seleccionar la ubicación de la emergencia"></div>
+              </c-col>
+              <c-col xs="12" *ngIf="!esNuevo && (parte.parte_latitud || imagenMapa)">
+                <div class="d-flex flex-wrap align-items-start gap-3">
+                  <div>
+                    <div class="small fw-semibold mb-1">Imagen del parte impreso</div>
+                    <img *ngIf="imagenMapa" [src]="imagenMapa" alt="Mapa con el marcador de la ubicación" class="border rounded imagen-mapa" />
+                    <div *ngIf="!imagenMapa" class="small text-body-secondary">Aún no hay imagen del mapa para este parte.</div>
+                  </div>
+                  <button *ngIf="!soloLectura" cButton type="button" color="secondary" variant="outline" size="sm" (click)="regenerarMapa()" [disabled]="regenerando">
+                    <i class="fa-solid fa-rotate"></i> {{ regenerando ? 'Generando...' : 'Regenerar imagen' }}</button>
+                </div>
               </c-col>
               <c-col xs="12">
                 <label cLabel for="parte_novedades">Novedades (personal, vehículos, equipo, material: lesiones, pérdidas o daños)</label>

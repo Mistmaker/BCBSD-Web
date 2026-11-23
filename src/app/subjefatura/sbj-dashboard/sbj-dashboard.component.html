@@ -1,211 +1,195 @@
-<c-row ngPreserveWhitespaces>
-    <c-col xs="12">
-        <c-card class="mb-1">
-            <c-card-header style="background-color: #bf0411;color: white;">
-                <strong>Subjefatura del BCBSD</strong>
-            </c-card-header>
-            <c-card-body>
-                <p class="text-body-secondary small">
-                    Resumen de acciones de la Subjefatura de Bomberos
-                </p>
-                <!-- <p class="text-body-secondary small">
-                    BCBSD
-                </p> -->
-                <c-row class="mb-1">
-                    <c-col md="3">
-                        <label cLabel for="estacion">Estacion</label>
-                        <c-input-group class="has-validation">
-                            <span cInputGroupText><i class="fa fa-fire-extinguisher"></i></span>
-                            <select cSelect id="estacion" name="estacion" [(ngModel)]="estacionId">
-                                <option value="0">-Todas las Estaciones-</option>
-                                <option *ngFor="let estacion of estaciones" [value]="estacion.estacion_id">{{ estacion.estacion_nombre }} </option>
-                            </select>
-                        </c-input-group>
-                    </c-col>
-                    <c-col sm="3" class="mb-1">
-                        <label cLabel class="required-label" for="desde">Desde</label>
-                        <c-input-group class="has-validation">
-                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
-                            <input cFormControl id="desde" name="desde" [(ngModel)]="fechaDesde" type="date" />
-                        </c-input-group>
-                    </c-col>
-                    <c-col sm="3" class="mb-1">
-                        <label cLabel class="required-label" for="hasta">Hasta</label>
-                        <c-input-group class="has-validation">
-                            <span cInputGroupText><i class="fa fa-calendar"></i></span>
-                            <input cFormControl id="hasta" name="hasta" [(ngModel)]="fechaHasta" type="date" />
-                        </c-input-group>
-                    </c-col>
-                    <c-col sm="2" class="mb-1 mt-4">
-                        <button cButton color="primary" (click)="obtenerEstadisticas()" type="button"><i class="fa-solid fa-search"></i> Buscar</button>
-                    </c-col>
-                </c-row>
-                <hr>
-                <c-row class="mb-1">
-                    <!-- <c-col md="12">
-                        <div id="map"></div>
-                    </c-col> -->
-                    <br>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Intervenciones'" color="success" inverse value="{{totalI}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-solid fa-2x fa-fire" style="color: #ffffff;"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin white [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Beneficiarios'" color="info" inverse value="{{totalB}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-solid fa-2x fa-hand-holding-heart" style="color: #ffffff;"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin white [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Fallecidos'" color="dark" inverse value="{{totalF}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-solid fa-2x fa-cross" style="color: #ffffff;"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin white [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                </c-row>
-                <hr>
-                <c-row class="mb-1">
-                    <!-- <c-col md="12">
-                        <div id="map"></div>
-                    </c-col> -->
-                    <br>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Mes Crítico'" color="secondary" inverse value="{{mesCritico}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-regular fa-2x fa-calendar" style="color: #ffffff;"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin white [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Día Crítico'" color="light"  value="{{diaCritico}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-solid fa-2x fa-calendar-day"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin dark [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                    <c-col xl="4" lg="4" sm="6">
-                        <c-widget-stat-c [title]="'Hora Crítica'" color="danger" inverse value="{{horaCritica}}">
-                            <ng-template cTemplateId="widgetIconTemplate">
-                                <i class="fa-solid fa-2x fa-clock" style="color: #ffffff;"></i>
-                            </ng-template>
-                            <ng-template cTemplateId="widgetProgressTemplate">
-                                <c-progress class="mt-3 mb-0" thin white [value]="75" />
-                            </ng-template>
-                        </c-widget-stat-c>
-                    </c-col>
-                </c-row>
-            </c-card-body>
-        </c-card>
-    </c-col>
-</c-row>
-
-<!-- <app-widgets-dropdown /> -->
-
-
-
-<c-card class="my-4">
-    <c-card-body>
-
-
-        <c-row>
-            <c-col sm="6" class="mb-1">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>Intervenciones por Estación</strong>
-                    </div>
-                    <div class="card-body">
-                        <!-- <c-chart baseChart [type]="chartType" [data]="chartData.data" [options]="chartData.options">
-                        </c-chart> -->
-                        <!-- <c-chart [data]="chartData.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartData.options" [type]="chartType" (chartRef)="handleChartRef($event)">
-                            Main chart
-                        </c-chart> -->
-                        <c-chart [data]="chartStations.data" [height]="300" [ngStyle]="{ 'marginTop.px': 10 }" [options]="chartOptions" [type]="chartTypeBar">
-                            Main chart
-                        </c-chart>
-                    </div>
-                </div>
-            </c-col>
-            <c-col sm="6" class="mb-1">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>Intervenciones por Tipo de Incidente</strong>
-                    </div>
-                    <div class="card-body">
-                        <!-- <c-chart baseChart [type]="chartType" [data]="chartData.data" [options]="chartData.options">
-                        </c-chart> -->
-                        <!-- <c-chart [data]="chartData.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartData.options" [type]="chartType" (chartRef)="handleChartRef($event)">
-                            Main chart
-                        </c-chart> -->
-                        <c-chart [data]="chartIncidentes.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartOptions" [type]="chartTypeBar">
-                            Main chart
-                        </c-chart>
-                    </div>
-                </div>
-            </c-col>
-            <c-col sm="12" class="mb-1">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>Intervenciones por Tipo de emergencia</strong>
-                    </div>
-                    <div class="card-body">
-                        <!-- <c-chart baseChart [type]="chartType" [data]="chartData.data" [options]="chartData.options">
-                        </c-chart> -->
-                        <!-- <c-chart [data]="chartData.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartData.options" [type]="chartType" (chartRef)="handleChartRef($event)">
-                            Main chart
-                        </c-chart> -->
-                        <c-chart [data]="chartEmergencias.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartOptions" [type]="chartTypeBar">
-                            Main chart
-                        </c-chart>
-                    </div>
-                </div>
-            </c-col>
-            <c-col sm="12" class="mb-1">
-                <div class="card">
-                    <div class="card-header">
-                        <strong>Intervenciones por Causa</strong>
-                    </div>
-                    <div class="card-body">
-                        <!-- <c-chart baseChart [type]="chartType" [data]="chartData.data" [options]="chartData.options">
-                        </c-chart> -->
-                        <!-- <c-chart [data]="chartData.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartData.options" [type]="chartType" (chartRef)="handleChartRef($event)">
-                            Main chart
-                        </c-chart> -->
-                        <c-chart [data]="chartCausas.data" [height]="300" [ngStyle]="{ 'marginTop.px': 40 }" [options]="chartOptions" [type]="chartTypeDona">
-                            Main chart
-                        </c-chart>
-                    </div>
-                </div>
-            </c-col>
-            
-            <!-- <c-col sm="6">
-                {{ chartCausas | json }}
-            </c-col> -->
-
-
-
-        </c-row>
-
-
-    </c-card-body>
-
+<c-card class="mb-4">
+  <c-card-header style="background-color: #bf0411; color: white;">
+    <strong>Estadística de emergencias</strong>
+    <span class="small ms-2 opacity-75">Partes de servicio de incendio y auxilio</span>
+  </c-card-header>
+  <c-card-body>
+    <form class="row g-2 align-items-end" (ngSubmit)="consultar()">
+      <c-col sm="6" md="3">
+        <label cLabel for="s_desde">Desde</label>
+        <input cFormControl id="s_desde" name="desde" type="date" [(ngModel)]="filtro.desde" required />
+      </c-col>
+      <c-col sm="6" md="3">
+        <label cLabel for="s_hasta">Hasta</label>
+        <input cFormControl id="s_hasta" name="hasta" type="date" [(ngModel)]="filtro.hasta" required />
+      </c-col>
+      <c-col sm="8" md="3">
+        <label cLabel for="s_estacion">Estación</label>
+        <select cSelect id="s_estacion" name="estacion" [(ngModel)]="filtro.estacion">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let e of estaciones" [ngValue]="e.estacion_id">{{ e.estacion_nombre }}</option>
+        </select>
+      </c-col>
+      <c-col sm="4" md="3">
+        <button cButton type="submit" color="primary" class="w-100" [disabled]="cargando">
+          <c-spinner *ngIf="cargando" size="sm"></c-spinner> Consultar
+        </button>
+      </c-col>
+    </form>
+    <p class="small text-body-secondary mt-2 mb-0">Partes no anulados. Tiempo de respuesta: desde el aviso hasta el primer arribo.</p>
+  </c-card-body>
 </c-card>
+
+<ng-container *ngIf="datos() as d">
+  <!-- Cifras generales -->
+  <c-row class="g-3 mb-3">
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Emergencias</div>
+        <div class="kpi">{{ d.resumen.partes | number }}</div>
+        <div class="small text-body-secondary">{{ d.resumen.incendio }} incendio · {{ d.resumen.auxilio }} auxilio</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Tiempo de respuesta</div>
+        <div class="kpi">{{ minutos(d.resumen.respuesta_prom_min) }}</div>
+        <div class="small text-body-secondary">promedio del período</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Víctimas</div>
+        <div class="kpi">{{ d.resumen.victimas }}</div>
+        <div class="small text-body-secondary">atendidas en las emergencias</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Fallecidos</div>
+        <div class="kpi">{{ d.resumen.fallecidos }}</div>
+        <div class="small text-body-secondary">registrados en los partes</div>
+      </div>
+    </c-col>
+  </c-row>
+
+  <div class="border rounded p-3 mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+      <div><h6 class="mb-1">Emergencias por mes</h6><p class="small text-body-secondary mb-0">Auxilio e incendio.</p></div>
+      <c-button-group size="sm" role="group" aria-label="Vista">
+        <button cButton color="secondary" variant="outline" type="button" [active]="!verTabla" (click)="verTabla = false"><i class="fa-solid fa-chart-column"></i> Gráficos</button>
+        <button cButton color="secondary" variant="outline" type="button" [active]="verTabla" (click)="verTabla = true"><i class="fa-solid fa-table"></i> Tablas</button>
+      </c-button-group>
+    </div>
+    <div class="grafico" *ngIf="!verTabla && gMes()"><c-chart type="bar" [data]="gMes()!" [options]="oMes()" [height]="280"></c-chart></div>
+    <div class="tabla-scroll" *ngIf="verTabla">
+      <table cTable small class="mb-0">
+        <thead><tr><th>Mes</th><th class="text-end">Auxilio</th><th class="text-end">Incendio</th><th class="text-end">Total</th></tr></thead>
+        <tbody><tr *ngFor="let m of d.por_mes"><td>{{ nombreMes(m.mes) }}</td><td class="text-end">{{ m.auxilio }}</td><td class="text-end">{{ m.incendio }}</td>
+          <td class="text-end fw-semibold">{{ m.auxilio + m.incendio }}</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pestañas por tipo -->
+  <c-button-group role="group" aria-label="Tipo de emergencia" class="mb-3">
+    <button cButton color="secondary" variant="outline" type="button" [active]="tipo() === 'INCENDIO'" (click)="elegir('INCENDIO')">
+      <i class="fa-solid fa-fire"></i> Incendio ({{ d.resumen.incendio }})</button>
+    <button cButton color="secondary" variant="outline" type="button" [active]="tipo() === 'AUXILIO'" (click)="elegir('AUXILIO')">
+      <i class="fa-solid fa-truck-medical"></i> Auxilio ({{ d.resumen.auxilio }})</button>
+  </c-button-group>
+</ng-container>
+
+<!-- Mapa: fuera del bloque condicional para que exista al iniciar la vista -->
+<div class="border rounded p-3 mb-3">
+  <h6 class="mb-1"><span class="marca" [style.background-color]="colorSeccion()"></span> Ubicación de las emergencias de {{ tipo() === 'INCENDIO' ? 'incendio' : 'auxilio' }}</h6>
+  <p class="small text-body-secondary">Partes con coordenadas registradas (clic en un punto para ver el número).</p>
+  <div id="mapa-emergencias" role="img" aria-label="Mapa de las emergencias"></div>
+</div>
+
+<ng-container *ngIf="seccion() as s">
+  <c-row class="g-3 mb-3">
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Partes de {{ tipo() === 'INCENDIO' ? 'incendio' : 'auxilio' }}</div>
+        <div class="kpi">{{ s.resumen.partes }}</div>
+        <div class="small text-body-secondary">respuesta {{ minutos(s.resumen.respuesta_prom_min) }}</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="3">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Víctimas / fallecidos</div>
+        <div class="kpi">{{ s.resumen.victimas }} / {{ s.resumen.fallecidos }}</div>
+      </div>
+    </c-col>
+    <ng-container *ngIf="tipo() === 'INCENDIO'">
+      <c-col xs="6" lg="3">
+        <div class="border rounded p-3 h-100">
+          <div class="small text-body-secondary">Área destruida</div>
+          <div class="kpi">{{ s.resumen.area_destruida_m2 | number: '1.0-0' }} m²</div>
+          <div class="small text-body-secondary">superficie quemada {{ s.resumen.superficie_quemada_m2 | number: '1.0-0' }} m²</div>
+        </div>
+      </c-col>
+      <c-col xs="6" lg="3">
+        <div class="border rounded p-3 h-100">
+          <div class="small text-body-secondary">Causante identificado</div>
+          <div class="kpi">{{ s.resumen.causante_identificado }}</div>
+          <div class="small text-body-secondary">{{ s.resumen.causante_no_identificado }} sin identificar</div>
+        </div>
+      </c-col>
+    </ng-container>
+    <c-col xs="12" [lg]="tipo() === 'INCENDIO' ? 12 : 6">
+      <div class="border rounded p-3 h-100 small">
+        <div class="text-body-secondary mb-1">Momentos críticos</div>
+        <div><b>Hora:</b> {{ horaCritica() !== null ? (horaCritica()! | number: '2.0-0') + ':00 – ' + (horaCritica()! | number: '2.0-0') + ':59' : '—' }}
+          &nbsp;·&nbsp; <b>Día:</b> {{ diaCritico() !== null ? dias[diaCritico()!] : '—' }}
+          &nbsp;·&nbsp; <b>Mes:</b> {{ mesCritico() ? nombreMes(mesCritico()!) : '—' }}</div>
+      </div>
+    </c-col>
+  </c-row>
+
+  <c-row class="g-3 mb-3">
+    <c-col lg="6" *ngFor="let b of bloques(); let i = index">
+      <div class="border rounded p-3 h-100">
+        <h6 class="mb-1">{{ b.titulo }}</h6>
+        <p class="small text-body-secondary">{{ b.nota }}</p>
+        <div *ngIf="!verTabla && b.items.length" class="position-relative" [style.height.px]="alto(b.items.length)">
+          <c-chart type="bar" [data]="graficos()[i]" [options]="oTop()" [height]="alto(b.items.length)"></c-chart>
+        </div>
+        <div class="tabla-scroll" *ngIf="verTabla && b.items.length">
+          <table cTable small class="mb-0">
+            <thead><tr><th>{{ b.titulo }}</th><th class="text-end">Partes</th><th class="text-end">%</th></tr></thead>
+            <tbody><tr *ngFor="let x of b.items"><td>{{ etiqueta(x) }}</td><td class="text-end">{{ x.partes }}</td>
+              <td class="text-end">{{ porcentaje(x.partes, s.resumen.partes) }}</td></tr></tbody>
+          </table>
+        </div>
+        <p *ngIf="!b.items.length" class="small text-body-secondary mb-0">Sin datos en el período.</p>
+      </div>
+    </c-col>
+  </c-row>
+
+  <c-row class="g-3 mb-4">
+    <c-col lg="8">
+      <div class="border rounded p-3 h-100">
+        <h6 class="mb-1">Hora del aviso</h6>
+        <p class="small text-body-secondary">Partes según la hora en que se recibió el aviso.</p>
+        <div class="grafico" *ngIf="!verTabla && gHora()"><c-chart type="bar" [data]="gHora()!" [options]="oHora()" [height]="280"></c-chart></div>
+        <div class="tabla-scroll" *ngIf="verTabla">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Hora</th><th class="text-end">Partes</th></tr></thead>
+            <tbody><tr *ngFor="let n of s.por_hora; let h = index"><td>{{ h | number: '2.0-0' }}:00 – {{ h | number: '2.0-0' }}:59</td><td class="text-end">{{ n }}</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </c-col>
+    <c-col lg="4">
+      <div class="border rounded p-3 h-100">
+        <h6 class="mb-1">Día de la semana</h6>
+        <p class="small text-body-secondary">Según la fecha del aviso.</p>
+        <table cTable small class="mb-0">
+          <tbody>
+            <tr *ngFor="let n of s.por_dia_semana; let i = index">
+              <td class="w-25">{{ dias[i] }}</td>
+              <td>
+                <div class="progress" style="height: 8px" role="progressbar" [attr.aria-label]="dias[i]" [attr.aria-valuenow]="n" aria-valuemin="0" [attr.aria-valuemax]="maxDia()">
+                  <div class="progress-bar" [style.width.%]="n / maxDia() * 100" [style.background-color]="colorSeccion()"></div>
+                </div>
+              </td>
+              <td class="text-end fw-semibold">{{ n }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </c-col>
+  </c-row>
+</ng-container>
