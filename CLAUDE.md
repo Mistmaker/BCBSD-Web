@@ -15,7 +15,8 @@ Cada vez que se crea un componente con ruta nueva, o una acción que deba restri
    `migrations/generar-script-3.py`, regenerar `script-3.sql` y `requirePermiso()` en los endpoints.
    Ver "Nuevas pantallas y privilegios" en el CLAUDE.md del API.
 4. Entregar al usuario el SQL de los privilegios para que pueda asignarlos de inmediato en
-   Administración > Usuarios > Privilegios (el menú se arma con lo asignado).
+   Administración > Usuarios > Privilegios (el menú se arma con lo asignado). Los administradores (parámetro
+   `SIS_ADMINISTRADORES`, nunca un usuario_id fijo) reciben todo con la última sección de `script-3.sql`.
 
 ## Convenciones
 
