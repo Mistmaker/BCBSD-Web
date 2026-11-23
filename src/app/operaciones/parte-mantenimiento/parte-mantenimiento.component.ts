@@ -3,14 +3,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import {
-  AlertComponent, BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, FormControlDirective,
+  AlertComponent, BadgeComponent, ButtonDirective, ButtonGroupComponent, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, FormControlDirective,
   FormDirective, FormLabelDirective, FormSelectDirective, RowComponent
 } from '@coreui/angular';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import Swal from 'sweetalert2';
 import * as L from 'leaflet';
 import {
-  BLOQUES_RECURSOS, CatalogosParte, causasDe, clasificacionesAuxilio, clasificacionesCausa, fechaHoraAviso, kmRecorridos, minutosRespuesta,
+  BLOQUES_RECURSOS, CatalogosParte, mapaDeTipo, TipoMapa, causasDe, clasificacionesAuxilio, clasificacionesCausa, fechaHoraAviso, kmRecorridos, minutosRespuesta,
   ParteCausaDetalle, ParteFallecidoDetalle, ParteModel, PartePersonaAsistidaDetalle, PartePersonalDetalle, ParteRecursoDetalle,
   ParteTipoAuxilioDetalle, ParteVehiculoDetalle, ParteVictimaDetalle, PersonalCatalogo, PROPIEDADES, RecursoCatalogo, ROL_MANDO, ROLES_PERSONAL,
   SEXOS, subclasificacionesAuxilio, TIPOS_DIA, TIPOS_EDAD, TIPOS_IDENTIFICACION, TIPOS_PARTE, TRASLADOS_VICTIMA, usosAuxilio, validarParte,
@@ -29,7 +29,7 @@ import { PdfService } from '../../core/pdf.service';
 @Component({
   selector: 'app-parte-mantenimiento',
   imports: [CommonModule, FormsModule, RouterLink, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective,
-    FormDirective, FormLabelDirective, FormControlDirective, FormSelectDirective, AlertComponent, BadgeComponent, NgSelectComponent,
+    FormDirective, FormLabelDirective, FormControlDirective, FormSelectDirective, AlertComponent, BadgeComponent, ButtonGroupComponent, NgSelectComponent,
     NgLabelTemplateDirective, NgOptionTemplateDirective],
   templateUrl: './parte-mantenimiento.component.html',
   styleUrl: './parte-mantenimiento.component.scss'
@@ -56,6 +56,10 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
   isSaving = false;
   private map?: L.Map;
   private marker?: L.Marker;
+  private capaMapa?: L.TileLayer;
+  /** Vista previa de la imagen impresa (URL local del PNG descargado con la sesión) */
+  imagenMapa: string | null = null;
+  regenerando = false;
 
   readonly bloques = BLOQUES_RECURSOS;
   readonly tiposParte = TIPOS_PARTE;
@@ -87,6 +91,7 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
     this.parteService.getCatalogos().subscribe({
       next: (c) => {
         this.cat = c;
+        this.aplicarCapaMapa();
         for (const t of ['EQUIPO', 'MATERIAL', 'INSUMO'] as const) {
           this.recursos[t] = c.recursos.filter(r => r.recurso_tipo === t).map(r => r.recurso_descripcion);
         }
@@ -113,6 +118,8 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
           this.cargarCantones(this.parte.parte_provincia, false);
           this.cargarParroquias(this.parte.parte_canton, false);
           this.updateMarkerFromCoordinates();
+          this.aplicarCapaMapa();
+          this.cargarImagenMapa();
           this.isLoading = false;
         },
         error: (error) => {
@@ -132,6 +139,7 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
 
   ngOnDestroy(): void {
     this.map?.remove();
+    if (this.imagenMapa) URL.revokeObjectURL(this.imagenMapa);
   }
 
   private normalizar(): void {
@@ -247,7 +255,7 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
     if (!document.getElementById('parte-map')) return;
     const inicial = this.getCoordinates();
     this.map = L.map('parte-map').setView(inicial ?? [-0.254, -79.172], inicial ? 16 : 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(this.map);
+    this.aplicarCapaMapa();
     this.map.on('click', (event: L.LeafletMouseEvent) => {
       if (this.soloLectura) return;
       this.setCoordinates(event.latlng.lat, event.latlng.lng);
@@ -299,6 +307,49 @@ export class ParteMantenimientoComponent implements OnInit, AfterViewInit, OnDes
       this.marker.setLatLng([lat, lng]);
     }
     this.marker.bindPopup(`Latitud: ${lat.toFixed(6)}<br>Longitud: ${lng.toFixed(6)}`);
+  }
+
+  /** Mapa de calles o satelital: cambia lo que se ve y la imagen que se imprimirá (se genera al guardar) */
+  elegirMapa(tipo: TipoMapa): void {
+    if (this.soloLectura) return;
+    this.parte.parte_mapa_tipo = tipo;
+    this.aplicarCapaMapa();
+  }
+
+  private aplicarCapaMapa(): void {
+    if (!this.map) return;
+    const cfg = mapaDeTipo(this.cat?.mapas, this.parte.parte_mapa_tipo);
+    this.capaMapa?.remove();
+    this.capaMapa = L.tileLayer(cfg.url, { attribution: cfg.atribucion, maxZoom: 19 }).addTo(this.map);
+  }
+
+  private cargarImagenMapa(): void {
+    if (!this.parte.parte_id || !this.parte.parte_mapa_archivo) return;
+    this.parteService.getMapa(this.parte.parte_id).subscribe({
+      next: (blob) => {
+        if (this.imagenMapa) URL.revokeObjectURL(this.imagenMapa);
+        this.imagenMapa = URL.createObjectURL(blob);
+      },
+      error: () => this.imagenMapa = null,
+    });
+  }
+
+  /** Vuelve a generar la imagen impresa (si el servidor de mapas no respondió al guardar) */
+  regenerarMapa(): void {
+    if (!this.parte.parte_id) return;
+    this.regenerando = true;
+    this.parteService.regenerarMapa(this.parte.parte_id).subscribe({
+      next: (r) => {
+        this.regenerando = false;
+        this.parte.parte_mapa_archivo = 'generado';
+        this.cargarImagenMapa();
+        Swal.fire('Listo', r.msg, 'success');
+      },
+      error: (e) => {
+        this.regenerando = false;
+        Swal.fire('Mapa', e.error?.msg ?? e.error?.error ?? e.message, 'warning');
+      },
+    });
   }
 
   // ---- Guardar / anular ----

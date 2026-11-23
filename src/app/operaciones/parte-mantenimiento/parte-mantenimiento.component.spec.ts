@@ -21,6 +21,7 @@ describe('ParteMantenimientoComponent', () => {
     recursos: [{ recurso_id: 1, recurso_tipo: 'EQUIPO', recurso_descripcion: 'EPP ESTRUCTURAL' }],
     formas_aviso: ['Cabina de radio'], apoyos: ['Apoyo interno'], tipos_incendio: [], naturalezas: [],
     rangos: ['Bro. V.'], pelotones: ['Pelotón 1'], claves: ['10-1'], ubicacion: { provincia: 23, canton: 2301, parroquia: 230151 },
+    mapas: [{ tipo: 'CALLES', url: 'https://t/{z}/{x}/{y}.png', atribucion: 'OSM' }, { tipo: 'SATELITE', url: 'https://s/{z}/{y}/{x}', atribucion: 'Esri' }],
   };
 
   function crear(id: string, permisos: string[], parte: any = null) {
@@ -30,6 +31,8 @@ describe('ParteMantenimientoComponent', () => {
       save: jasmine.createSpy().and.returnValue(of({ msg: 'Parte registrado', id: 1, parte_numero: 'CBSD-PA-X1-2026-0001' })),
       update: jasmine.createSpy().and.returnValue(of({ msg: 'Parte actualizado', id: 1, parte_numero: 'CBSD-PA-X1-2026-0001' })),
       anular: jasmine.createSpy(),
+      getMapa: jasmine.createSpy().and.returnValue(of(new Blob(['png'], { type: 'image/png' }))),
+      regenerarMapa: jasmine.createSpy().and.returnValue(of({ msg: 'Imagen del mapa generada', mapa: true })),
       urlPdf: (n: number) => `pdf/${n}`,
     };
     TestBed.configureTestingModule({
@@ -91,5 +94,21 @@ describe('ParteMantenimientoComponent', () => {
     expect(el.textContent).toContain('Imprimir');
     c.imprimir();
     expect(TestBed.inject(PdfService).abrir).toHaveBeenCalledWith('pdf/9');
+  });
+
+  it('elige mapa de calles o satelital y muestra la imagen impresa del parte guardado', () => {
+    const { c, el, servicio } = crear('9', ['OPE_PARTE_REGISTRAR'], {
+      parte_id: 9, parte_numero: 'CBSD-PA-X1-2026-0009', parte_estado: 'REGISTRADO', parte_tipo: 'AUXILIO', parte_fecha: '2026-11-20',
+      fk_estacion_id: 1, parte_latitud: '-0.2477', parte_longitud: '-79.1834', parte_mapa_tipo: 'CALLES',
+      parte_mapa_archivo: 'ubicaciones/partes/MAPA-CBSD-PA-X1-2026-0009.png', personal: [], vehiculos: [],
+    });
+    expect(servicio.getMapa).toHaveBeenCalledWith(9);
+    expect(c.imagenMapa).toMatch(/^blob:/);
+    expect(el.textContent).toContain('Imagen del parte impreso');
+    c.elegirMapa('SATELITE');
+    expect(c.parte.parte_mapa_tipo).toBe('SATELITE');
+    spyOn(Swal, 'fire').and.returnValue(Promise.resolve({} as any));
+    c.regenerarMapa();
+    expect(servicio.regenerarMapa).toHaveBeenCalledWith(9);
   });
 });

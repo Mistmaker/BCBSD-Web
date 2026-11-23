@@ -43,6 +43,15 @@ export class ParteService {
     return `${environment.API_URL}/reportes/operaciones/parte.php?id=${id}`;
   }
 
+  /** Imagen de la ubicación (mapa con el marcador) que va en el parte impreso */
+  getMapa(id: number) {
+    return this.http.get(`${this.url}/getParteMapa.php`, { params: { id }, responseType: 'blob' });
+  }
+
+  regenerarMapa(id: number) {
+    return this.http.post<{ msg: string; mapa: boolean }>(`${this.url}/setParteMapa.php`, { parte_id: id });
+  }
+
   anular(id: number, motivo: string) {
     return this.http.put<{ msg: string }>(`${this.url}/setParte.php`, { parte_id: id, parte_estado: 'ANULADO', parte_anulado_motivo: motivo });
   }
