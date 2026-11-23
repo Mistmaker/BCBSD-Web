@@ -3,740 +3,691 @@
     <c-card class="mb-4">
       <c-card-header class="page-header">
         <div>
-          <strong>{{ parte.parte_id ? 'Edición de parte de auxilio' : 'Registro de parte de auxilio' }}</strong>
-          <div class="small opacity-75">Complete la información de la atención y los recursos desplegados.</div>
+          <strong>{{ esNuevo ? 'Registro de parte de servicio' : 'Parte ' + parte.parte_numero }}</strong>
+          <c-badge *ngIf="!esNuevo" class="ms-2" [color]="parte.parte_estado === 'ANULADO' ? 'dark' : parte.parte_estado === 'FINALIZADO' ? 'success' : 'warning'">
+            {{ parte.parte_estado }}
+          </c-badge>
+          <div class="small opacity-75">Formato del área operativa: datos de la emergencia, personal, vehículos y recursos desplegados.</div>
         </div>
-        <a cButton routerLink="../" color="light" size="sm">
-          <i class="fa-solid fa-arrow-left"></i> Salir y cancelar
-        </a>
+        <div class="d-flex gap-2">
+          <button *ngIf="!esNuevo" cButton type="button" color="light" size="sm" (click)="imprimir()">
+            <i class="fa-solid fa-print"></i> Imprimir
+          </button>
+          <button *ngIf="!esNuevo && puedeAnular && parte.parte_estado !== 'ANULADO'" cButton type="button" color="light" variant="outline" size="sm" (click)="anular()">
+            <i class="fa-solid fa-ban"></i> Anular
+          </button>
+          <a cButton routerLink="../" color="light" size="sm"><i class="fa-solid fa-arrow-left"></i> Salir</a>
+        </div>
       </c-card-header>
 
       <c-card-body>
         <c-alert *ngIf="errorMessage" color="danger" class="mb-3">{{ errorMessage }}</c-alert>
+        <c-alert *ngIf="parte.parte_estado === 'ANULADO'" color="dark" class="mb-3">
+          Parte anulado. Motivo: {{ parte.parte_anulado_motivo || '—' }}
+        </c-alert>
+        <c-alert *ngIf="soloLectura && parte.parte_estado !== 'ANULADO'" color="info" class="mb-3">
+          Consulta: {{ parte.parte_estado === 'FINALIZADO' ? 'el parte está finalizado; solo la supervisión puede corregirlo.' : 'no tiene el privilegio para registrar partes.' }}
+        </c-alert>
         <div *ngIf="isLoading" class="alert alert-info" role="status">Cargando el parte...</div>
 
-        <form #formulario="ngForm" (ngSubmit)="onSubmit(formulario)"
-              [validated]="customStylesValidated" cForm class="needs-validation">
+        <form #formulario="ngForm" (ngSubmit)="onSubmit(formulario)" [validated]="customStylesValidated" cForm class="needs-validation" novalidate>
+          <fieldset [disabled]="soloLectura">
+
+          <!-- IDENTIFICACIÓN -->
           <section class="part-section">
             <div class="section-title">Identificación del parte</div>
             <c-row class="g-3">
               <c-col md="3">
-                <label cLabel for="parte_fecha">Fecha del parte</label>
-                <input cFormControl id="parte_fecha" name="parte_fecha" type="date"
-                       [(ngModel)]="parte.parte_fecha" required />
-              </c-col>
-              <c-col md="3">
                 <label cLabel for="parte_numero">N.º de parte</label>
-                <input cFormControl id="parte_numero" name="parte_numero" type="text"
-                       [(ngModel)]="parte.parte_numero" required />
-              </c-col>
-              <c-col md="3">
-                <label cLabel for="parte_codigo_salida">Código de salida</label>
-                <input cFormControl id="parte_codigo_salida" name="parte_codigo_salida"
-                       [(ngModel)]="parte.parte_codigo_salida" />
-              </c-col>
-              <c-col md="3">
-                <label cLabel for="parte_tipo_dia">Clase de día</label>
-                <select cSelect id="parte_tipo_dia" name="parte_tipo_dia" [(ngModel)]="parte.parte_tipo_dia">
-                  <option value="">Seleccione...</option>
-                  <option *ngFor="let tipo of tiposDia" [value]="tipo">{{ tipo }}</option>
-                </select>
+                <input cFormControl id="parte_numero" name="parte_numero" [value]="parte.parte_numero || 'Se asigna al guardar'" readonly
+                       class="fw-semibold" />
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_tipo">Tipo de parte</label>
-                <select cSelect id="parte_tipo" name="parte_tipo" [(ngModel)]="parte.parte_tipo" required>
-                  <option value="">Seleccione...</option>
-                  <option *ngFor="let tipo of tiposParte" [value]="tipo">{{ tipo }}</option>
+                <select cSelect id="parte_tipo" name="parte_tipo" [(ngModel)]="parte.parte_tipo" required [disabled]="!esNuevo || soloLectura">
+                  <option *ngFor="let t of tiposParte" [value]="t">{{ t === 'AUXILIO' ? 'Auxilio (PA)' : 'Incendio (PI)' }}</option>
+                </select>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="fk_estacion_id">Estación</label>
+                <select cSelect id="fk_estacion_id" name="fk_estacion_id" [(ngModel)]="parte.fk_estacion_id" required [disabled]="!esNuevo || soloLectura">
+                  <option [ngValue]="null">Seleccione...</option>
+                  <option *ngFor="let e of cat?.estaciones" [ngValue]="e.estacion_id">{{ e.estacion_nombre }}</option>
                 </select>
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_estado">Estado</label>
-                <select cSelect id="parte_estado" name="parte_estado" [(ngModel)]="parte.parte_estado">
+                <select cSelect id="parte_estado" name="parte_estado" [(ngModel)]="parte.parte_estado" [disabled]="parte.parte_estado === 'ANULADO' || soloLectura">
                   <option value="REGISTRADO">REGISTRADO</option>
                   <option value="FINALIZADO">FINALIZADO</option>
-                  <option value="ANULADO">ANULADO</option>
+                  <option *ngIf="parte.parte_estado === 'ANULADO'" value="ANULADO">ANULADO</option>
                 </select>
               </c-col>
               <c-col md="3">
-                <label cLabel for="fk_estacion_id">Estación responsable</label>
-                <select cSelect id="fk_estacion_id" name="fk_estacion_id"
-                        [(ngModel)]="parte.fk_estacion_id" required>
-                  <option value="">Seleccione...</option>
-                  <option *ngFor="let estacion of estaciones" [value]="estacion.estacion_id">
-                    {{ estacion.estacion_nombre }}
-                  </option>
+                <label cLabel for="parte_fecha">Fecha del parte</label>
+                <input cFormControl id="parte_fecha" name="parte_fecha" type="date" [(ngModel)]="parte.parte_fecha" required [readonly]="!esNuevo" />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_tipo_dia">Clase de día</label>
+                <select cSelect id="parte_tipo_dia" name="parte_tipo_dia" [(ngModel)]="parte.parte_tipo_dia">
+                  <option *ngFor="let t of tiposDia" [value]="t">{{ t }}</option>
                 </select>
               </c-col>
               <c-col md="3">
-                <label cLabel for="parte_forma_aviso">Forma de aviso</label>
-                <select cSelect id="parte_forma_aviso" name="parte_forma_aviso"
-                        [(ngModel)]="parte.parte_forma_aviso">
-                  <option value="">Seleccione...</option>
-                  <option *ngFor="let forma of formasAviso" [value]="forma">{{ forma }}</option>
-                </select>
+                <label cLabel for="parte_codigo_salida">Código de salida</label>
+                <input cFormControl id="parte_codigo_salida" name="parte_codigo_salida" [(ngModel)]="parte.parte_codigo_salida" />
               </c-col>
               <c-col md="3">
-                <label cLabel for="parte_apoyo_requerido">¿Requirió apoyo?</label>
-                <select cSelect id="parte_apoyo_requerido" name="parte_apoyo_requerido"
-                        [(ngModel)]="parte.parte_apoyo_requerido">
-                  <option value="">Seleccione...</option>
-                  <option value="SI">Sí</option>
-                  <option value="NO">No</option>
+                <label cLabel for="parte_grupo_asiste">Pelotón que asiste</label>
+                <select cSelect id="parte_grupo_asiste" name="parte_grupo_asiste" [(ngModel)]="parte.parte_grupo_asiste">
+                  <option value="">—</option>
+                  <option *ngFor="let p of cat?.pelotones" [value]="p">{{ p }}</option>
                 </select>
-              </c-col>
-              <c-col md="4" *ngIf="parte.parte_apoyo_requerido === 'SI'">
-                <label cLabel for="parte_apoyo">Tipo de apoyo</label>
-                <select cSelect id="parte_apoyo" name="parte_apoyo" [(ngModel)]="parte.parte_apoyo">
-                  <option value="">Seleccione...</option>
-                  <option value="POLICIA">Policía</option>
-                  <option value="CRUZ-ROJA">Cruz Roja</option>
-                  <option value="EJERCITO">Ejército</option>
-                  <option value="PERSONAS-PARTICULARES">Personas particulares</option>
-                  <option value="OTROS">Otros</option>
-                </select>
-              </c-col>
-              <c-col md="5" *ngIf="parte.parte_apoyo_requerido === 'SI' && parte.parte_apoyo === 'OTROS'">
-                <label cLabel for="parte_apoyo_otros">Detalle del apoyo</label>
-                <input cFormControl id="parte_apoyo_otros" name="parte_apoyo_otros"
-                       [(ngModel)]="parte.parte_apoyo_otros" />
               </c-col>
             </c-row>
           </section>
 
+          <!-- DATOS GENERALES -->
           <section class="part-section">
-            <div class="section-title">Datos generales y ubicación</div>
+            <div class="section-title">Datos generales</div>
             <c-row class="g-3">
-              <c-col md="6">
-                <label cLabel for="fk_personal_id">Responsable de despacho</label>
-                <ng-select id="fk_personal_id" name="fk_personal_id" [items]="personal"
-                           bindLabel="nombre_completo" bindValue="ppersonal_id"
-                           [(ngModel)]="parte.fk_personal_id" placeholder="Buscar personal..."
-                           [searchable]="true" [clearable]="true">
-                  <ng-template ng-label-tmp let-item="item">
-                    {{ item.persona_apellidos }} {{ item.persona_nombres }} — {{ item.puesto_nombre }}
-                  </ng-template>
+              <c-col md="4">
+                <label cLabel for="parte_forma_aviso">Forma de aviso a central</label>
+                <select cSelect id="parte_forma_aviso" name="parte_forma_aviso" [(ngModel)]="parte.parte_forma_aviso">
+                  <option value="">Seleccione...</option>
+                  <option *ngFor="let f of cat?.formas_aviso" [value]="f">{{ f }}</option>
+                </select>
+              </c-col>
+              <c-col md="8">
+                <label cLabel for="fk_personal_despacho_id">Responsable de despacho</label>
+                <ng-select id="fk_personal_despacho_id" name="fk_personal_despacho_id" [items]="cat?.personal ?? []" bindLabel="nombre"
+                           bindValue="personal_id" [(ngModel)]="parte.fk_personal_despacho_id" placeholder="Buscar personal..."
+                           [searchFn]="buscarPersonal" [readonly]="soloLectura">
                   <ng-template ng-option-tmp let-item="item">
-                    <strong>{{ item.persona_apellidos }} {{ item.persona_nombres }}</strong>
+                    <strong>{{ item.nombre }}</strong>
                     <small class="d-block">{{ item.puesto_nombre }} · {{ item.persona_doc_identidad }}</small>
                   </ng-template>
                 </ng-select>
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_fecha_aviso">Fecha del aviso</label>
-                <input cFormControl id="parte_fecha_aviso" name="parte_fecha_aviso" type="date"
-                       [(ngModel)]="parte.parte_fecha_aviso" />
+                <input cFormControl id="parte_fecha_aviso" name="parte_fecha_aviso" type="date" [(ngModel)]="parte.parte_fecha_aviso"
+                       [max]="parte.parte_fecha" />
+                <small class="text-body-secondary">Vacía: la del parte</small>
               </c-col>
               <c-col md="3">
-                <label cLabel>Transferencia ECU-911</label>
+                <label cLabel for="parte_hora_aviso">Hora del aviso</label>
+                <input cFormControl id="parte_hora_aviso" name="parte_hora_aviso" type="time" [(ngModel)]="parte.parte_hora_aviso" required />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_hora_transferencia_ecu">Transferencia del ECU (hora : min)</label>
                 <div class="d-flex gap-2">
-                  <input cFormControl aria-label="Hora transferencia ECU-911" name="parte_hora_transferencia_ecu"
-                         type="number" min="0" max="23" placeholder="Hora"
-                         [(ngModel)]="parte.parte_hora_transferencia_ecu" />
-                  <input cFormControl aria-label="Minutos transferencia ECU-911" name="parte_minuto_transferencia_ecu"
-                         type="number" min="0" max="59" placeholder="Minutos"
-                         [(ngModel)]="parte.parte_minuto_transferencia_ecu" />
+                  <input cFormControl id="parte_hora_transferencia_ecu" name="parte_hora_transferencia_ecu" type="number" min="0" max="23"
+                         placeholder="Hora" [(ngModel)]="parte.parte_hora_transferencia_ecu" />
+                  <input cFormControl name="parte_minuto_transferencia_ecu" type="number" min="0" max="59" placeholder="Min"
+                         aria-label="Minutos de transferencia del ECU" [(ngModel)]="parte.parte_minuto_transferencia_ecu" />
                 </div>
               </c-col>
               <c-col md="3">
-                <label cLabel for="parte_hora_aviso">Hora de aviso</label>
-                <input cFormControl id="parte_hora_aviso" name="parte_hora_aviso" type="time"
-                       [(ngModel)]="parte.parte_hora_aviso" />
-              </c-col>
-              <c-col md="9">
                 <label cLabel for="parte_informacion_alertante">Información del alertante</label>
-                <input cFormControl id="parte_informacion_alertante" name="parte_informacion_alertante"
-                       [(ngModel)]="parte.parte_informacion_alertante" />
+                <input cFormControl id="parte_informacion_alertante" name="parte_informacion_alertante" [(ngModel)]="parte.parte_informacion_alertante" />
               </c-col>
-              <c-col md="4">
+              <c-col md="3">
                 <label cLabel for="parte_provincia">Provincia</label>
-                <input cFormControl id="parte_provincia" name="parte_provincia" [(ngModel)]="parte.parte_provincia" />
+                <select cSelect id="parte_provincia" name="parte_provincia" [(ngModel)]="parte.parte_provincia" (ngModelChange)="cargarCantones($event)">
+                  <option [ngValue]="null">Seleccione...</option>
+                  <option *ngFor="let p of provincias" [ngValue]="+p.state_id">{{ p.state_name }}</option>
+                </select>
               </c-col>
-              <c-col md="4">
+              <c-col md="3">
                 <label cLabel for="parte_canton">Cantón</label>
-                <input cFormControl id="parte_canton" name="parte_canton" [(ngModel)]="parte.parte_canton" />
+                <select cSelect id="parte_canton" name="parte_canton" [(ngModel)]="parte.parte_canton" (ngModelChange)="cargarParroquias($event)">
+                  <option [ngValue]="null">Seleccione...</option>
+                  <option *ngFor="let c of cantones" [ngValue]="+c.town_id">{{ c.town_name }}</option>
+                </select>
               </c-col>
-              <c-col md="4">
+              <c-col md="3">
                 <label cLabel for="parte_tipo_sector">Zona</label>
                 <select cSelect id="parte_tipo_sector" name="parte_tipo_sector" [(ngModel)]="parte.parte_tipo_sector">
                   <option value="">Seleccione...</option>
-                  <option value="URBANA">URBANA</option>
-                  <option value="RURAL">RURAL</option>
+                  <option value="URBANA">Urbana</option>
+                  <option value="RURAL">Rural</option>
+                </select>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_parroquia">Parroquia</label>
+                <select cSelect id="parte_parroquia" name="parte_parroquia" [(ngModel)]="parte.parte_parroquia">
+                  <option [ngValue]="null">Seleccione...</option>
+                  <option *ngFor="let p of parroquias" [ngValue]="+p.parish_id">{{ p.parish_name }}</option>
                 </select>
               </c-col>
               <c-col md="4">
-                <label cLabel for="parte_parroquia">Parroquia</label>
-                <input cFormControl id="parte_parroquia" name="parte_parroquia" [(ngModel)]="parte.parte_parroquia" />
-              </c-col>
-              <c-col md="4">
                 <label cLabel for="parte_calle_principal">Calle / avenida principal</label>
-                <input cFormControl id="parte_calle_principal" name="parte_calle_principal"
-                       [(ngModel)]="parte.parte_calle_principal" />
+                <input cFormControl id="parte_calle_principal" name="parte_calle_principal" [(ngModel)]="parte.parte_calle_principal" />
               </c-col>
               <c-col md="4">
                 <label cLabel for="parte_calle_secundaria">Calle / avenida secundaria</label>
-                <input cFormControl id="parte_calle_secundaria" name="parte_calle_secundaria"
-                       [(ngModel)]="parte.parte_calle_secundaria" />
+                <input cFormControl id="parte_calle_secundaria" name="parte_calle_secundaria" [(ngModel)]="parte.parte_calle_secundaria" />
               </c-col>
-              <c-col md="3">
+              <c-col md="4">
                 <label cLabel for="parte_numero_domicilio">Número</label>
-                <input cFormControl id="parte_numero_domicilio" name="parte_numero_domicilio"
-                       [(ngModel)]="parte.parte_numero_domicilio" />
+                <input cFormControl id="parte_numero_domicilio" name="parte_numero_domicilio" [(ngModel)]="parte.parte_numero_domicilio" />
               </c-col>
-              <c-col md="3">
+              <c-col md="4">
                 <label cLabel for="parte_sector">Sector</label>
                 <input cFormControl id="parte_sector" name="parte_sector" [(ngModel)]="parte.parte_sector" />
               </c-col>
-              <c-col md="6">
+              <c-col md="8">
                 <label cLabel for="parte_referencia">Punto de referencia</label>
                 <input cFormControl id="parte_referencia" name="parte_referencia" [(ngModel)]="parte.parte_referencia" />
               </c-col>
               <c-col md="3">
-                <label cLabel for="parte_grupo_asiste">Grupo que asistió</label>
-                <input cFormControl id="parte_grupo_asiste" name="parte_grupo_asiste"
-                       [(ngModel)]="parte.parte_grupo_asiste" />
+                <label cLabel for="parte_apoyo_requerido">¿Requirió apoyo?</label>
+                <select cSelect id="parte_apoyo_requerido" name="parte_apoyo_requerido" [(ngModel)]="parte.parte_apoyo_requerido">
+                  <option value="">—</option>
+                  <option value="SI">Sí</option>
+                  <option value="NO">No</option>
+                </select>
               </c-col>
-              <c-col md="9">
-                <label cLabel for="parte_datos_adicionales">Información adicional</label>
-                <input cFormControl id="parte_datos_adicionales" name="parte_datos_adicionales"
-                       [(ngModel)]="parte.parte_datos_adicionales" />
+              <c-col md="4" *ngIf="parte.parte_apoyo_requerido === 'SI'">
+                <label cLabel for="parte_apoyo">Institución de apoyo</label>
+                <select cSelect id="parte_apoyo" name="parte_apoyo" [(ngModel)]="parte.parte_apoyo">
+                  <option value="">Seleccione...</option>
+                  <option *ngFor="let a of cat?.apoyos" [value]="a">{{ a }}</option>
+                </select>
+              </c-col>
+              <c-col md="5" *ngIf="parte.parte_apoyo_requerido === 'SI'">
+                <label cLabel for="parte_apoyo_otros">Detalle del apoyo</label>
+                <input cFormControl id="parte_apoyo_otros" name="parte_apoyo_otros" [(ngModel)]="parte.parte_apoyo_otros" />
               </c-col>
             </c-row>
           </section>
 
+          <!-- PERSONAL -->
           <section class="part-section">
             <div class="section-heading">
-              <div class="section-title">Personal que atendió la emergencia
-                <button cButton type="button" color="primary" size="sm" (click)="agregarPersonal()">
-                  <i class="fa-solid fa-plus"></i> Agregar personal
-                </button>
-              </div>
+              <div class="section-title">Personal que atendió la emergencia</div>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarPersonal()"><i class="fa-solid fa-plus"></i> Agregar personal</button>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>Rol</th>
-                    <th>Apellidos y nombres</th>
-                    <th>Rango</th>
-                    <th>Pelotón</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Rol</th><th class="w-50">Apellidos y nombres</th><th>Rango</th><th>Pelotón</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let detalle of parte.personal; let i = index">
+                  <tr *ngFor="let d of parte.personal; let i = index">
                     <td>
-                      <select cSelect [name]="'personal_rol_' + i" [(ngModel)]="detalle.parte_personal_rol">
-                        <option value="">Seleccione...</option>
-                        <option *ngFor="let rol of rolesPersonal" [value]="rol">{{ rol }}</option>
+                      <select cSelect [name]="'personal_rol_' + i" [(ngModel)]="d.parte_personal_rol" aria-label="Rol">
+                        <option *ngFor="let r of rolesPersonal" [value]="r">{{ r === rolMando ? 'Persona al mando' : r === 'PERSONAL DE APH' ? 'Personal de APH' : 'Personal operativo' }}</option>
                       </select>
                     </td>
                     <td>
-                      <ng-select [name]="'personal_id_' + i" [items]="personal" bindLabel="nombre_completo"
-                                 bindValue="ppersonal_id" [(ngModel)]="detalle.fk_personal_id"
-                                 placeholder="Buscar personal..." [searchable]="true" [clearable]="true">
-                        <ng-template ng-label-tmp let-item="item">
-                          {{ item.persona_apellidos }} {{ item.persona_nombres }}
-                        </ng-template>
+                      <ng-select [name]="'personal_id_' + i" [items]="cat?.personal ?? []" bindLabel="nombre" bindValue="personal_id"
+                                 [(ngModel)]="d.fk_personal_id" placeholder="Buscar..." [searchFn]="buscarPersonal" appendTo="body" [readonly]="soloLectura"
+                                 aria-label="Apellidos y nombres">
+                        <ng-template ng-label-tmp let-item="item">{{ item.nombre || d.nombre }}</ng-template>
                         <ng-template ng-option-tmp let-item="item">
-                          {{ item.persona_apellidos }} {{ item.persona_nombres }} · {{ item.puesto_nombre }}
+                          <strong>{{ item.nombre }}</strong><small class="d-block">{{ item.puesto_nombre }}</small>
                         </ng-template>
                       </ng-select>
                     </td>
-                    <td><input cFormControl [name]="'personal_rango_' + i" [(ngModel)]="detalle.parte_personal_rango" /></td>
-                    <td><input cFormControl [name]="'personal_grupo_' + i" [(ngModel)]="detalle.parte_personal_grupo" /></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm"
-                              aria-label="Quitar personal" (click)="quitarDetalle(parte.personal, i)">
-                        <i class="fa-solid fa-trash"></i>
-                      </button></td>
+                    <td>
+                      <select cSelect [name]="'personal_rango_' + i" [(ngModel)]="d.parte_personal_rango" aria-label="Rango">
+                        <option value="">—</option>
+                        <option *ngFor="let r of cat?.rangos" [value]="r">{{ r }}</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select cSelect [name]="'personal_grupo_' + i" [(ngModel)]="d.parte_personal_grupo" aria-label="Pelotón">
+                        <option value="">—</option>
+                        <option *ngFor="let p of cat?.pelotones" [value]="p">{{ p }}</option>
+                      </select>
+                    </td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.personal, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.personal.length">
-                    <td colspan="5" class="empty-row">Agregue el personal que participó.</td>
-                  </tr>
+                  <tr *ngIf="!parte.personal.length"><td colspan="5" class="empty-row">Agregue a la persona al mando y al personal que atendió.</td></tr>
                 </tbody>
               </table>
             </div>
           </section>
 
+          <!-- VEHÍCULOS -->
           <section class="part-section">
             <div class="section-heading">
-              <div class="section-title">Recursos y vehículos</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarVehiculo()">
-                <i class="fa-solid fa-plus"></i> Agregar vehículo
-              </button>
+              <div class="section-title">Recursos (vehículos)</div>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarVehiculo()"><i class="fa-solid fa-plus"></i> Agregar vehículo</button>
             </div>
             <div class="table-responsive">
-              <table class="table table-bordered align-middle detail-table">
+              <table class="table table-bordered align-middle detail-table vehiculos">
                 <thead>
-                  <tr>
-                    <th>Estación</th>
-                    <th>Placa</th>
-                    <th>Siglas</th>
-                    <th>Km salida</th>
-                    <th>Km ingreso</th>
-                    <th>Despacho</th>
-                    <th>Salida</th>
-                    <th>Arribo</th>
-                    <th>Fin operaciones</th>
-                    <th>Apoyo</th>
-                    <th></th>
-                  </tr>
+                  <tr><th>Vehículo</th><th>Estación</th><th>Km salida</th><th>Km ingreso</th><th>Despacho</th><th>Salida</th><th>Arribo</th>
+                    <th>Fin operaciones</th><th>Apoyo int/ext</th><th></th></tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let vehiculo of parte.vehiculos; let i = index">
-                    <td><select cSelect [name]="'vehiculo_estacion_' + i" [(ngModel)]="vehiculo.fk_estacion_id">
-                        <option [ngValue]="null">Seleccione...</option>
-                        <option *ngFor="let estacion of estaciones" [ngValue]="estacion.estacion_id">{{ estacion.estacion_nombre }}</option>
+                  <tr *ngFor="let v of parte.vehiculos; let i = index">
+                    <td class="col-vehiculo">
+                      <ng-select [name]="'vehiculo_id_' + i" [items]="cat?.vehiculos ?? []" bindValue="vehiculo_id" bindLabel="vehiculo_placa"
+                                 [(ngModel)]="v.fk_vehiculo_id" (change)="vehiculoElegido(v, $event)" placeholder="Sigla o placa..."
+                                 [searchFn]="buscarVehiculo" appendTo="body" [readonly]="soloLectura" aria-label="Vehículo">
+                        <ng-template ng-label-tmp let-item="item">{{ etiquetaVehiculo(item) }}</ng-template>
+                        <ng-template ng-option-tmp let-item="item">{{ etiquetaVehiculo(item) }} <small class="text-body-secondary">{{ item.vehiculo_tipo }}</small></ng-template>
+                      </ng-select>
+                      <div *ngIf="!v.fk_vehiculo_id" class="d-flex gap-1 mt-1">
+                        <input cFormControl size="sm" [name]="'vehiculo_placa_' + i" [(ngModel)]="v.parte_vehiculo_placa" placeholder="Placa (externo)" aria-label="Placa" />
+                        <input cFormControl size="sm" [name]="'vehiculo_siglas_' + i" [(ngModel)]="v.parte_vehiculo_siglas" placeholder="Siglas" aria-label="Siglas" />
+                      </div>
+                    </td>
+                    <td><select cSelect [name]="'vehiculo_estacion_' + i" [(ngModel)]="v.fk_estacion_id" aria-label="Estación">
+                        <option [ngValue]="null">—</option>
+                        <option *ngFor="let e of cat?.estaciones" [ngValue]="e.estacion_id">{{ e.estacion_nombre }}</option>
                       </select></td>
-                    <td><input cFormControl [name]="'vehiculo_placa_' + i" [(ngModel)]="vehiculo.parte_vehiculo_placa" /></td>
-                    <td><input cFormControl [name]="'vehiculo_siglas_' + i" [(ngModel)]="vehiculo.parte_vehiculo_siglas" /></td>
-                    <td><input cFormControl type="number" min="0" [name]="'vehiculo_km_salida_' + i" [(ngModel)]="vehiculo.parte_vehiculo_km_salida" /></td>
-                    <td><input cFormControl type="number" min="0" [name]="'vehiculo_km_retorno_' + i" [(ngModel)]="vehiculo.parte_vehiculo_km_retorno" /></td>
-                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_despacho_' + i" [(ngModel)]="vehiculo.parte_vehiculo_hora_despacho" /></td>
-                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_salida_' + i" [(ngModel)]="vehiculo.parte_vehiculo_hora_salida" /></td>
-                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_arribo_' + i" [(ngModel)]="vehiculo.parte_vehiculo_hora_arribo" /></td>
-                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_fin_' + i" [(ngModel)]="vehiculo.parte_vehiculo_hora_fin_operaciones" /></td>
-                    <td><select cSelect [name]="'vehiculo_apoyo_' + i" [(ngModel)]="vehiculo.parte_vehiculo_apoyo">
-                        <option value="">Seleccione...</option>
-                        <option *ngFor="let tipo of tiposApoyo" [value]="tipo">{{ tipo }}</option>
+                    <td><input cFormControl type="number" min="0" [name]="'vehiculo_km_salida_' + i" [(ngModel)]="v.parte_vehiculo_km_salida" aria-label="Km salida" /></td>
+                    <td>
+                      <input cFormControl type="number" min="0" [name]="'vehiculo_km_retorno_' + i" [(ngModel)]="v.parte_vehiculo_km_retorno" aria-label="Km ingreso" />
+                      <small *ngIf="kmRecorridos(v) !== null" class="text-body-secondary">{{ kmRecorridos(v) }} km</small>
+                    </td>
+                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_despacho_' + i" [(ngModel)]="v.parte_vehiculo_hora_despacho" aria-label="Despacho" /></td>
+                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_salida_' + i" [(ngModel)]="v.parte_vehiculo_hora_salida" aria-label="Salida" /></td>
+                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_arribo_' + i" [(ngModel)]="v.parte_vehiculo_hora_arribo" aria-label="Arribo" /></td>
+                    <td><input cFormControl type="datetime-local" [name]="'vehiculo_fin_' + i" [(ngModel)]="v.parte_vehiculo_hora_fin_operaciones" aria-label="Fin de operaciones" /></td>
+                    <td><select cSelect [name]="'vehiculo_apoyo_' + i" [(ngModel)]="v.parte_vehiculo_apoyo" aria-label="Apoyo">
+                        <option value="">—</option>
+                        <option *ngFor="let a of cat?.apoyos" [value]="a">{{ a }}</option>
                       </select></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm"
-                              aria-label="Quitar vehículo" (click)="quitarDetalle(parte.vehiculos, i)">
-                        <i class="fa-solid fa-trash"></i>
-                      </button></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar vehículo" (click)="quitarDetalle(parte.vehiculos, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.vehiculos.length">
-                    <td colspan="11" class="empty-row">Agregue los vehículos que intervinieron.</td>
-                  </tr>
+                  <tr *ngIf="!parte.vehiculos.length"><td colspan="10" class="empty-row">Agregue los vehículos que intervinieron.</td></tr>
                 </tbody>
               </table>
             </div>
+            <p class="small text-body-secondary mt-2 mb-0">
+              Tiempo de respuesta (aviso → primer arribo): <strong>{{ formatoMinutos(respuesta) }}</strong>.
+              El kilometraje alimenta la bitácora del vehículo.
+            </p>
           </section>
 
+          <!-- TIPO DE AUXILIO -->
           <section class="part-section">
             <div class="section-heading">
               <div class="section-title">Tipo de auxilio</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarTipoAuxilio()">
-                <i class="fa-solid fa-plus"></i> Agregar clasificación
-              </button>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarTipoAuxilio()"><i class="fa-solid fa-plus"></i> Agregar clasificación</button>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>Clave</th>
-                    <th>Clasificación</th>
-                    <th>Subclasificación y niveles</th>
-                    <th>Usos y tipos</th>
-                    <th>Especifique</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Clave</th><th>Clasificación</th><th>Subclasificación y niveles</th><th>Usos y tipos</th><th>Especifique</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let tipo of parte.tipos_auxilio; let i = index">
-                    <td><input cFormControl [name]="'auxilio_clave_' + i" [(ngModel)]="tipo.parte_auxilio_clave" /></td>
-                    <td><input cFormControl [name]="'auxilio_clasificacion_' + i" [(ngModel)]="tipo.parte_auxilio_clasificacion" /></td>
-                    <td><input cFormControl [name]="'auxilio_subclasificacion_' + i" [(ngModel)]="tipo.parte_auxilio_subclasificacion" /></td>
-                    <td><input cFormControl [name]="'auxilio_uso_' + i" [(ngModel)]="tipo.parte_auxilio_uso_tipo" /></td>
-                    <td><input cFormControl [name]="'auxilio_especifique_' + i" [(ngModel)]="tipo.parte_auxilio_especifique" /></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar clasificación"
-                              (click)="quitarDetalle(parte.tipos_auxilio, i)"><i class="fa-solid fa-trash"></i></button></td>
+                  <tr *ngFor="let t of parte.tipos_auxilio; let i = index">
+                    <td><select cSelect [name]="'auxilio_clave_' + i" [(ngModel)]="t.parte_auxilio_clave" aria-label="Clave">
+                        <option value="">—</option>
+                        <option *ngFor="let c of cat?.claves" [value]="c">{{ c }}</option>
+                      </select></td>
+                    <td><select cSelect [name]="'auxilio_clasificacion_' + i" [(ngModel)]="t.parte_auxilio_clasificacion" (ngModelChange)="auxilioCambio(t, 'clasificacion')" aria-label="Clasificación">
+                        <option value="">Seleccione...</option>
+                        <option *ngFor="let c of clasificaciones" [value]="c">{{ c }}</option>
+                      </select></td>
+                    <td><select cSelect [name]="'auxilio_sub_' + i" [(ngModel)]="t.parte_auxilio_subclasificacion" (ngModelChange)="auxilioCambio(t, 'subclasificacion')"
+                                [disabled]="soloLectura || !subclasificaciones(t.parte_auxilio_clasificacion).length" aria-label="Subclasificación">
+                        <option value="">—</option>
+                        <option *ngFor="let s of subclasificaciones(t.parte_auxilio_clasificacion)" [value]="s">{{ s }}</option>
+                      </select></td>
+                    <td><select cSelect [name]="'auxilio_uso_' + i" [(ngModel)]="t.parte_auxilio_uso_tipo"
+                                [disabled]="soloLectura || !usos(t.parte_auxilio_clasificacion, t.parte_auxilio_subclasificacion).length" aria-label="Usos y tipos">
+                        <option value="">—</option>
+                        <option *ngFor="let u of usos(t.parte_auxilio_clasificacion, t.parte_auxilio_subclasificacion)" [value]="u">{{ u }}</option>
+                      </select></td>
+                    <td><input cFormControl [name]="'auxilio_especifique_' + i" [(ngModel)]="t.parte_auxilio_especifique" aria-label="Especifique" /></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.tipos_auxilio, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.tipos_auxilio.length">
-                    <td colspan="6" class="empty-row">Agregue una clasificación de auxilio.</td>
-                  </tr>
+                  <tr *ngIf="!parte.tipos_auxilio.length"><td colspan="6" class="empty-row">Sin clasificación.</td></tr>
                 </tbody>
               </table>
             </div>
           </section>
 
+          <!-- POSIBLES CAUSAS -->
           <section class="part-section">
             <div class="section-heading">
               <div class="section-title">Posibles causas</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarCausa()">
-                <i class="fa-solid fa-plus"></i> Agregar causa
-              </button>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarCausa()"><i class="fa-solid fa-plus"></i> Agregar causa</button>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>Clave</th>
-                    <th>Clasificación</th>
-                    <th>Posibles causas</th>
-                    <th>Especifique</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Clave</th><th>Clasificación</th><th>Posible causa</th><th>Especifique</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let causa of parte.causas; let i = index">
-                    <td><input cFormControl [name]="'causa_clave_' + i" [(ngModel)]="causa.parte_causa_clave" /></td>
-                    <td><input cFormControl [name]="'causa_clasificacion_' + i" [(ngModel)]="causa.parte_causa_clasificacion" /></td>
-                    <td><input cFormControl [name]="'causa_descripcion_' + i" [(ngModel)]="causa.parte_causa_descripcion" /></td>
-                    <td><input cFormControl [name]="'causa_especifique_' + i" [(ngModel)]="causa.parte_causa_especifique" /></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar causa"
-                              (click)="quitarDetalle(parte.causas, i)"><i class="fa-solid fa-trash"></i></button></td>
-                  </tr>
-                  <tr *ngIf="!parte.causas.length">
-                    <td colspan="5" class="empty-row">Agregue las causas identificadas.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="part-section" *ngFor="let bloque of recursoBloques">
-            <div class="section-heading">
-              <div class="section-title">{{ bloque.titulo }}</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarRecurso(bloque.lista)">
-                <i class="fa-solid fa-plus"></i> Agregar
-              </button>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>Estación</th>
-                    <th>Descripción</th>
-                    <th>Cantidad</th>
-                    <th>Observaciones</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let recurso of bloque.lista; let i = index">
-                    <td><select cSelect [name]="bloque.prefijo + '_estacion_' + i" [(ngModel)]="recurso.fk_estacion_id">
-                        <option [ngValue]="null">Seleccione...</option>
-                        <option *ngFor="let estacion of estaciones" [ngValue]="estacion.estacion_id">{{ estacion.estacion_nombre }}</option>
+                  <tr *ngFor="let c of parte.causas; let i = index">
+                    <td><select cSelect [name]="'causa_clave_' + i" [(ngModel)]="c.parte_causa_clave" aria-label="Clave">
+                        <option value="">—</option>
+                        <option *ngFor="let k of cat?.claves" [value]="k">{{ k }}</option>
                       </select></td>
-                    <td><input cFormControl [name]="bloque.prefijo + '_descripcion_' + i" [(ngModel)]="recurso.parte_recurso_descripcion" /></td>
-                    <td><input cFormControl type="number" min="0" [name]="bloque.prefijo + '_cantidad_' + i" [(ngModel)]="recurso.parte_recurso_cantidad" /></td>
-                    <td><input cFormControl [name]="bloque.prefijo + '_observaciones_' + i" [(ngModel)]="recurso.parte_recurso_observaciones" /></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar recurso"
-                              (click)="quitarDetalle(bloque.lista, i)"><i class="fa-solid fa-trash"></i></button></td>
+                    <td><select cSelect [name]="'causa_clasificacion_' + i" [(ngModel)]="c.parte_causa_clasificacion" (ngModelChange)="causaCambio(c)" aria-label="Clasificación">
+                        <option value="">Seleccione...</option>
+                        <option *ngFor="let k of clasificacionesCausa" [value]="k">{{ k }}</option>
+                      </select></td>
+                    <td><select cSelect [name]="'causa_descripcion_' + i" [(ngModel)]="c.parte_causa_descripcion" aria-label="Posible causa">
+                        <option value="">Seleccione...</option>
+                        <option *ngFor="let k of causas(c.parte_causa_clasificacion)" [value]="k">{{ k }}</option>
+                      </select></td>
+                    <td><input cFormControl [name]="'causa_especifique_' + i" [(ngModel)]="c.parte_causa_especifique" aria-label="Especifique" /></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.causas, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!bloque.lista.length">
-                    <td colspan="5" class="empty-row">No hay elementos registrados.</td>
-                  </tr>
+                  <tr *ngIf="!parte.causas.length"><td colspan="5" class="empty-row">Sin causas registradas.</td></tr>
                 </tbody>
               </table>
             </div>
           </section>
 
+          <!-- EQUIPOS, MATERIAL E INSUMOS -->
+          <section class="part-section" *ngFor="let b of bloques">
+            <div class="section-heading">
+              <div class="section-title">{{ b.titulo }}</div>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarRecurso(parte[b.clave])"><i class="fa-solid fa-plus"></i> Agregar</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle detail-table">
+                <thead><tr><th>Estación</th><th class="w-50">Descripción</th><th>Cantidad</th><th>Observaciones</th><th></th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let r of parte[b.clave]; let i = index">
+                    <td><select cSelect [name]="b.clave + '_estacion_' + i" [(ngModel)]="r.fk_estacion_id" aria-label="Estación">
+                        <option [ngValue]="null">—</option>
+                        <option *ngFor="let e of cat?.estaciones" [ngValue]="e.estacion_id">{{ e.estacion_nombre }}</option>
+                      </select></td>
+                    <td>
+                      <ng-select [name]="b.clave + '_descripcion_' + i" [items]="recursos[b.tipo]" [(ngModel)]="r.parte_recurso_descripcion"
+                                 (change)="r.fk_recurso_id = null" [addTag]="agregarRecursoNuevo" addTagText="Agregar a la lista:" appendTo="body"
+                                 placeholder="Buscar o escribir..." [readonly]="soloLectura" aria-label="Descripción"></ng-select>
+                    </td>
+                    <td><input cFormControl type="number" min="0" step="any" [name]="b.clave + '_cantidad_' + i" [(ngModel)]="r.parte_recurso_cantidad" aria-label="Cantidad" /></td>
+                    <td><input cFormControl [name]="b.clave + '_observaciones_' + i" [(ngModel)]="r.parte_recurso_observaciones" aria-label="Observaciones" /></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte[b.clave], i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
+                  </tr>
+                  <tr *ngIf="!parte[b.clave].length"><td colspan="5" class="empty-row">Ninguno.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- PERSONAS / INSTITUCIONES ASISTIDAS -->
           <section class="part-section">
-            <div class="section-title">Personas e instituciones asistidas</div>
+            <div class="section-title">Personas / instituciones asistidas</div>
             <c-row class="g-3 mb-3">
               <c-col md="6">
-                <label cLabel for="parte_personas_institucion">Institución / entidad asistida</label>
-                <input cFormControl id="parte_personas_institucion" name="parte_personas_institucion"
-                       [(ngModel)]="parte.parte_personas_institucion" />
+                <label cLabel for="parte_personas_institucion">Institución</label>
+                <input cFormControl id="parte_personas_institucion" name="parte_personas_institucion" [(ngModel)]="parte.parte_personas_institucion" />
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_institucion_tipo">Tipo</label>
                 <select cSelect id="parte_institucion_tipo" name="parte_institucion_tipo" [(ngModel)]="parte.parte_institucion_tipo">
-                  <option value="">Seleccione...</option>
-                  <option value="PÚBLICA">Pública</option>
-                  <option value="PRIVADA">Privada</option>
+                  <option value="">—</option><option value="PÚBLICA">Pública</option><option value="PRIVADA">Privada</option>
                 </select>
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_institucion_propiedad">Propiedad</label>
                 <select cSelect id="parte_institucion_propiedad" name="parte_institucion_propiedad" [(ngModel)]="parte.parte_institucion_propiedad">
-                  <option value="">Seleccione...</option>
-                  <option value="PROPIO">Propio</option>
-                  <option value="ARRENDADO">Arrendado</option>
-                  <option value="OTRO">Otro</option>
+                  <option value="">—</option>
+                  <option *ngFor="let p of propiedades" [value]="p">{{ p }}</option>
                 </select>
               </c-col>
             </c-row>
             <div class="section-heading">
               <h3 class="subsection-title">Personas asistidas</h3>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarPersonaAsistida()">
-                <i class="fa-solid fa-plus"></i> Agregar persona
-              </button>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarPersonaAsistida()"><i class="fa-solid fa-plus"></i> Agregar persona</button>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive mt-2">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>Nombres y apellidos</th>
-                    <th>Identificación</th>
-                    <th>Teléfono</th>
-                    <th>Institución</th>
-                    <th>Tipo</th>
-                    <th>Propiedad</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Nombres y apellidos</th><th>Cédula</th><th>Teléfono</th><th>Propiedad</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let persona of parte.personas_asistidas; let i = index">
-                    <td><input cFormControl [name]="'asistida_nombre_' + i" [(ngModel)]="persona.parte_persona_nombre" /></td>
-                    <td><input cFormControl [name]="'asistida_identificacion_' + i" [(ngModel)]="persona.parte_persona_identificacion" /></td>
-                    <td><input cFormControl [name]="'asistida_telefono_' + i" [(ngModel)]="persona.parte_persona_telefono" /></td>
-                    <td><input cFormControl [name]="'asistida_institucion_' + i" [(ngModel)]="persona.parte_persona_institucion" /></td>
-                    <td><input cFormControl [name]="'asistida_tipo_' + i" [(ngModel)]="persona.parte_persona_tipo_institucion" /></td>
-                    <td><input cFormControl [name]="'asistida_propiedad_' + i" [(ngModel)]="persona.parte_persona_propiedad" /></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar persona asistida"
-                              (click)="quitarDetalle(parte.personas_asistidas, i)"><i class="fa-solid fa-trash"></i></button></td>
+                  <tr *ngFor="let a of parte.personas_asistidas; let i = index">
+                    <td><input cFormControl [name]="'asistida_nombre_' + i" [(ngModel)]="a.parte_persona_nombre" aria-label="Nombres" /></td>
+                    <td><input cFormControl [name]="'asistida_identificacion_' + i" [(ngModel)]="a.parte_persona_identificacion" aria-label="Cédula" /></td>
+                    <td><input cFormControl [name]="'asistida_telefono_' + i" [(ngModel)]="a.parte_persona_telefono" aria-label="Teléfono" /></td>
+                    <td><select cSelect [name]="'asistida_propiedad_' + i" [(ngModel)]="a.parte_persona_propiedad" aria-label="Propiedad">
+                        <option value="">—</option>
+                        <option *ngFor="let p of propiedades" [value]="p">{{ p }}</option>
+                      </select></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.personas_asistidas, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.personas_asistidas.length">
-                    <td colspan="7" class="empty-row">Agregue las personas asistidas.</td>
-                  </tr>
+                  <tr *ngIf="!parte.personas_asistidas.length"><td colspan="5" class="empty-row">Ninguna.</td></tr>
                 </tbody>
               </table>
             </div>
-            <label cLabel for="parte_observacion_institucion">Observación</label>
-            <textarea cFormControl id="parte_observacion_institucion" name="parte_observacion_institucion" rows="2"
-                      [(ngModel)]="parte.parte_observacion_institucion"></textarea>
+            <label cLabel for="parte_observacion_institucion" class="mt-3">Observación</label>
+            <textarea cFormControl id="parte_observacion_institucion" name="parte_observacion_institucion" rows="2" [(ngModel)]="parte.parte_observacion_institucion"></textarea>
           </section>
 
+          <!-- VÍCTIMAS -->
           <section class="part-section">
             <div class="section-heading">
               <div class="section-title">Víctimas</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarVictima()">
-                <i class="fa-solid fa-plus"></i> Agregar víctima
-              </button>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarVictima()"><i class="fa-solid fa-plus"></i> Agregar víctima</button>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>N.º hoja</th>
-                    <th>Tipo identificación</th>
-                    <th>N.º identificación</th>
-                    <th>Apellidos y nombres</th>
-                    <th>Edad</th>
-                    <th>Tipo edad</th>
-                    <th>Sexo</th>
-                    <th>Signos / síntomas</th>
-                    <th>Traslado</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>N.º hoja 002</th><th>Tipo de identificación</th><th>N.º identificación</th><th>Apellidos y nombres</th><th>Edad</th><th>Tipo edad</th>
+                  <th>Sexo</th><th>Signos / síntomas</th><th>Traslado</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let victima of parte.victimas; let i = index">
-                    <td><input cFormControl [name]="'victima_hoja_' + i" [(ngModel)]="victima.parte_victima_numero_hoja" /></td>
-                    <td><select cSelect [name]="'victima_tipo_id_' + i" [(ngModel)]="victima.parte_victima_tipo_identificacion">
-                        <option value="">Seleccione...</option>
-                        <option *ngFor="let tipo of tiposIdentificacion" [value]="tipo">{{ tipo }}</option>
-                      </select></td>
-                    <td><input cFormControl [name]="'victima_id_' + i" [(ngModel)]="victima.parte_victima_identificacion" /></td>
-                    <td><input cFormControl [name]="'victima_nombre_' + i" [(ngModel)]="victima.parte_victima_nombres" /></td>
-                    <td><input cFormControl type="number" min="0" [name]="'victima_edad_' + i" [(ngModel)]="victima.parte_victima_edad" /></td>
-                    <td><select cSelect [name]="'victima_tipo_edad_' + i" [(ngModel)]="victima.parte_victima_tipo_edad">
-                        <option value="años">Años</option>
-                        <option value="meses">Meses</option>
-                        <option value="días">Días</option>
-                      </select></td>
-                    <td><select cSelect [name]="'victima_sexo_' + i" [(ngModel)]="victima.parte_victima_sexo">
-                        <option value="">-</option>
-                        <option *ngFor="let sexo of sexos" [value]="sexo">{{ sexo }}</option>
-                      </select></td>
-                    <td><input cFormControl [name]="'victima_signos_' + i" [(ngModel)]="victima.parte_victima_signos_sintomas" /></td>
-                    <td><select cSelect [name]="'victima_traslado_' + i" [(ngModel)]="victima.parte_victima_traslado">
-                        <option value="">Seleccione...</option>
-                        <option *ngFor="let tipo of tiposTraslado" [value]="tipo">{{ tipo }}</option>
-                      </select></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar víctima"
-                              (click)="quitarDetalle(parte.victimas, i)"><i class="fa-solid fa-trash"></i></button></td>
+                  <tr *ngFor="let v of parte.victimas; let i = index">
+                    <td><input cFormControl [name]="'victima_hoja_' + i" [(ngModel)]="v.parte_victima_numero_hoja" aria-label="Hoja 002" /></td>
+                    <td><select cSelect [name]="'victima_tipo_id_' + i" [(ngModel)]="v.parte_victima_tipo_identificacion" aria-label="Tipo de identificación">
+                        <option value="">—</option><option *ngFor="let t of tiposIdentificacion" [value]="t">{{ t }}</option></select></td>
+                    <td><input cFormControl [name]="'victima_id_' + i" [(ngModel)]="v.parte_victima_identificacion" aria-label="Identificación" /></td>
+                    <td><input cFormControl [name]="'victima_nombre_' + i" [(ngModel)]="v.parte_victima_nombres" aria-label="Nombres" /></td>
+                    <td><input cFormControl type="number" min="0" max="130" [name]="'victima_edad_' + i" [(ngModel)]="v.parte_victima_edad" aria-label="Edad" /></td>
+                    <td><select cSelect [name]="'victima_tipo_edad_' + i" [(ngModel)]="v.parte_victima_tipo_edad" aria-label="Tipo de edad">
+                        <option *ngFor="let t of tiposEdad" [value]="t">{{ t }}</option></select></td>
+                    <td><select cSelect [name]="'victima_sexo_' + i" [(ngModel)]="v.parte_victima_sexo" aria-label="Sexo">
+                        <option value="">—</option><option *ngFor="let s of sexos" [value]="s">{{ s }}</option></select></td>
+                    <td><input cFormControl [name]="'victima_signos_' + i" [(ngModel)]="v.parte_victima_signos_sintomas" aria-label="Signos y síntomas" /></td>
+                    <td><select cSelect [name]="'victima_traslado_' + i" [(ngModel)]="v.parte_victima_traslado" aria-label="Traslado">
+                        <option value="">—</option><option *ngFor="let t of traslados" [value]="t">{{ t }}</option></select></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.victimas, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.victimas.length">
-                    <td colspan="10" class="empty-row">No hay víctimas registradas.</td>
-                  </tr>
+                  <tr *ngIf="!parte.victimas.length"><td colspan="10" class="empty-row">Ninguna.</td></tr>
                 </tbody>
               </table>
             </div>
-            <label cLabel for="parte_observacion_victimas">Observación de víctimas</label>
-            <textarea cFormControl id="parte_observacion_victimas" name="parte_observacion_victimas" rows="2"
-                      [(ngModel)]="parte.parte_observacion_victimas"></textarea>
+            <label cLabel for="parte_observacion_victimas" class="mt-3">Observación (si realiza traslado, detallar)</label>
+            <textarea cFormControl id="parte_observacion_victimas" name="parte_observacion_victimas" rows="2" [(ngModel)]="parte.parte_observacion_victimas"></textarea>
           </section>
 
+          <!-- FALLECIDOS -->
           <section class="part-section">
             <div class="section-heading">
               <div class="section-title">Fallecidos</div>
-              <button cButton type="button" color="primary" size="sm" (click)="agregarFallecido()">
-                <i class="fa-solid fa-plus"></i> Agregar fallecido
-              </button>
+              <button cButton type="button" color="primary" size="sm" (click)="agregarFallecido()"><i class="fa-solid fa-plus"></i> Agregar fallecido</button>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered align-middle detail-table">
-                <thead>
-                  <tr>
-                    <th>N.º</th>
-                    <th>Tipo identificación</th>
-                    <th>N.º identificación</th>
-                    <th>Apellidos y nombres</th>
-                    <th>Edad</th>
-                    <th>Tipo edad</th>
-                    <th>Sexo</th>
-                    <th>Observaciones</th>
-                    <th>Traslado</th>
-                    <th></th>
-                  </tr>
-                </thead>
+                <thead><tr><th>N.º</th><th>Tipo de identificación</th><th>N.º identificación</th><th>Apellidos y nombres</th><th>Edad</th><th>Tipo edad</th>
+                  <th>Sexo</th><th>Observaciones</th><th>Traslado</th><th></th></tr></thead>
                 <tbody>
-                  <tr *ngFor="let fallecido of parte.fallecidos; let i = index">
-                    <td><input cFormControl [name]="'fallecido_numero_' + i" [(ngModel)]="fallecido.parte_fallecido_numero" /></td>
-                    <td><select cSelect [name]="'fallecido_tipo_id_' + i" [(ngModel)]="fallecido.parte_fallecido_tipo_identificacion">
-                        <option value="">Seleccione...</option>
-                        <option *ngFor="let tipo of tiposIdentificacion" [value]="tipo">{{ tipo }}</option>
-                      </select></td>
-                    <td><input cFormControl [name]="'fallecido_id_' + i" [(ngModel)]="fallecido.parte_fallecido_identificacion" /></td>
-                    <td><input cFormControl [name]="'fallecido_nombre_' + i" [(ngModel)]="fallecido.parte_fallecido_nombres" /></td>
-                    <td><input cFormControl type="number" min="0" [name]="'fallecido_edad_' + i" [(ngModel)]="fallecido.parte_fallecido_edad" /></td>
-                    <td><select cSelect [name]="'fallecido_tipo_edad_' + i" [(ngModel)]="fallecido.parte_fallecido_tipo_edad">
-                        <option value="años">Años</option>
-                        <option value="meses">Meses</option>
-                        <option value="días">Días</option>
-                      </select></td>
-                    <td><select cSelect [name]="'fallecido_sexo_' + i" [(ngModel)]="fallecido.parte_fallecido_sexo">
-                        <option value="">-</option>
-                        <option *ngFor="let sexo of sexos" [value]="sexo">{{ sexo }}</option>
-                      </select></td>
-                    <td><input cFormControl [name]="'fallecido_observaciones_' + i" [(ngModel)]="fallecido.parte_fallecido_observaciones" /></td>
-                    <td><select cSelect [name]="'fallecido_traslado_' + i" [(ngModel)]="fallecido.parte_fallecido_traslado">
-                        <option value="">Seleccione...</option>
-                        <option value="SI">SÍ</option>
-                        <option value="NO">NO</option>
-                      </select></td>
-                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar fallecido"
-                              (click)="quitarDetalle(parte.fallecidos, i)"><i class="fa-solid fa-trash"></i></button></td>
+                  <tr *ngFor="let f of parte.fallecidos; let i = index">
+                    <td><input cFormControl [name]="'fallecido_numero_' + i" [(ngModel)]="f.parte_fallecido_numero" aria-label="Número" /></td>
+                    <td><select cSelect [name]="'fallecido_tipo_id_' + i" [(ngModel)]="f.parte_fallecido_tipo_identificacion" aria-label="Tipo de identificación">
+                        <option value="">—</option><option *ngFor="let t of tiposIdentificacion" [value]="t">{{ t }}</option></select></td>
+                    <td><input cFormControl [name]="'fallecido_id_' + i" [(ngModel)]="f.parte_fallecido_identificacion" aria-label="Identificación" /></td>
+                    <td><input cFormControl [name]="'fallecido_nombre_' + i" [(ngModel)]="f.parte_fallecido_nombres" aria-label="Nombres" /></td>
+                    <td><input cFormControl type="number" min="0" max="130" [name]="'fallecido_edad_' + i" [(ngModel)]="f.parte_fallecido_edad" aria-label="Edad" /></td>
+                    <td><select cSelect [name]="'fallecido_tipo_edad_' + i" [(ngModel)]="f.parte_fallecido_tipo_edad" aria-label="Tipo de edad">
+                        <option *ngFor="let t of tiposEdad" [value]="t">{{ t }}</option></select></td>
+                    <td><select cSelect [name]="'fallecido_sexo_' + i" [(ngModel)]="f.parte_fallecido_sexo" aria-label="Sexo">
+                        <option value="">—</option><option *ngFor="let s of sexos" [value]="s">{{ s }}</option></select></td>
+                    <td><input cFormControl [name]="'fallecido_observaciones_' + i" [(ngModel)]="f.parte_fallecido_observaciones" aria-label="Observaciones" /></td>
+                    <td><select cSelect [name]="'fallecido_traslado_' + i" [(ngModel)]="f.parte_fallecido_traslado" aria-label="Traslado">
+                        <option value="">—</option><option value="SI">Sí</option><option value="NO">No</option></select></td>
+                    <td><button cButton type="button" color="danger" variant="outline" size="sm" aria-label="Quitar" (click)="quitarDetalle(parte.fallecidos, i)">
+                      <i class="fa-solid fa-trash"></i></button></td>
                   </tr>
-                  <tr *ngIf="!parte.fallecidos.length">
-                    <td colspan="10" class="empty-row">No hay fallecidos registrados.</td>
-                  </tr>
+                  <tr *ngIf="!parte.fallecidos.length"><td colspan="10" class="empty-row">Ninguno.</td></tr>
                 </tbody>
               </table>
             </div>
-            <label cLabel for="parte_observacion_fallecidos">Observación de fallecidos</label>
-            <textarea cFormControl id="parte_observacion_fallecidos" name="parte_observacion_fallecidos" rows="2"
-                      [(ngModel)]="parte.parte_observacion_fallecidos"></textarea>
+            <label cLabel for="parte_observacion_fallecidos" class="mt-3">Observación (si realiza traslado, detallar)</label>
+            <textarea cFormControl id="parte_observacion_fallecidos" name="parte_observacion_fallecidos" rows="2" [(ngModel)]="parte.parte_observacion_fallecidos"></textarea>
           </section>
 
-          <section class="part-section">
-            <div class="section-title">Daños materiales</div>
-            <label cLabel for="parte_danios_materiales">Describa los daños materiales, si existen</label>
-            <textarea cFormControl id="parte_danios_materiales" name="parte_danios_materiales" rows="4"
-                      [(ngModel)]="parte.parte_danios_materiales"></textarea>
-            <c-row class="g-3 mt-1">
+          <!-- DATOS DEL INCENDIO -->
+          <section class="part-section" *ngIf="parte.parte_tipo === 'INCENDIO'">
+            <div class="section-title">Datos del incendio</div>
+            <c-row class="g-3">
+              <c-col md="6">
+                <label cLabel for="tipos_incendio">Tipo de incendio</label>
+                <ng-select id="tipos_incendio" name="tipos_incendio" [items]="cat?.tipos_incendio ?? []" bindLabel="descripcion" bindValue="id"
+                           [multiple]="true" [(ngModel)]="parte.tipos_incendio" [readonly]="soloLectura" placeholder="Seleccione..."></ng-select>
+              </c-col>
+              <c-col md="6">
+                <label cLabel for="naturalezas">Naturaleza (lugar afectado)</label>
+                <ng-select id="naturalezas" name="naturalezas" [items]="cat?.naturalezas ?? []" bindLabel="descripcion" bindValue="id"
+                           [multiple]="true" [(ngModel)]="parte.naturalezas" [readonly]="soloLectura" placeholder="Seleccione..."></ng-select>
+              </c-col>
               <c-col md="4">
-                <label cLabel for="parte_tipo_afectado">Tipo de afectado</label>
+                <label cLabel for="parte_naturaleza_especifique">Naturaleza: especifique</label>
+                <input cFormControl id="parte_naturaleza_especifique" name="parte_naturaleza_especifique" [(ngModel)]="parte.parte_naturaleza_especifique" />
+              </c-col>
+              <c-col md="4">
+                <label cLabel for="parte_tipo_afectado">Afectado</label>
                 <select cSelect id="parte_tipo_afectado" name="parte_tipo_afectado" [(ngModel)]="parte.parte_tipo_afectado">
-                  <option value="">Seleccione...</option>
-                  <option value="PROPIETARIO">Propietario</option>
-                  <option value="ARRENDATARIO">Arrendatario</option>
-                  <option value="OTROS">Otros</option>
+                  <option value="">—</option><option value="PROPIO">Propio</option><option value="ARRENDADO">Arrendado</option>
                 </select>
               </c-col>
               <c-col md="4">
-                <label cLabel for="parte_afectado_propietario">Propietario afectado</label>
-                <input cFormControl id="parte_afectado_propietario" name="parte_afectado_propietario"
-                       [(ngModel)]="parte.parte_afectado_propietario" />
+                <label cLabel for="parte_afectado_propietario">Propietario</label>
+                <input cFormControl id="parte_afectado_propietario" name="parte_afectado_propietario" [(ngModel)]="parte.parte_afectado_propietario" />
               </c-col>
               <c-col md="4">
-                <label cLabel for="parte_afectado_arrendatario">Arrendatario afectado</label>
-                <input cFormControl id="parte_afectado_arrendatario" name="parte_afectado_arrendatario"
-                       [(ngModel)]="parte.parte_afectado_arrendatario" />
-              </c-col>
-              <c-col md="12">
-                <label cLabel for="parte_afectado_otros">Otros afectados</label>
-                <input cFormControl id="parte_afectado_otros" name="parte_afectado_otros"
-                       [(ngModel)]="parte.parte_afectado_otros" />
+                <label cLabel for="parte_afectado_arrendatario">Arrendatario</label>
+                <input cFormControl id="parte_afectado_arrendatario" name="parte_afectado_arrendatario" [(ngModel)]="parte.parte_afectado_arrendatario" />
               </c-col>
               <c-col md="4">
                 <label cLabel for="parte_area_destruida_m2">Área destruida (m²)</label>
-                <input cFormControl id="parte_area_destruida_m2" name="parte_area_destruida_m2" type="number" min="0"
-                       [(ngModel)]="parte.parte_area_destruida_m2" />
+                <input cFormControl id="parte_area_destruida_m2" name="parte_area_destruida_m2" type="number" min="0" step="any" [(ngModel)]="parte.parte_area_destruida_m2" />
               </c-col>
               <c-col md="4">
-                <label cLabel for="parte_total_superficie_quemada">Superficie quemada</label>
-                <input cFormControl id="parte_total_superficie_quemada" name="parte_total_superficie_quemada"
-                       [(ngModel)]="parte.parte_total_superficie_quemada" />
+                <label cLabel for="parte_total_superficie_quemada_m2">Superficie quemada (m²)</label>
+                <input cFormControl id="parte_total_superficie_quemada_m2" name="parte_total_superficie_quemada_m2" type="number" min="0" step="any"
+                       [(ngModel)]="parte.parte_total_superficie_quemada_m2" />
               </c-col>
-              <c-col md="4">
-                <label cLabel for="parte_especies_predominantes">Especies predominantes</label>
-                <input cFormControl id="parte_especies_predominantes" name="parte_especies_predominantes"
-                       [(ngModel)]="parte.parte_especies_predominantes" />
+              <c-col md="6">
+                <label cLabel for="parte_especies_predominantes">Especies predominantes (forestal)</label>
+                <input cFormControl id="parte_especies_predominantes" name="parte_especies_predominantes" [(ngModel)]="parte.parte_especies_predominantes" />
               </c-col>
-              <c-col md="12">
-                <label cLabel for="parte_lugar_posible_inicio">Lugar posible de inicio</label>
-                <input cFormControl id="parte_lugar_posible_inicio" name="parte_lugar_posible_inicio"
-                       [(ngModel)]="parte.parte_lugar_posible_inicio" />
+              <c-col md="6">
+                <label cLabel for="parte_lugar_posible_inicio">Lugar de posible inicio</label>
+                <input cFormControl id="parte_lugar_posible_inicio" name="parte_lugar_posible_inicio" [(ngModel)]="parte.parte_lugar_posible_inicio" />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_causante_identificado">¿Causante identificado?</label>
+                <select cSelect id="parte_causante_identificado" name="parte_causante_identificado" [(ngModel)]="parte.parte_causante_identificado">
+                  <option [ngValue]="null">—</option><option [ngValue]="true">Sí</option><option [ngValue]="false">No</option>
+                </select>
+              </c-col>
+              <c-col md="4" *ngIf="parte.parte_causante_identificado">
+                <label cLabel for="parte_nombre_causante">Nombre del causante</label>
+                <input cFormControl id="parte_nombre_causante" name="parte_nombre_causante" [(ngModel)]="parte.parte_nombre_causante" />
+              </c-col>
+              <c-col md="5" *ngIf="parte.parte_causante_identificado">
+                <label cLabel for="parte_otros_datos_causante">Otros datos del causante</label>
+                <input cFormControl id="parte_otros_datos_causante" name="parte_otros_datos_causante" [(ngModel)]="parte.parte_otros_datos_causante" />
               </c-col>
             </c-row>
           </section>
 
+          <!-- DAÑOS Y OPERACIONES -->
           <section class="part-section">
-            <div class="section-title">Descripción de operaciones</div>
-            <label cLabel for="parte_descripcion_operaciones">Descripción cronológica de las actividades realizadas</label>
-            <textarea cFormControl id="parte_descripcion_operaciones" name="parte_descripcion_operaciones" rows="6"
+            <div class="section-title">Daños materiales y descripción de operaciones</div>
+            <label cLabel for="parte_danios_materiales">Daños materiales (en caso de existir)</label>
+            <textarea cFormControl id="parte_danios_materiales" name="parte_danios_materiales" rows="2" [(ngModel)]="parte.parte_danios_materiales"></textarea>
+            <label cLabel for="parte_descripcion_operaciones" class="mt-3">Descripción cronológica de las operaciones</label>
+            <textarea cFormControl id="parte_descripcion_operaciones" name="parte_descripcion_operaciones" rows="6" required
                       [(ngModel)]="parte.parte_descripcion_operaciones"></textarea>
           </section>
 
+          <!-- CROQUIS Y NOVEDADES -->
           <section class="part-section">
             <div class="section-title">Croquis y novedades</div>
             <c-row class="g-3">
               <c-col md="3">
                 <label cLabel for="parte_latitud">Latitud</label>
-                <input cFormControl id="parte_latitud" name="parte_latitud" inputmode="decimal"
-                       [(ngModel)]="parte.parte_latitud" (ngModelChange)="onCoordinatesChanged()" />
+                <input cFormControl id="parte_latitud" name="parte_latitud" inputmode="decimal" [(ngModel)]="parte.parte_latitud" (ngModelChange)="onCoordinatesChanged()" />
               </c-col>
               <c-col md="3">
                 <label cLabel for="parte_longitud">Longitud</label>
-                <input cFormControl id="parte_longitud" name="parte_longitud" inputmode="decimal"
-                       [(ngModel)]="parte.parte_longitud" (ngModelChange)="onCoordinatesChanged()" />
+                <input cFormControl id="parte_longitud" name="parte_longitud" inputmode="decimal" [(ngModel)]="parte.parte_longitud" (ngModelChange)="onCoordinatesChanged()" />
               </c-col>
               <c-col md="6">
                 <label cLabel for="parte_croquis_url">Enlace al croquis (opcional)</label>
                 <div class="d-flex gap-2">
-                  <input cFormControl id="parte_croquis_url" name="parte_croquis_url" type="url"
-                         [(ngModel)]="parte.parte_croquis_url" />
+                  <input cFormControl id="parte_croquis_url" name="parte_croquis_url" type="url" [(ngModel)]="parte.parte_croquis_url" />
                   <a *ngIf="parte.parte_latitud && parte.parte_longitud"
-                     [href]="'https://www.openstreetmap.org/?mlat=' + parte.parte_latitud + '&mlon=' + parte.parte_longitud"
-                     target="_blank" rel="noopener noreferrer" cButton color="secondary" variant="outline">
-                    Ver mapa
-                  </a>
+                     [href]="'https://www.openstreetmap.org/?mlat=' + parte.parte_latitud + '&mlon=' + parte.parte_longitud + '#map=18/' + parte.parte_latitud + '/' + parte.parte_longitud"
+                     target="_blank" rel="noopener noreferrer" cButton color="secondary" variant="outline">Ver mapa</a>
                 </div>
               </c-col>
               <c-col xs="12">
-                <div class="alert alert-info" role="status">
-                  Seleccione el punto de la emergencia en el mapa o arrastre el marcador para ajustar las coordenadas.
-                </div>
+                <p class="small text-body-secondary mb-2">Haga clic en el mapa para marcar el punto de la emergencia o arrastre el marcador.</p>
                 <div id="parte-map" aria-label="Mapa para seleccionar la ubicación de la emergencia"></div>
               </c-col>
               <c-col xs="12">
-                <label cLabel for="parte_novedades">Novedades (personal, vehículos, equipo, materiales)</label>
-                <textarea cFormControl id="parte_novedades" name="parte_novedades" rows="4"
-                          [(ngModel)]="parte.parte_novedades"></textarea>
+                <label cLabel for="parte_novedades">Novedades (personal, vehículos, equipo, material: lesiones, pérdidas o daños)</label>
+                <textarea cFormControl id="parte_novedades" name="parte_novedades" rows="3" [(ngModel)]="parte.parte_novedades"></textarea>
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_visita_inspectores">¿Solicita visita de inspectores?</label>
+                <select cSelect id="parte_visita_inspectores" name="parte_visita_inspectores" [(ngModel)]="parte.parte_visita_inspectores">
+                  <option [ngValue]="null">—</option><option [ngValue]="true">Sí</option><option [ngValue]="false">No</option>
+                </select>
+              </c-col>
+              <c-col md="9" *ngIf="parte.parte_visita_inspectores">
+                <label cLabel for="parte_visita_inspectores_motivo">¿Por qué?</label>
+                <input cFormControl id="parte_visita_inspectores_motivo" name="parte_visita_inspectores_motivo" [(ngModel)]="parte.parte_visita_inspectores_motivo" />
               </c-col>
             </c-row>
           </section>
 
+          <!-- ELABORACIÓN Y ENTREGA -->
           <section class="part-section">
-            <div class="section-title">Elaboración y aprobación</div>
+            <div class="section-title">Elaboración, aprobación y entrega</div>
             <c-row class="g-3">
               <c-col md="4">
-                <label cLabel for="parte_elaborado_por">Elaborado por</label>
-                <input cFormControl id="parte_elaborado_por" name="parte_elaborado_por"
-                       [(ngModel)]="parte.parte_elaborado_por" />
+                <label cLabel for="parte_elaborado_por">Elaborado por (nombre y cargo)</label>
+                <input cFormControl id="parte_elaborado_por" name="parte_elaborado_por" [(ngModel)]="parte.parte_elaborado_por" />
               </c-col>
               <c-col md="4">
                 <label cLabel for="parte_revisado_por">Revisado por</label>
-                <input cFormControl id="parte_revisado_por" name="parte_revisado_por"
-                       [(ngModel)]="parte.parte_revisado_por" />
+                <input cFormControl id="parte_revisado_por" name="parte_revisado_por" [(ngModel)]="parte.parte_revisado_por" />
               </c-col>
               <c-col md="4">
                 <label cLabel for="parte_aprobado_por">Aprobado por</label>
-                <input cFormControl id="parte_aprobado_por" name="parte_aprobado_por"
-                       [(ngModel)]="parte.parte_aprobado_por" />
+                <input cFormControl id="parte_aprobado_por" name="parte_aprobado_por" [(ngModel)]="parte.parte_aprobado_por" />
+              </c-col>
+              <c-col md="5">
+                <label cLabel for="parte_entregado_a">Parte entregado a (apellidos y nombres)</label>
+                <input cFormControl id="parte_entregado_a" name="parte_entregado_a" [(ngModel)]="parte.parte_entregado_a" />
+              </c-col>
+              <c-col md="4">
+                <label cLabel for="parte_entregado_identificacion">Cédula de ciudadanía</label>
+                <input cFormControl id="parte_entregado_identificacion" name="parte_entregado_identificacion" [(ngModel)]="parte.parte_entregado_identificacion" />
+              </c-col>
+              <c-col md="3">
+                <label cLabel for="parte_fecha_entrega">Fecha de entrega</label>
+                <input cFormControl id="parte_fecha_entrega" name="parte_fecha_entrega" type="date" [(ngModel)]="parte.parte_fecha_entrega" />
               </c-col>
             </c-row>
           </section>
+          </fieldset>
 
+          <c-alert *ngIf="errores.length" color="warning">
+            <strong>Revise:</strong>
+            <ul class="mb-0"><li *ngFor="let e of errores">{{ e }}</li></ul>
+          </c-alert>
           <div class="d-flex flex-wrap justify-content-end gap-2 pt-2">
-            <a cButton routerLink="../" color="secondary" variant="outline">Cancelar</a>
-            <button cButton color="success" type="submit" [disabled]="isLoading || isSaving">
-              <i class="fa-solid fa-save"></i>
-              {{ isSaving ? 'Guardando...' : 'Guardar parte' }}
+            <a cButton routerLink="../" color="secondary" variant="outline">{{ soloLectura ? 'Volver' : 'Cancelar' }}</a>
+            <button *ngIf="!soloLectura" cButton color="success" type="submit" [disabled]="isLoading || isSaving">
+              <i class="fa-solid fa-save"></i> {{ isSaving ? 'Guardando...' : 'Guardar parte' }}
             </button>
           </div>
         </form>

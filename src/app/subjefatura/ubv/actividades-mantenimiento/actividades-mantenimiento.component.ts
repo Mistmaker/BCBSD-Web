@@ -2,59 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgForm } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { VoluntariosActividades } from '../../models/voluntarios.molde';
 import { ActividadesService } from '../../services/ubv/actividades.service';
 import { VoluntariosService } from '../../services/ubv/voluntarios.service';
 
-import {
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TableDirective,
-  ModalBodyComponent,
-  ModalComponent,
-  ModalFooterComponent,
-  ModalHeaderComponent,
-  ModalTitleDirective,
-  ModalToggleDirective,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent, AlertLinkDirective,
-  ButtonCloseDirective,
-} from '@coreui/angular';
-import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective } from '@coreui/angular';
 
 import Swal from 'sweetalert2';
 import { AuthService } from '../../../auth/auth.service';
 
 @Component({
   selector: 'app-actividades-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent, AlertLinkDirective, TableDirective, ModalBodyComponent,
-    ModalComponent,
-    ModalFooterComponent,
-    ModalHeaderComponent,
-    ModalTitleDirective,
-    ModalToggleDirective, ButtonCloseDirective
-  ],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent,
+    ButtonDirective, RouterLink, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent,
+    InputGroupComponent, InputGroupTextDirective, FormSelectDirective],
   templateUrl: './actividades-mantenimiento.component.html',
   styleUrls: ['./actividades-mantenimiento.component.scss']
 })

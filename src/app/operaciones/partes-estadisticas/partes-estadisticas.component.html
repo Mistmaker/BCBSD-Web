@@ -1,0 +1,280 @@
+<c-card class="mb-4">
+  <c-card-header style="background-color: #bf0411; color: white;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <strong>Estadística de partes de servicio</strong>
+      <a cButton routerLink="../partes" color="light" size="sm"><i class="fa-solid fa-list"></i> Partes</a>
+    </div>
+  </c-card-header>
+  <c-card-body>
+    <form class="row g-2 align-items-end mb-3" (ngSubmit)="consultar()">
+      <c-col sm="6" md="3">
+        <label cLabel for="e_desde">Desde</label>
+        <input cFormControl id="e_desde" name="desde" type="date" [(ngModel)]="filtro.desde" required />
+      </c-col>
+      <c-col sm="6" md="3">
+        <label cLabel for="e_hasta">Hasta</label>
+        <input cFormControl id="e_hasta" name="hasta" type="date" [(ngModel)]="filtro.hasta" required />
+      </c-col>
+      <c-col sm="5" md="2">
+        <label cLabel for="e_estacion">Estación</label>
+        <select cSelect id="e_estacion" name="estacion" [(ngModel)]="filtro.estacion">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let e of estaciones" [ngValue]="e.estacion_id">{{ e.estacion_nombre }}</option>
+        </select>
+      </c-col>
+      <c-col sm="4" md="2">
+        <label cLabel for="e_tipo">Tipo</label>
+        <select cSelect id="e_tipo" name="tipo" [(ngModel)]="filtro.tipo">
+          <option value="">Auxilio e incendio</option>
+          <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+        </select>
+      </c-col>
+      <c-col sm="3" md="2">
+        <button cButton type="submit" color="primary" class="w-100" [disabled]="cargando">
+          <c-spinner *ngIf="cargando" size="sm"></c-spinner> Consultar
+        </button>
+      </c-col>
+    </form>
+    <p class="small text-body-secondary mb-0">Partes no anulados. Tiempo de respuesta: desde el aviso hasta el primer arribo.</p>
+  </c-card-body>
+</c-card>
+
+<ng-container *ngIf="datos() as d">
+  <!-- Cifras -->
+  <c-row class="g-3 mb-3">
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Partes</div>
+        <div class="kpi">{{ d.resumen.partes | number }}</div>
+        <div class="small text-body-secondary">{{ d.resumen.auxilio }} auxilio · {{ d.resumen.incendio }} incendio</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Tiempo de respuesta</div>
+        <div class="kpi">{{ minutos(d.resumen.respuesta_prom_min) }}</div>
+        <div class="small text-body-secondary">promedio · mediana {{ minutos(d.resumen.respuesta_mediana_min) }}</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Víctimas / fallecidos</div>
+        <div class="kpi">{{ d.resumen.victimas }} / {{ d.resumen.fallecidos }}</div>
+        <div class="small text-body-secondary">{{ d.resumen.personas_asistidas }} personas asistidas</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Vehículos</div>
+        <div class="kpi">{{ d.resumen.km | number: '1.0-0' }} km</div>
+        <div class="small text-body-secondary">{{ d.por_vehiculo.length }} vehículos usados</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Horas de operación</div>
+        <div class="kpi">{{ d.resumen.horas_operacion | number: '1.0-1' }} h</div>
+        <div class="small text-body-secondary">salida a fin de operaciones</div>
+      </div>
+    </c-col>
+    <c-col xs="6" lg="2">
+      <div class="border rounded p-3 h-100">
+        <div class="small text-body-secondary">Personal</div>
+        <div class="kpi">{{ d.por_bombero.length }}</div>
+        <div class="small text-body-secondary">bomberos participaron</div>
+      </div>
+    </c-col>
+  </c-row>
+
+  <!-- Por mes -->
+  <div class="border rounded p-3 mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+      <div><h6 class="mb-1">Partes por mes</h6><p class="small text-body-secondary mb-0">Auxilio e incendio.</p></div>
+      <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'mes' }"></ng-container>
+    </div>
+    <div class="grafico" *ngIf="vista['mes'] === 'grafico' && gMes()"><c-chart type="bar" [data]="gMes()!" [options]="oMes()" [height]="280"></c-chart></div>
+    <div class="tabla-scroll" *ngIf="vista['mes'] === 'tabla'">
+      <table cTable small class="mb-0">
+        <thead><tr><th>Mes</th><th class="text-end">Auxilio</th><th class="text-end">Incendio</th><th class="text-end">Total</th></tr></thead>
+        <tbody><tr *ngFor="let m of d.por_mes"><td>{{ nombreMes(m.mes) }}</td><td class="text-end">{{ m.auxilio }}</td><td class="text-end">{{ m.incendio }}</td>
+          <td class="text-end fw-semibold">{{ m.auxilio + m.incendio }}</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Por estación -->
+  <div class="border rounded p-3 mb-3">
+    <h6 class="mb-1">Por estación</h6>
+    <p class="small text-body-secondary">Salidas de vehículos y participaciones de personal en los partes de cada estación.</p>
+    <div class="table-responsive">
+      <table cTable small [hover]="true" class="mb-0">
+        <thead><tr><th>Estación</th><th class="text-end">Partes</th><th class="text-end">Auxilio</th><th class="text-end">Incendio</th>
+          <th class="text-end">Respuesta prom.</th><th class="text-end">Salidas de vehículos</th><th class="text-end">Participaciones</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let e of d.por_estacion">
+            <td class="fw-semibold">{{ e.estacion }}</td><td class="text-end">{{ e.partes }}</td><td class="text-end">{{ e.auxilio }}</td><td class="text-end">{{ e.incendio }}</td>
+            <td class="text-end">{{ minutos(e.respuesta_prom_min) }}</td><td class="text-end">{{ e.salidas_vehiculos }}</td><td class="text-end">{{ e.participaciones }}</td>
+          </tr>
+          <tr *ngIf="!d.por_estacion.length"><td colspan="7" class="text-center text-body-secondary">Sin partes en el período.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <c-row class="g-3 mb-3">
+    <!-- Por vehículo -->
+    <c-col lg="6">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div><h6 class="mb-1">Por vehículo</h6><p class="small text-body-secondary mb-0">Salidas a emergencias (10 con más salidas en el gráfico).</p></div>
+          <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'vehiculo' }"></ng-container>
+        </div>
+        <div *ngIf="vista['vehiculo'] === 'grafico' && gVehiculo() && d.por_vehiculo.length" class="position-relative" [style.height.px]="alto(d.por_vehiculo.length)">
+          <c-chart type="bar" [data]="gVehiculo()!" [options]="oTopSalidas()" [height]="alto(d.por_vehiculo.length)"></c-chart>
+        </div>
+        <div class="tabla-scroll" *ngIf="vista['vehiculo'] === 'tabla'">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Vehículo</th><th class="text-end">Salidas</th><th class="text-end">Km</th><th class="text-end">Horas</th><th class="text-end">Respuesta</th><th>Última</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let v of d.por_vehiculo">
+                <td>
+                  <a *ngIf="verBitacora && v.vehiculo_id; else sinEnlace" [routerLink]="['/admin/bitacora-vehiculos', v.vehiculo_id]">{{ nombreVehiculo(v) }}</a>
+                  <ng-template #sinEnlace>{{ nombreVehiculo(v) }}</ng-template>
+                </td>
+                <td class="text-end">{{ v.salidas }}</td><td class="text-end">{{ v.km | number: '1.0-0' }}</td><td class="text-end">{{ v.horas | number: '1.0-1' }}</td>
+                <td class="text-end">{{ minutos(v.respuesta_prom_min) }}</td><td>{{ v.ultima | date: 'dd/MM/yy' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="!d.por_vehiculo.length" class="small text-body-secondary mb-0">Sin vehículos en el período.</p>
+      </div>
+    </c-col>
+    <!-- Por bombero -->
+    <c-col lg="6">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div><h6 class="mb-1">Por bombero</h6><p class="small text-body-secondary mb-0">Partes en los que participó (10 con más participaciones en el gráfico).</p></div>
+          <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'bombero' }"></ng-container>
+        </div>
+        <div *ngIf="vista['bombero'] === 'grafico' && gBombero() && d.por_bombero.length" class="position-relative" [style.height.px]="alto(d.por_bombero.length)">
+          <c-chart type="bar" [data]="gBombero()!" [options]="oTop()" [height]="alto(d.por_bombero.length)"></c-chart>
+        </div>
+        <div class="tabla-scroll" *ngIf="vista['bombero'] === 'tabla'">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Bombero</th><th>Rango</th><th class="text-end">Partes</th><th class="text-end">Al mando</th><th class="text-end">APH</th>
+              <th class="text-end">Operativo</th><th class="text-end">Horas</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let b of d.por_bombero">
+                <td>{{ b.nombre }}</td><td>{{ b.rango }}</td><td class="text-end">{{ b.participaciones }}</td><td class="text-end">{{ b.al_mando }}</td>
+                <td class="text-end">{{ b.aph }}</td><td class="text-end">{{ b.operativo }}</td><td class="text-end">{{ b.horas | number: '1.0-1' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="!d.por_bombero.length" class="small text-body-secondary mb-0">Sin personal en el período.</p>
+      </div>
+    </c-col>
+  </c-row>
+
+  <c-row class="g-3 mb-3">
+    <!-- Herramientas y recursos -->
+    <c-col lg="6">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div><h6 class="mb-1">Equipos, herramientas y recursos</h6><p class="small text-body-secondary mb-0">Partes en los que se usó y cantidad total.</p></div>
+          <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'recurso' }"></ng-container>
+        </div>
+        <c-button-group size="sm" role="group" aria-label="Tipo de recurso" class="mb-2">
+          <button cButton color="secondary" variant="outline" type="button" [active]="tipoRecurso === 'EQUIPO'" (click)="elegirTipoRecurso('EQUIPO')">Equipos y herramientas</button>
+          <button cButton color="secondary" variant="outline" type="button" [active]="tipoRecurso === 'MATERIAL'" (click)="elegirTipoRecurso('MATERIAL')">Material MATPEL</button>
+          <button cButton color="secondary" variant="outline" type="button" [active]="tipoRecurso === 'INSUMO'" (click)="elegirTipoRecurso('INSUMO')">Insumos</button>
+        </c-button-group>
+        <div *ngIf="vista['recurso'] === 'grafico' && recursos().length" class="position-relative" [style.height.px]="alto(recursos().length)">
+          <c-chart type="bar" [data]="gRecurso()" [options]="oTop()" [height]="alto(recursos().length)"></c-chart>
+        </div>
+        <div class="tabla-scroll" *ngIf="vista['recurso'] === 'tabla'">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Descripción</th><th class="text-end">Partes</th><th class="text-end">Cantidad</th></tr></thead>
+            <tbody><tr *ngFor="let r of recursos()"><td>{{ r.descripcion }}</td><td class="text-end">{{ r.partes }}</td><td class="text-end">{{ r.cantidad | number: '1.0-2' }}</td></tr></tbody>
+          </table>
+        </div>
+        <p *ngIf="!recursos().length" class="small text-body-secondary mb-0">Sin {{ tipoRecursoTexto[tipoRecurso] | lowercase }} registrados en el período.</p>
+      </div>
+    </c-col>
+    <!-- Tipo de auxilio -->
+    <c-col lg="6">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div><h6 class="mb-1">Tipo de auxilio</h6><p class="small text-body-secondary mb-0">Clasificación y subclasificación (10 más frecuentes en el gráfico).</p></div>
+          <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'auxilio' }"></ng-container>
+        </div>
+        <div *ngIf="vista['auxilio'] === 'grafico' && gAuxilio() && d.por_tipo_auxilio.length" class="position-relative" [style.height.px]="alto(d.por_tipo_auxilio.length)">
+          <c-chart type="bar" [data]="gAuxilio()!" [options]="oTop()" [height]="alto(d.por_tipo_auxilio.length)"></c-chart>
+        </div>
+        <div class="tabla-scroll" *ngIf="vista['auxilio'] === 'tabla'">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Clasificación</th><th>Subclasificación</th><th class="text-end">Partes</th></tr></thead>
+            <tbody><tr *ngFor="let t of d.por_tipo_auxilio"><td>{{ t.clasificacion }}</td><td>{{ t.subclasificacion }}</td><td class="text-end">{{ t.partes }}</td></tr></tbody>
+          </table>
+        </div>
+        <p *ngIf="!d.por_tipo_auxilio.length" class="small text-body-secondary mb-0">Sin clasificación registrada.</p>
+        <h6 class="mt-3 small fw-semibold">Posibles causas</h6>
+        <ul class="list-unstyled small mb-0">
+          <li *ngFor="let c of d.por_causa.slice(0, 8)" class="d-flex justify-content-between border-bottom py-1">
+            <span>{{ c.descripcion }} <span class="text-body-secondary">· {{ c.clasificacion }}</span></span><strong>{{ c.partes }}</strong>
+          </li>
+          <li *ngIf="!d.por_causa.length" class="text-body-secondary">Sin causas registradas.</li>
+        </ul>
+      </div>
+    </c-col>
+  </c-row>
+
+  <c-row class="g-3 mb-4">
+    <!-- Hora del aviso -->
+    <c-col lg="8">
+      <div class="border rounded p-3 h-100">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div><h6 class="mb-1">Hora del aviso</h6><p class="small text-body-secondary mb-0">Partes según la hora en que se recibió el aviso.</p></div>
+          <ng-container *ngTemplateOutlet="selectorVista; context: { $implicit: 'hora' }"></ng-container>
+        </div>
+        <div class="grafico" *ngIf="vista['hora'] === 'grafico' && gHora()"><c-chart type="bar" [data]="gHora()!" [options]="oHora()" [height]="280"></c-chart></div>
+        <div class="tabla-scroll" *ngIf="vista['hora'] === 'tabla'">
+          <table cTable small class="mb-0">
+            <thead><tr><th>Hora</th><th class="text-end">Partes</th></tr></thead>
+            <tbody><tr *ngFor="let n of d.por_hora; let h = index"><td>{{ h | number: '2.0-0' }}:00 – {{ h | number: '2.0-0' }}:59</td><td class="text-end">{{ n }}</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </c-col>
+    <!-- Día de la semana -->
+    <c-col lg="4">
+      <div class="border rounded p-3 h-100">
+        <h6 class="mb-1">Día de la semana</h6>
+        <p class="small text-body-secondary">Según la fecha del aviso.</p>
+        <table cTable small class="mb-0">
+          <tbody>
+            <tr *ngFor="let n of d.por_dia_semana; let i = index">
+              <td class="w-25">{{ dias[i] }}</td>
+              <td>
+                <div class="progress" style="height: 8px" role="progressbar" [attr.aria-label]="dias[i]" [attr.aria-valuenow]="n" aria-valuemin="0" [attr.aria-valuemax]="maxDia()">
+                  <div class="progress-bar" [style.width.%]="n / maxDia() * 100" style="background-color: var(--cui-primary)"></div>
+                </div>
+              </td>
+              <td class="text-end fw-semibold">{{ n }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </c-col>
+  </c-row>
+</ng-container>
+
+<ng-template #selectorVista let-clave>
+  <c-button-group size="sm" role="group" aria-label="Vista">
+    <button cButton color="secondary" variant="outline" type="button" [active]="vista[clave] === 'grafico'" (click)="vista[clave] = 'grafico'">
+      <i class="fa-solid fa-chart-column"></i> Gráfico</button>
+    <button cButton color="secondary" variant="outline" type="button" [active]="vista[clave] === 'tabla'" (click)="vista[clave] = 'tabla'">
+      <i class="fa-solid fa-table"></i> Tabla</button>
+  </c-button-group>
+</ng-template>

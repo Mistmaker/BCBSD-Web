@@ -1,44 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
 import { Documento, Direccion, TipoDocumento } from '../../models/archivo.model';
 
-import {
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective
-} from '@coreui/angular';
-import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective } from '@coreui/angular';
 
 import Swal from 'sweetalert2';
 import { ArchivoService } from '../../services/archivo.service';
 
 @Component({
   selector: 'app-documentos-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective
-  ],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent,
+    ButtonDirective, RouterLink, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent,
+    InputGroupComponent, InputGroupTextDirective, FormSelectDirective],
   templateUrl: './documentos-mantenimiento.component.html',
   styleUrls: ['./documentos-mantenimiento.component.scss']
 })

@@ -3,34 +3,10 @@ import { CausasModel, EstacionesModel, IntervencionesModel, NaturalezasModel, Ti
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
 
-import {
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,AlertComponent, AlertLinkDirective 
-} from '@coreui/angular';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, AlertComponent } from '@coreui/angular';
 
 import Swal from 'sweetalert2';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
@@ -46,9 +22,10 @@ import * as L from 'leaflet';
 
 @Component({
   selector: 'app-intervenciones-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent, AlertLinkDirective 
-  ],
+  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent,
+    ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective, RouterLink, TextColorDirective, FormDirective,
+    FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective,
+    AlertComponent],
   templateUrl: './intervenciones-mantenimiento.component.html',
   styleUrl: './intervenciones-mantenimiento.component.scss'
 })

@@ -1,42 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
 
-import {
-  BorderDirective,
-  ButtonDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TableDirective,
-  ModalBodyComponent,
-  ModalComponent,
-  ModalFooterComponent,
-  ModalHeaderComponent,
-  ModalTitleDirective,
-  ModalToggleDirective,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent, AlertLinkDirective,
-  ButtonCloseDirective,
-} from '@coreui/angular';
+import { ButtonDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, RowComponent, TableDirective, ModalBodyComponent, ModalComponent, ModalFooterComponent, ModalHeaderComponent, ModalTitleDirective, ModalToggleDirective, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, ButtonCloseDirective } from '@coreui/angular';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import Swal from 'sweetalert2';
 import { AphHojaRuta, AphHojaRuta_medicamentos, AphHojaRuta_pacientes, AphHojaRuta_tipoEmergencia, AphHojaRuta_vehiculos } from '../models/aph-hojaruta.model';
@@ -51,14 +19,11 @@ import { IntervencionesService } from '../services/intervenciones.service';
 
 @Component({
   selector: 'app-aph-hoja-ruta-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent, AlertLinkDirective, TableDirective, ModalBodyComponent,
-    ModalComponent,
-    ModalFooterComponent,
-    ModalHeaderComponent,
-    ModalTitleDirective,
-    ModalToggleDirective, ButtonCloseDirective
-  ],
+  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent,
+    ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective, RouterLink, TextColorDirective, FormDirective,
+    FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective,
+    TableDirective, ModalBodyComponent, ModalComponent, ModalFooterComponent, ModalHeaderComponent, ModalTitleDirective, ModalToggleDirective,
+    ButtonCloseDirective],
   templateUrl: './aph-hoja-ruta-mantenimiento.component.html',
   styleUrl: './aph-hoja-ruta-mantenimiento.component.scss'
 })

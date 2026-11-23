@@ -63,7 +63,7 @@ export class HojaRutaService {
   }
 
   update(intervencion: AphHojaRuta) {
-    return this.http.put<any>(`${environment.API_URL}/servicios/subjefatura/estadisticas/setOrden.php`, intervencion)
+    return this.http.put<any>(`${environment.API_URL}/servicios/subjefatura/aph/setHojaRuta.php`, intervencion)
   }
 
   getProvincias() {

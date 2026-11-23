@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormControl, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { DocsExampleComponent } from '@docs-components/public-api';
 import { RowComponent, FormDirective, ColComponent, TextColorDirective, CardComponent, CardHeaderComponent, CardBodyComponent, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, ButtonGroupComponent, ButtonDirective } from '@coreui/angular';
 

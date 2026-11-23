@@ -25,6 +25,8 @@ export class BitacoraFlotaComponent implements OnInit {
   soloAlertas = false;
   orden: Orden = 'alertas';
   cargando = false;
+  /** Ya se hizo la primera consulta: las siguientes vienen del formulario */
+  private consultado = false;
   vehiculos: FilaFlotaBitacora[] = [];
   parametros: ParametrosBitacora | null = null;
   readonly colorAlerta = colorAlerta;
@@ -43,7 +45,14 @@ export class BitacoraFlotaComponent implements OnInit {
       Swal.fire('Fechas', 'Seleccione un rango válido: la fecha inicial no puede ser posterior a la final.', 'warning');
       return;
     }
-    this.router.navigate([], { queryParams: { desde: this.desde, hasta: this.hasta }, replaceUrl: true });
+    // Solo si el usuario cambió las fechas (al abrir sin fechas en la URL se usan las por defecto sin reescribirla:
+    // hacerlo inicia una transición de vista que interrumpe la de la navegación)
+    const q = this.route.snapshot.queryParamMap;
+    const enUrl = q.get('desde') !== null;
+    if ((enUrl || this.consultado) && (q.get('desde') !== this.desde || q.get('hasta') !== this.hasta)) {
+      this.router.navigate([], { queryParams: { desde: this.desde, hasta: this.hasta }, replaceUrl: true });
+    }
+    this.consultado = true;
     this.cargando = true;
     this.bitacora.getFlota(this.desde, this.hasta).subscribe({
       next: (r) => { this.vehiculos = r.vehiculos; this.parametros = r.parametros; this.cargando = false; },

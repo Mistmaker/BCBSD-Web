@@ -5,43 +5,9 @@ import { PersonalModel } from './../../tthh/models/personal.model';
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
-import {
-  AlertComponent,
-  AlertHeadingDirective,
-  BorderDirective,
-  ButtonDirective,
-  ButtonCloseDirective,
-  CardBodyComponent,
-  CardComponent,
-  CardFooterComponent,
-  CardGroupComponent,
-  CardHeaderComponent,
-  CardImgDirective,
-  CardLinkDirective,
-  CardSubtitleDirective,
-  CardTextDirective,
-  CardTitleDirective,
-  ColComponent,
-  GutterDirective,
-  ListGroupDirective,
-  ListGroupItemDirective,
-  RowComponent,
-  TabDirective,
-  TabPanelComponent,
-  TabsComponent,
-  TabsContentComponent,
-  TabsListComponent,
-  TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective,
-  TableDirective,
-  ModalBodyComponent,
-  ModalComponent,
-  ModalFooterComponent,
-  ModalHeaderComponent,
-  ModalTitleDirective,
-  ModalToggleDirective,
-} from '@coreui/angular';
+import { ButtonDirective, ButtonCloseDirective, CardBodyComponent, CardComponent, CardHeaderComponent, ColComponent, ListGroupDirective, ListGroupItemDirective, RowComponent, TabDirective, TabPanelComponent, TabsComponent, TabsContentComponent, TabsListComponent, TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, ModalBodyComponent, ModalComponent, ModalFooterComponent, ModalHeaderComponent, ModalTitleDirective, ModalToggleDirective } from '@coreui/angular';
 import Swal from 'sweetalert2';
 import { NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 // import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -52,23 +18,15 @@ import { AuthService } from '../../auth/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { finalize, map, switchMap } from 'rxjs/operators';
 
-import { Cargos, DistributivoModel, PelotonesModel, TropasModel } from './../models/distributivo.model';
+import { Cargos, DistributivoModel, TropasModel } from './../models/distributivo.model';
 
 @Component({
   selector: 'app-distributivo-mantenimiento',
-  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent, ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, NgTemplateOutlet, CardTitleDirective, CardTextDirective, ButtonDirective, CardSubtitleDirective, CardLinkDirective, RouterLink, ListGroupDirective, ListGroupItemDirective, CardFooterComponent, BorderDirective, CardGroupComponent, GutterDirective, CardImgDirective, TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent,
-    TextColorDirective, FormDirective, FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, FormSelectDirective, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, AlertComponent,
-    AlertHeadingDirective,
-    TableDirective,
-    ModalBodyComponent,
-    ModalComponent,
-    ModalFooterComponent,
-    ModalHeaderComponent,
-    ModalTitleDirective,
-    ModalToggleDirective,
-    ButtonCloseDirective,
-    // DragDropModule
-  ],
+  imports: [NgLabelTemplateDirective, NgOptionTemplateDirective, NgSelectComponent, ReactiveFormsModule, FormsModule, CommonModule, RowComponent,
+    ColComponent, CardComponent, CardHeaderComponent, CardBodyComponent, ButtonDirective, RouterLink, ListGroupDirective, ListGroupItemDirective,
+    TabsComponent, TabsListComponent, TabDirective, TabsContentComponent, TabPanelComponent, TextColorDirective, FormDirective,
+    FormLabelDirective, FormControlDirective, FormFeedbackComponent, InputGroupComponent, InputGroupTextDirective, ModalBodyComponent,
+    ModalComponent, ModalFooterComponent, ModalHeaderComponent, ModalTitleDirective, ModalToggleDirective, ButtonCloseDirective],
   templateUrl: './distributivo-mantenimiento.component.html',
   styleUrl: './distributivo-mantenimiento.component.scss'
 })

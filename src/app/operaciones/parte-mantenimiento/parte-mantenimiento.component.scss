@@ -81,3 +81,18 @@
     align-self: flex-start;
   }
 }
+fieldset {
+  min-width: 0;
+}
+
+.vehiculos .col-vehiculo {
+  min-width: 220px;
+}
+
+.vehiculos input[type='datetime-local'] {
+  min-width: 190px;
+}
+
+.detail-table select[aria-label='Rol'] {
+  min-width: 190px;
+}
