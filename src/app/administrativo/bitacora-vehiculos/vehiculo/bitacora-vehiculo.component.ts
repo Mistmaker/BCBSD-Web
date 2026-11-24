@@ -13,6 +13,8 @@ import {
   rangoPorDefecto, RespuestaVehiculo, TipoEvento, TIPOS_EVENTO
 } from '../../models/bitacora.model';
 import { BitacoraService } from '../../services/bitacora.service';
+import { PdfService } from '../../../core/pdf.service';
+import { coloresImpresion, formatoDolares, IMPRESION_ANCHO, imagenGrafico, recortarInicio } from '../../../core/grafico-impresion';
 
 @Component({
   selector: 'app-bitacora-vehiculo',
@@ -31,11 +33,13 @@ export class BitacoraVehiculoComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly pdf = inject(PdfService);
 
   id = 0;
   desde = rangoPorDefecto().desde;
   hasta = rangoPorDefecto().hasta;
   cargando = false;
+  imprimiendo = false;
   /** Ya se hizo la primera consulta: las siguientes vienen del formulario */
   private consultado = false;
   verTablaGasto = false;
@@ -102,6 +106,17 @@ export class BitacoraVehiculoComponent implements OnInit {
     });
   }
 
+  /** Informe imprimible del vehículo con el período de la última consulta */
+  imprimir(): void {
+    const d = this.datos();
+    if (!d) {
+      return;
+    }
+    this.imprimiendo = true;
+    this.pdf.abrirPost(this.bitacora.urlInformeVehiculo(), { id: d.vehiculo.vehiculo_id, desde: d.desde, hasta: d.hasta, graficos: graficosInformeVehiculo(d) })
+      .then(() => this.imprimiendo = false);
+  }
+
   alternarTipo(tipo: TipoEvento): void {
     const s = new Set(this.tiposVisibles());
     if (s.has(tipo)) { s.delete(tipo); } else { s.add(tipo); }
@@ -131,4 +146,14 @@ export class BitacoraVehiculoComponent implements OnInit {
   totalGasto(): number {
     return (this.datos()?.gasto_mensual ?? []).reduce((s, m) => s + m.total, 0);
   }
+}
+
+/** Gráficos del informe del vehículo: los mismos del tablero (rendimiento por carga y gasto mensual desde el primer mes con gasto) */
+export function graficosInformeVehiculo(d: RespuestaVehiculo): Record<string, string | null> {
+  const c = coloresImpresion();
+  return {
+    rendimiento: imagenGrafico('line', graficoRendimiento(d.tramos, d.comparacion.rendimiento.promedio_pares, c), opcionesGrafico(c, 'km/gal'),
+      IMPRESION_ANCHO, 600, { valores: false }),
+    gasto: imagenGrafico('bar', recortarInicio(graficoGasto(d.gasto_mensual, d.rubros, c)), opcionesGrafico(c, 'USD', true), IMPRESION_ANCHO, 600, { formato: formatoDolares }),
+  };
 }

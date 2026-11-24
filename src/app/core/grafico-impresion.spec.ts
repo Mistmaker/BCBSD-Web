@@ -1,4 +1,4 @@
-import { altoBarrasImpresion, coloresImpresion, etiquetasValores, imagenGrafico, opcionesImpresion } from './grafico-impresion';
+import { altoBarrasImpresion, engrosarLineas, formatoDolares, recortarInicio, coloresImpresion, etiquetasValores, imagenGrafico, opcionesImpresion } from './grafico-impresion';
 import { graficoPartesMes, graficoTop, opcionesConteo } from '../operaciones/models/partes-estadisticas.model';
 
 describe('grafico-impresion', () => {
@@ -31,6 +31,7 @@ describe('grafico-impresion', () => {
   it('etiquetas: valor por barra o total de la pila', () => {
     expect(etiquetasValores([{ data: [1200, 0, 3] }])).toEqual([['1.200', null, '3']]);
     expect(etiquetasValores([{ data: [1, 0] }, { data: [2, 0] }])).toEqual([[null, null], ['3', null]]);
+    expect(etiquetasValores([{ data: [1234.4] }], formatoDolares)).toEqual([['$1.234']]);
   });
 
   it('dibuja un PNG del tamaño pedido y null sin datos', (done) => {
@@ -42,5 +43,21 @@ describe('grafico-impresion', () => {
     img.onload = () => { expect([img.width, img.height]).toEqual([800, 300]); done(); };
     img.src = png!;
     expect(imagenGrafico('bar', graficoTop([], (x: any) => x, () => 0, c.series[0]), opcionesConteo(c), 800, 300)).toBeNull();
+  });
+
+  it('engrosa líneas sin modificar los datos del tablero', () => {
+    const data: any = { labels: ['a'], datasets: [{ data: [1], borderWidth: 2, pointRadius: 0, borderDash: [6, 4] }] };
+    const g: any = engrosarLineas(data);
+    expect(g.datasets[0].borderWidth).toBe(5);
+    expect(g.datasets[0].pointRadius).toBe(0);
+    expect(g.datasets[0].borderDash).toEqual([15, 10]);
+    expect(data.datasets[0].borderWidth).toBe(2);
+  });
+
+  it('recorta los meses iniciales vacíos', () => {
+    const g = recortarInicio({ labels: ['e', 'f', 'm', 'a'], datasets: [{ data: [0, 0, 3, 0] }, { data: [0, 0, 0, 1] }] });
+    expect(g.labels).toEqual(['m', 'a']);
+    expect(g.datasets[1].data).toEqual([0, 1]);
+    expect(recortarInicio({ labels: ['e'], datasets: [{ data: [0] }] }).labels).toEqual(['e']);
   });
 });

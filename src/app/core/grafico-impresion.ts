@@ -50,22 +50,62 @@ export function opcionesImpresion(opciones: ChartOptions, fuente = IMPRESION_FUE
 }
 
 /** Texto de cada valor sobre su barra; en barras apiladas, el total de la pila. Ceros sin etiqueta. */
-export function etiquetasValores(datasets: { data: (number | null)[] }[]): (string | null)[][] {
+export function etiquetasValores(datasets: { data: (number | null)[] }[], formato: (v: number) => string = formatoNumero): (string | null)[][] {
   if (datasets.length === 1) {
-    return [datasets[0].data.map(v => (v ? new Intl.NumberFormat('es-EC').format(v) : null))];
+    return [datasets[0].data.map(v => (v ? formato(v) : null))];
   }
   const totales = datasets[0].data.map((_, i) => datasets.reduce((s, d) => s + Number(d.data[i] ?? 0), 0));
-  return datasets.map((_, j) => j === datasets.length - 1 ? totales.map(t => (t ? new Intl.NumberFormat('es-EC').format(t) : null)) : totales.map(() => null));
+  return datasets.map((_, j) => j === datasets.length - 1 ? totales.map(t => (t ? formato(t) : null)) : totales.map(() => null));
 }
 
+/** 1234.5 -> '1.234,5' */
+export function formatoNumero(v: number): string {
+  return new Intl.NumberFormat('es-EC', { maximumFractionDigits: 1 }).format(v);
+}
+
+/** 1234.5 -> '$1.235' (sin decimales: etiqueta corta sobre la barra) */
+export function formatoDolares(v: number): string {
+  return '$' + new Intl.NumberFormat('es-EC', { maximumFractionDigits: 0 }).format(v);
+}
+
+/** Con más categorías que esto, los valores sobre las barras se encimarían: no se escriben */
+export const IMPRESION_MAX_ETIQUETAS = 24;
+
+/** Líneas y puntos más gruesos para el tamaño de impresión (copia; no modifica los datos del tablero) */
+export function engrosarLineas(data: ChartData, factor = 2.5): ChartData {
+  return {
+    ...data,
+    datasets: data.datasets.map((d: any) => ({
+      ...d,
+      borderWidth: (d.borderWidth ?? 2) * factor,
+      pointRadius: (d.pointRadius ?? 3) * factor,
+      pointBorderWidth: (d.pointBorderWidth ?? 1) * factor,
+      ...(d.borderDash ? { borderDash: d.borderDash.map((x: number) => x * factor) } : {}),
+    })),
+  } as ChartData;
+}
+
+/** Quita los meses iniciales sin valores (rango largo consultado antes de que hubiera datos) */
+export function recortarInicio(data: ChartData): ChartData {
+  const n = data.labels?.length ?? 0;
+  let i = 0;
+  while (i < n - 1 && data.datasets.every(d => !Number(d.data[i] ?? 0))) {
+    i++;
+  }
+  return i === 0 ? data : { ...data, labels: data.labels!.slice(i), datasets: data.datasets.map(d => ({ ...d, data: d.data.slice(i) })) } as ChartData;
+}
+
+/** Opciones de imagenGrafico */
+export interface OpcionesImagen { valores?: boolean; fuente?: number; formato?: (v: number) => string; }
+
 /** Plugin que escribe los valores (etiquetasValores) al final de cada barra */
-function pluginValores(fuente: number, color: string): Plugin {
+function pluginValores(fuente: number, color: string, formato: (v: number) => string): Plugin {
   return {
     id: 'valoresImpresion',
     afterDatasetsDraw(chart) {
       const ctx = chart.ctx;
       const horizontal = (chart.options as any).indexAxis === 'y';
-      const textos = etiquetasValores(chart.data.datasets as any);
+      const textos = etiquetasValores(chart.data.datasets as any, formato);
       ctx.save();
       ctx.font = `600 ${Math.round(fuente * 0.9)}px sans-serif`;
       ctx.fillStyle = color;
@@ -89,10 +129,15 @@ function pluginValores(fuente: number, color: string): Plugin {
  * El fondo es blanco para que el PDF no muestre transparencias.
  */
 export function imagenGrafico(tipo: ChartType, data: ChartData | null, opciones: ChartOptions, ancho: number, alto: number,
-                              valores = true, fuente = IMPRESION_FUENTE): string | null {
+                              extra: OpcionesImagen = {}): string | null {
+  const { valores = true, fuente = IMPRESION_FUENTE, formato = formatoNumero } = extra;
   if (!data || !data.datasets.length || !(data.labels?.length)) {
     return null;
   }
+  if (tipo === 'line') {
+    data = engrosarLineas(data);
+  }
+  const conValores = valores && tipo === 'bar' && (data.labels?.length ?? 0) <= IMPRESION_MAX_ETIQUETAS;
   const canvas = document.createElement('canvas');
   canvas.width = ancho;
   canvas.height = alto;
@@ -107,7 +152,7 @@ export function imagenGrafico(tipo: ChartType, data: ChartData | null, opciones:
   };
   const grafico = new Chart(canvas, {
     type: tipo, data: data as any, options: opcionesImpresion(opciones, fuente) as any,
-    plugins: valores && tipo === 'bar' ? [fondo, pluginValores(fuente, '#333333')] : [fondo],
+    plugins: conValores ? [fondo, pluginValores(fuente, '#333333', formato)] : [fondo],
   });
   try {
     return grafico.toBase64Image('image/png');

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,7 +7,10 @@ import { BadgeComponent, ButtonDirective, CardBodyComponent, CardComponent, Card
 import Swal from 'sweetalert2';
 
 import { FiltroGeneralPipe } from '../../../pipes/filtro-general.pipe';
-import { colorAlerta, FilaFlotaBitacora, ParametrosBitacora, rangoPorDefecto } from '../../models/bitacora.model';
+import { colorAlerta, FilaFlotaBitacora, graficoGastoFlota, ParametrosBitacora, rangoPorDefecto } from '../../models/bitacora.model';
+import { PdfService } from '../../../core/pdf.service';
+import { altoBarrasImpresion, coloresImpresion, formatoDolares, imagenGrafico } from '../../../core/grafico-impresion';
+import { opcionesConteo } from '../../../operaciones/models/partes-estadisticas.model';
 import { BitacoraService } from '../../services/bitacora.service';
 
 type Orden = 'alertas' | 'sigla' | 'costo_total_km' | 'rendimiento_dif_pct' | 'gasto_mantenimiento' | 'km_recorridos';
@@ -25,6 +28,10 @@ export class BitacoraFlotaComponent implements OnInit {
   soloAlertas = false;
   orden: Orden = 'alertas';
   cargando = false;
+  imprimiendo = false;
+  /** Rango de la última consulta: el informe se genera con este */
+  private rango = { desde: this.desde, hasta: this.hasta };
+  private readonly pdf = inject(PdfService);
   /** Ya se hizo la primera consulta: las siguientes vienen del formulario */
   private consultado = false;
   vehiculos: FilaFlotaBitacora[] = [];
@@ -55,9 +62,16 @@ export class BitacoraFlotaComponent implements OnInit {
     this.consultado = true;
     this.cargando = true;
     this.bitacora.getFlota(this.desde, this.hasta).subscribe({
-      next: (r) => { this.vehiculos = r.vehiculos; this.parametros = r.parametros; this.cargando = false; },
+      next: (r) => { this.vehiculos = r.vehiculos; this.parametros = r.parametros; this.rango = { desde: r.desde, hasta: r.hasta }; this.cargando = false; },
       error: (e) => { this.cargando = false; Swal.fire('Error', 'No se pudo calcular la bitácora. ' + (e.error?.msg ?? e.message), 'error'); }
     });
+  }
+
+  /** Informe imprimible de la flota (todos los vehículos activos del período consultado) */
+  imprimir(): void {
+    this.imprimiendo = true;
+    this.pdf.abrirPost(this.bitacora.urlInformeFlota(), { ...this.rango, graficos: graficosInformeFlota(this.vehiculos) })
+      .then(() => this.imprimiendo = false);
   }
 
   get filas(): FilaFlotaBitacora[] {
@@ -92,4 +106,12 @@ export function ordenarFlota(lista: FilaFlotaBitacora[], orden: Orden): FilaFlot
     km_recorridos: (a, b) => b.km_recorridos - a.km_recorridos,
   };
   return lista.sort(cmp[orden]);
+}
+
+/** Gráfico del informe de la flota: gasto por vehículo (combustible y mantenimiento) */
+export function graficosInformeFlota(vehiculos: FilaFlotaBitacora[]): Record<string, string | null> {
+  const c = coloresImpresion();
+  const datos = graficoGastoFlota(vehiculos, c);
+  return { gasto: imagenGrafico('bar', datos, opcionesConteo(c, { horizontal: true, apilado: true, unidad: 'USD' }), 1600,
+    altoBarrasImpresion(datos.labels?.length ?? 0) + 40, { formato: formatoDolares }) };
 }
