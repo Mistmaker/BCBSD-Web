@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from '../auth/auth.guard';
 import { permisoGuard } from '../auth/permiso.guard';
 
-// Administración del sistema (/adm). Privilegios en BCBSD-Api: migrations/admin/01-usuarios-perfiles.sql
+// Administración del sistema (/adm). Privilegios en BCBSD-Api: migrations/admin/01-usuarios-perfiles.sql y 04-parametros.sql
 const routes: Routes = [
   {
     path: 'dashboard',
@@ -29,6 +29,11 @@ const routes: Routes = [
     path: 'perfiles/:id',
     loadComponent: () => import('./perfiles-mantenimiento/perfiles-mantenimiento.component').then(m => m.PerfilesMantenimientoComponent),
     data: { permiso: 'SIS_PERFILES', title: 'Perfil' }, canActivate: [AuthGuard, permisoGuard]
+  },
+  {
+    path: 'parametros',
+    loadComponent: () => import('./parametros/parametros.component').then(m => m.ParametrosComponent),
+    data: { permiso: 'SIS_PARAMETROS', title: 'Parámetros' }, canActivate: [AuthGuard, permisoGuard]
   },
 ];
 

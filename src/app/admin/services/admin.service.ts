@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import {
   ModuloPrivilegios, PerfilDetalle, PerfilGuardar, PerfilModel, PersonaUsuario, UsuarioGuardar, UsuarioModel
 } from '../models/usuarios.model';
+import { HistorialParametro, RespuestaParametros } from '../models/parametros.model';
 
 type Respuesta = { msg: string; id: number };
 
@@ -13,6 +14,17 @@ export class AdminService {
   private readonly auth = `${environment.API_URL}/servicios/auth`;
 
   constructor(private http: HttpClient) { }
+
+  // Parámetros del sistema
+  getParametros() {
+    return this.http.get<RespuestaParametros>(`${this.admin}/getParametros.php`);
+  }
+  getHistorialParametro(id: number) {
+    return this.http.get<HistorialParametro[]>(`${this.admin}/getParametros.php`, { params: { historial: id } });
+  }
+  guardarParametro(param_id: number, param_value: string | string[]) {
+    return this.http.put<{ msg: string; param_value: string }>(`${this.admin}/setParametro.php`, { param_id, param_value });
+  }
 
   // Usuarios
   getAll() {

@@ -1,0 +1,212 @@
+<c-card class="mb-4">
+  <c-card-header style="background-color: #bf0411; color: white;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <strong>Administración - Parámetros del sistema</strong>
+      <button cButton type="button" color="light" size="sm" (click)="cargar()" [disabled]="cargando()" title="Volver a cargar">
+        <i class="fa-solid fa-rotate"></i> Actualizar
+      </button>
+    </div>
+  </c-card-header>
+  <c-card-body>
+    <p class="small text-body-secondary mb-3">
+      Valores configurables de cada módulo (cargos que firman, listas, alertas, formatos, mapas...). Cada parámetro se edita con un editor
+      según su tipo; el cambio rige de inmediato y queda en el historial. La llave y el tipo los define el sistema.
+    </p>
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-8">
+        <c-input-group>
+          <span cInputGroupText><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <input cFormControl id="buscar" name="buscar" placeholder="Buscar por llave, nombre o valor. Ej.: MANT_RUBROS, firma, mapa..." aria-label="Buscar parámetro"
+                 [ngModel]="texto()" (ngModelChange)="texto.set($event)" />
+        </c-input-group>
+      </div>
+      <div class="col-12 col-md-4">
+        <select cSelect id="modulo" name="modulo" aria-label="Módulo" [ngModel]="modulo()" (ngModelChange)="modulo.set($event)">
+          <option value="">Todos los módulos</option>
+          <option *ngFor="let m of modulos()" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="text-center py-4" *ngIf="cargando() && !datos()"><c-spinner size="sm"></c-spinner> Cargando...</div>
+    <ng-container *ngIf="datos() as d">
+      <p class="small text-body-secondary mb-2">{{ filtrados().length }} de {{ d.parametros.length }} parámetros</p>
+      <div class="table-responsive">
+        <table cTable hover small class="align-middle tabla-parametros">
+          <thead>
+            <tr><th style="width: 32%">Parámetro</th><th>Valor</th><th style="width: 9rem">Actualizado</th><th style="width: 6.5rem"></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="!filtrados().length"><td colspan="4" class="text-center text-body-secondary">Ningún parámetro coincide con la búsqueda</td></tr>
+            <tr *ngFor="let p of filtrados()">
+              <td>
+                <div class="llave">{{ p.param_key }}</div>
+                <div class="small">{{ p.param_name }}</div>
+                <c-badge color="secondary" class="me-1">{{ p.param_modulo }}</c-badge>
+                <c-badge color="info" textColor="dark"><i class="fa-solid" [ngClass]="icono[p.param_type]" aria-hidden="true"></i> {{ etiquetaTipo(p.param_type) }}</c-badge>
+              </td>
+              <td [ngSwitch]="p.param_type">
+                <ng-container *ngSwitchCase="'LISTA'">
+                  <c-badge color="light" textColor="dark" class="me-1 mb-1 border" *ngFor="let x of lista(p.param_value).slice(0, 8)">{{ x }}</c-badge>
+                  <span class="small text-body-secondary" *ngIf="lista(p.param_value).length > 8">+{{ lista(p.param_value).length - 8 }} más</span>
+                  <span class="small text-body-secondary" *ngIf="!lista(p.param_value).length">(vacía)</span>
+                </ng-container>
+                <c-badge *ngSwitchCase="'SI_NO'" [color]="p.param_value === 'SI' ? 'success' : 'secondary'">{{ p.param_value === 'SI' ? 'Sí' : 'No' }}</c-badge>
+                <span *ngSwitchCase="'COLOR'"><span class="muestra-color me-1" [style.background-color]="p.param_value"></span> {{ p.param_value }}</span>
+                <span *ngSwitchCase="'JSON'" class="valor-codigo">{{ resumen(p) }}</span>
+                <span *ngSwitchCase="'HTML'" class="valor-codigo">{{ resumen(p) }}</span>
+                <span *ngSwitchDefault [class.text-body-secondary]="!p.param_value">{{ resumen(p) || '(vacío)' }}</span>
+              </td>
+              <td class="small text-nowrap">
+                <ng-container *ngIf="p.param_actualizado; else sinCambios">{{ p.param_actualizado | date: 'dd/MM/yyyy HH:mm' }}<br />
+                  <span class="text-body-secondary">{{ p.actualizado_por }}</span></ng-container>
+                <ng-template #sinCambios><span class="text-body-secondary">—</span></ng-template>
+              </td>
+              <td class="text-end">
+                <button cButton size="sm" variant="outline" [color]="editable(p) ? 'primary' : 'secondary'" type="button" (click)="abrir(p)"
+                        [attr.aria-label]="(editable(p) ? 'Editar ' : 'Ver ') + p.param_key">
+                  <i class="fa-solid" [class.fa-pen]="editable(p)" [class.fa-eye]="!editable(p)" aria-hidden="true"></i> {{ editable(p) ? 'Editar' : 'Ver' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </c-card-body>
+</c-card>
+
+<c-modal [visible]="!!editando" (visibleChange)="!$event && cerrar()" alignment="center" size="lg" scrollable backdrop="static">
+  <ng-container *ngIf="editando as p">
+    <c-modal-header style="background-color: #bf0411; color: white;">
+      <h5 cModalTitle class="text-break"><i class="fa-solid fa-gear" aria-hidden="true"></i> {{ p.param_key }}</h5>
+      <button cButtonClose white type="button" (click)="cerrar()" aria-label="Cerrar"></button>
+    </c-modal-header>
+    <c-modal-body>
+      <p class="mb-1">{{ p.param_name }}</p>
+      <p class="small text-body-secondary">
+        Módulo <strong>{{ p.param_modulo }}</strong> · Tipo <strong>{{ etiquetaTipo(p.param_type) }}</strong>
+        <span *ngIf="!editable(p)"> · <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{ datos()?.puede_editar ? 'Solo un administrador del sistema puede cambiarlo' : 'Solo lectura' }}</span>
+      </p>
+
+      <fieldset [disabled]="!editable(p) || guardando" [ngSwitch]="p.param_type">
+        <legend class="visually-hidden">Valor</legend>
+        <!-- Número -->
+        <ng-container *ngSwitchCase="'NUMERO'">
+          <label for="v_numero" class="form-label">Valor</label>
+          <input cFormControl id="v_numero" name="v_numero" type="text" inputmode="decimal" [(ngModel)]="valor" style="max-width: 220px" />
+        </ng-container>
+        <!-- Texto simple -->
+        <ng-container *ngSwitchCase="'TEXTO'">
+          <label for="v_texto" class="form-label">Valor</label>
+          <input cFormControl id="v_texto" name="v_texto" [(ngModel)]="valor" />
+        </ng-container>
+        <!-- Sí / No -->
+        <ng-container *ngSwitchCase="'SI_NO'">
+          <c-button-group role="group" aria-label="Valor">
+            <button cButton type="button" color="success" [variant]="valor === 'SI' ? undefined : 'outline'" (click)="valor = 'SI'" [attr.aria-pressed]="valor === 'SI'">Sí</button>
+            <button cButton type="button" color="secondary" [variant]="valor === 'NO' ? undefined : 'outline'" (click)="valor = 'NO'" [attr.aria-pressed]="valor === 'NO'">No</button>
+          </c-button-group>
+        </ng-container>
+        <!-- Color -->
+        <ng-container *ngSwitchCase="'COLOR'">
+          <label for="v_color" class="form-label">Color</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="color" id="v_color_sel" aria-label="Seleccionar color" class="form-control form-control-color" [ngModel]="valor" (ngModelChange)="valor = $event.toUpperCase()" />
+            <input cFormControl id="v_color" name="v_color" [(ngModel)]="valor" style="max-width: 140px" />
+          </div>
+        </ng-container>
+        <!-- Lista -->
+        <ng-container *ngSwitchCase="'LISTA'">
+          <label class="form-label">Elementos <span class="small text-body-secondary">(en el orden en que aparecen en el sistema)</span></label>
+          <table cTable small class="mb-2 align-middle">
+            <tbody>
+              <tr *ngFor="let x of items; let i = index; let primero = first; let ultimo = last; trackBy: indice">
+                <td class="text-body-secondary small" style="width: 2rem">{{ i + 1 }}</td>
+                <td><input cFormControl sizing="sm" [id]="'item_' + i" [name]="'item_' + i" [attr.aria-label]="'Elemento ' + (i + 1)" [ngModel]="x" (ngModelChange)="items[i] = $event" /></td>
+                <td class="text-end text-nowrap">
+                  <button cButton size="sm" variant="ghost" color="secondary" type="button" [disabled]="primero" (click)="moverItem(i, -1)" aria-label="Subir"><i class="fa-solid fa-arrow-up"></i></button>
+                  <button cButton size="sm" variant="ghost" color="secondary" type="button" [disabled]="ultimo" (click)="moverItem(i, 1)" aria-label="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
+                  <button cButton size="sm" variant="ghost" color="danger" type="button" (click)="quitarItem(i)" aria-label="Quitar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr *ngIf="!items.length"><td colspan="3" class="small text-body-secondary">Lista vacía</td></tr>
+            </tbody>
+          </table>
+          <c-input-group size="sm">
+            <input cFormControl id="nuevo_item" name="nuevo_item" placeholder="Nuevo elemento" aria-label="Nuevo elemento" [(ngModel)]="nuevoItem" (keydown.enter)="$event.preventDefault(); agregarItem()" />
+            <button cButton color="secondary" type="button" (click)="agregarItem()"><i class="fa-solid fa-plus"></i> Agregar</button>
+          </c-input-group>
+        </ng-container>
+        <!-- JSON -->
+        <ng-container *ngSwitchCase="'JSON'">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <c-button-group size="sm" role="group" aria-label="Vista del JSON">
+              <button cButton color="secondary" variant="outline" type="button" [active]="vistaJson === 'tabla'" (click)="cambiarVistaJson('tabla')"><i class="fa-solid fa-table"></i> Tabla</button>
+              <button cButton color="secondary" variant="outline" type="button" [active]="vistaJson === 'texto'" (click)="cambiarVistaJson('texto')"><i class="fa-solid fa-code"></i> Texto JSON</button>
+            </c-button-group>
+            <button *ngIf="vistaJson === 'texto'" cButton size="sm" color="secondary" variant="ghost" type="button" (click)="formatear()"><i class="fa-solid fa-indent"></i> Formatear</button>
+          </div>
+          <ng-container *ngIf="vistaJson === 'tabla' && tabla">
+            <table cTable small class="mb-2 align-middle">
+              <thead><tr><th *ngIf="tabla.forma === 'objeto'">Clave</th><th>Valor</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let f of tabla.filas; let i = index; let primero = first; let ultimo = last">
+                  <td *ngIf="tabla.forma === 'objeto'"><input cFormControl sizing="sm" class="font-monospace" [id]="'clave_' + i" [name]="'clave_' + i" [attr.aria-label]="'Clave ' + (i + 1)" [(ngModel)]="f.clave" /></td>
+                  <td><input cFormControl sizing="sm" [id]="'valor_' + i" [name]="'valor_' + i" [attr.aria-label]="'Valor ' + (i + 1)" [(ngModel)]="f.valor" /></td>
+                  <td class="text-end text-nowrap">
+                    <ng-container *ngIf="tabla.forma === 'arreglo'">
+                      <button cButton size="sm" variant="ghost" color="secondary" type="button" [disabled]="primero" (click)="moverFila(i, -1)" aria-label="Subir"><i class="fa-solid fa-arrow-up"></i></button>
+                      <button cButton size="sm" variant="ghost" color="secondary" type="button" [disabled]="ultimo" (click)="moverFila(i, 1)" aria-label="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
+                    </ng-container>
+                    <button cButton size="sm" variant="ghost" color="danger" type="button" (click)="quitarFila(i)" aria-label="Quitar"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button cButton size="sm" color="secondary" type="button" (click)="agregarFila()"><i class="fa-solid fa-plus"></i> Agregar fila</button>
+          </ng-container>
+          <textarea *ngIf="vistaJson === 'texto'" cFormControl id="v_json" name="v_json" class="editor-codigo" aria-label="Texto JSON" spellcheck="false" [(ngModel)]="valor"></textarea>
+        </ng-container>
+        <!-- HTML -->
+        <ng-container *ngSwitchCase="'HTML'">
+          <c-button-group size="sm" role="group" aria-label="Vista del HTML" class="mb-2">
+            <button cButton color="secondary" variant="outline" type="button" [active]="vistaHtml === 'codigo'" (click)="vistaHtml = 'codigo'"><i class="fa-solid fa-code"></i> Código</button>
+            <button cButton color="secondary" variant="outline" type="button" [active]="vistaHtml === 'vista'" (click)="vistaHtml = 'vista'"><i class="fa-solid fa-eye"></i> Vista previa</button>
+          </c-button-group>
+          <textarea *ngIf="vistaHtml === 'codigo'" cFormControl id="v_html" name="v_html" class="editor-codigo" aria-label="Código HTML" spellcheck="false" [(ngModel)]="valor"></textarea>
+          <div *ngIf="vistaHtml === 'vista'" class="vista-html" [innerHTML]="valor"></div>
+        </ng-container>
+        <!-- Texto largo -->
+        <ng-container *ngSwitchDefault>
+          <label for="v_largo" class="form-label">Valor</label>
+          <textarea cFormControl id="v_largo" name="v_largo" rows="6" [(ngModel)]="valor"></textarea>
+        </ng-container>
+      </fieldset>
+      <div class="text-danger small mt-2" *ngIf="editable(p) && error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ error }}</div>
+
+      <details class="mt-3">
+        <summary class="small">Historial de cambios ({{ historial.length }})</summary>
+        <p class="small text-body-secondary mt-2 mb-0" *ngIf="!historial.length">Sin cambios registrados desde esta pantalla.</p>
+        <table cTable small class="mt-2 mb-0" *ngIf="historial.length">
+          <thead><tr><th>Fecha</th><th>Usuario</th><th>Anterior</th><th>Nuevo</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let h of historial">
+              <td class="text-nowrap small">{{ h.historial_fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="small">{{ h.usuario_login }}</td>
+              <td class="valor-codigo">{{ resumen({ param_type: p.param_type, param_value: h.historial_valor_anterior ?? '' }, 80) }}</td>
+              <td class="valor-codigo">{{ resumen({ param_type: p.param_type, param_value: h.historial_valor_nuevo ?? '' }, 80) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+    </c-modal-body>
+    <c-modal-footer>
+      <button cButton color="secondary" variant="outline" type="button" (click)="cerrar()">{{ editable(p) ? 'Cancelar' : 'Cerrar' }}</button>
+      <button *ngIf="editable(p)" cButton color="primary" type="button" (click)="guardar()" [disabled]="guardando || !!error">
+        <c-spinner *ngIf="guardando" size="sm"></c-spinner><i *ngIf="!guardando" class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+    </c-modal-footer>
+  </ng-container>
+</c-modal>
