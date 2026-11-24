@@ -42,7 +42,7 @@ export function opcionesImpresion(opciones: ChartOptions, fuente = IMPRESION_FUE
     escala.ticks = { ...(escala.ticks ?? {}), font: { size: fuente } };
     if (eje === 'x' && !horizontal) {
       // Etiquetas horizontales; si no caben todas (p. ej. 24 meses) se omiten algunas
-      escala.ticks = { ...escala.ticks, maxRotation: 0, autoSkip: true, autoSkipPadding: fuente / 2 };
+      escala.ticks = { ...escala.ticks, maxRotation: 0, autoSkip: true, autoSkipPadding: fuente / 2, maxTicksLimit: IMPRESION_MAX_ETIQUETAS };
     }
   }
   o.layout = { padding: horizontal ? { right: fuente * 3, top: 8 } : { top: fuente * 1.5, right: 8 } };
@@ -150,8 +150,12 @@ export function imagenGrafico(tipo: ChartType, data: ChartData | null, opciones:
       chart.ctx.restore();
     },
   };
+  const o: any = opcionesImpresion(opciones, fuente);
+  if (o.indexAxis !== 'y' && o.scales?.x && (data.labels?.length ?? 0) <= 12) {
+    o.scales.x.ticks.autoSkip = false; // hasta 12 categorías (p. ej. un año) caben todas en el ancho de la hoja
+  }
   const grafico = new Chart(canvas, {
-    type: tipo, data: data as any, options: opcionesImpresion(opciones, fuente) as any,
+    type: tipo, data: data as any, options: o,
     plugins: conValores ? [fondo, pluginValores(fuente, '#333333', formato)] : [fondo],
   });
   try {

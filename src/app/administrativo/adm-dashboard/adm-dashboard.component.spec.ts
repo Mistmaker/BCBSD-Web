@@ -3,7 +3,8 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ResumenGerencialService } from '../services/resumen-gerencial.service';
-import { AdmDashboardComponent } from './adm-dashboard.component';
+import { PdfService } from '../../core/pdf.service';
+import { AdmDashboardComponent, graficosInformeResumen } from './adm-dashboard.component';
 
 describe('AdmDashboardComponent', () => {
   const resumen = {
@@ -22,7 +23,7 @@ describe('AdmDashboardComponent', () => {
 
   it('muestra las cifras principales, la variación y lo que requiere atención', () => {
     const getResumen = jasmine.createSpy().and.returnValue(of(resumen));
-    TestBed.configureTestingModule({ imports: [AdmDashboardComponent], providers: [provideRouter([]), { provide: ResumenGerencialService, useValue: { getResumen } }] });
+    TestBed.configureTestingModule({ imports: [AdmDashboardComponent], providers: [provideRouter([]), { provide: ResumenGerencialService, useValue: { getResumen } }, { provide: PdfService, useValue: {} }] });
     const f = TestBed.createComponent(AdmDashboardComponent);
     f.detectChanges();
     expect(getResumen).toHaveBeenCalledWith(f.componentInstance.mes);
@@ -34,5 +35,19 @@ describe('AdmDashboardComponent', () => {
     expect(texto).toContain('trabajo repetido');
     expect(texto).toContain('2 vencidas');
     expect(texto).toContain('95 %');                       // contrato casi agotado
+  });
+
+  it('imprime el mes consultado con el gráfico de 12 meses', () => {
+    const abrirPost = jasmine.createSpy().and.returnValue(Promise.resolve());
+    TestBed.configureTestingModule({ imports: [AdmDashboardComponent], providers: [provideRouter([]),
+      { provide: ResumenGerencialService, useValue: { getResumen: () => of(resumen), urlInforme: () => 'u' } }, { provide: PdfService, useValue: { abrirPost } }] });
+    const f = TestBed.createComponent(AdmDashboardComponent);
+    f.detectChanges();
+    (f.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[title^="Informe"]')!.click();
+    const [url, cuerpo] = abrirPost.calls.mostRecent().args;
+    expect(url).toBe('u');
+    expect(cuerpo.mes).toBe('2026-11');
+    expect(cuerpo.graficos.gasto).toMatch(/^data:image\/png;base64,/);
+    expect(graficosInformeResumen(resumen as any)['gasto']).toMatch(/^data:image\/png;base64,/);
   });
 });

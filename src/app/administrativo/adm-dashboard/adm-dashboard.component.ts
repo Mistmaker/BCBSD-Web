@@ -10,6 +10,8 @@ import Swal from 'sweetalert2';
 import { coloresGrafico, etiquetaSerie, nombreMes, opcionesGrafico } from '../models/bitacora.model';
 import { graficoGastoMensual, porcentajeConsumido, ResumenGerencial, TEXTO_ALERTA, variacion } from '../models/resumen-gerencial.model';
 import { ResumenGerencialService } from '../services/resumen-gerencial.service';
+import { PdfService } from '../../core/pdf.service';
+import { coloresImpresion, formatoDolares, IMPRESION_ANCHO, imagenGrafico } from '../../core/grafico-impresion';
 
 /**
  * Resumen gerencial de la Dirección Administrativa (/admin/dashboard, ADM_DASHBOARD): cifras simples para la dirección.
@@ -30,9 +32,11 @@ import { ResumenGerencialService } from '../services/resumen-gerencial.service';
 export class AdmDashboardComponent implements OnInit {
   private readonly servicio = inject(ResumenGerencialService);
   private readonly colorMode = inject(ColorModeService).colorMode;
+  private readonly pdf = inject(PdfService);
 
   mes = new Date().toISOString().slice(0, 7);
   cargando = false;
+  imprimiendo = false;
   verTabla = false;
   readonly datos = signal<ResumenGerencial | null>(null);
   readonly nombreMes = nombreMes;
@@ -61,6 +65,16 @@ export class AdmDashboardComponent implements OnInit {
     });
   }
 
+  /** Informe imprimible del mes consultado */
+  imprimir(): void {
+    const d = this.datos();
+    if (!d) {
+      return;
+    }
+    this.imprimiendo = true;
+    this.pdf.abrirPost(this.servicio.urlInforme(), { mes: d.mes, graficos: graficosInformeResumen(d) }).then(() => this.imprimiendo = false);
+  }
+
   variacion(actual: number, anterior: number | undefined): number | null {
     return variacion(Number(actual), anterior !== undefined ? Number(anterior) : null);
   }
@@ -68,4 +82,10 @@ export class AdmDashboardComponent implements OnInit {
   totalMes(m: { combustible: number; mantenimiento: number }): number {
     return Number(m.combustible) + Number(m.mantenimiento);
   }
+}
+
+/** Gráfico del informe: gasto de los últimos 12 meses (el mismo del tablero) */
+export function graficosInformeResumen(d: ResumenGerencial): Record<string, string | null> {
+  const c = coloresImpresion();
+  return { gasto: imagenGrafico('bar', graficoGastoMensual(d.gasto.meses, c), opcionesGrafico(c, 'USD', true), IMPRESION_ANCHO, 600, { formato: formatoDolares }) };
 }
