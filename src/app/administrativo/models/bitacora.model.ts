@@ -185,3 +185,16 @@ export function opcionesGrafico(c: ColoresGrafico, unidad: 'km/gal' | 'USD', api
     },
   };
 }
+
+/** Gasto por vehículo (informe de la flota): combustible y mantenimiento apilados, los n de mayor gasto total. */
+export function graficoGastoFlota(filas: FilaFlotaBitacora[], c: ColoresGrafico, n = 15): ChartData<'bar', number[], string> {
+  const top = [...filas].filter(v => v.costo_total > 0).sort((a, b) => b.costo_total - a.costo_total).slice(0, n);
+  const serie = (label: string, i: number, datos: number[]) => ({
+    label, data: datos, backgroundColor: c.series[i], borderColor: c.superficie, borderWidth: { top: 0, bottom: 0, left: 0, right: 2 },
+    borderSkipped: false, borderRadius: 0, maxBarThickness: 28, stack: 'gasto',
+  });
+  return {
+    labels: top.map(v => [v.vehiculo_sigla, v.vehiculo_placa].filter(Boolean).join(' · ')),
+    datasets: [serie('Combustible', 0, top.map(v => v.gasto_combustible)), serie('Mantenimiento', 1, top.map(v => v.gasto_mantenimiento))] as any,
+  };
+}

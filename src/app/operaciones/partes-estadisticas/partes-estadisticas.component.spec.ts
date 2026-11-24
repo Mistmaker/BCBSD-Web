@@ -5,7 +5,8 @@ import { of } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { EstadisticasPartes } from '../models/partes-estadisticas.model';
 import { ParteService } from '../services/parte.service';
-import { PartesEstadisticasComponent } from './partes-estadisticas.component';
+import { PdfService } from '../../core/pdf.service';
+import { graficosInformePartes, PartesEstadisticasComponent } from './partes-estadisticas.component';
 
 describe('PartesEstadisticasComponent', () => {
   const datos: EstadisticasPartes = {
@@ -29,6 +30,7 @@ describe('PartesEstadisticasComponent', () => {
       imports: [PartesEstadisticasComponent],
       providers: [provideRouter([]),
         { provide: ParteService, useValue: { getEstadisticas, getCatalogos: () => of({ estaciones: [] }) } },
+        { provide: PdfService, useValue: {} },
         { provide: AuthService, useValue: { tienePermiso: () => true } }],
     });
     const f = TestBed.createComponent(PartesEstadisticasComponent);
@@ -52,5 +54,35 @@ describe('PartesEstadisticasComponent', () => {
     c.elegirTipoRecurso('INSUMO');
     f.detectChanges();
     expect(el.textContent).toContain('GASAS');
+  });
+
+  it('gráficos del informe: uno por sección; recursos solo con equipos', () => {
+    const g = graficosInformePartes(datos);
+    expect(Object.keys(g)).toEqual(['mes', 'vehiculo', 'bombero', 'recurso', 'auxilio', 'hora']);
+    Object.values(g).forEach(png => expect(png).toMatch(/^data:image\/png;base64,/));
+    expect(graficosInformePartes({ ...datos, por_recurso: [datos.por_recurso[1]] })['recurso']).toBeNull();
+  });
+
+  it('imprime con el filtro de la última consulta', async () => {
+    const abrirPost = jasmine.createSpy().and.returnValue(Promise.resolve());
+    TestBed.configureTestingModule({
+      imports: [PartesEstadisticasComponent],
+      providers: [provideRouter([]),
+        { provide: ParteService, useValue: { getEstadisticas: () => of(datos), getCatalogos: () => of({ estaciones: [] }), urlInformeEstadistico: () => 'u' } },
+        { provide: PdfService, useValue: { abrirPost } },
+        { provide: AuthService, useValue: { tienePermiso: () => true } }],
+    });
+    const f = TestBed.createComponent(PartesEstadisticasComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    const desde = c.filtro.desde;
+    c.filtro.desde = '2020-01-01'; // cambiado sin volver a consultar
+    (f.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[title^="Informe"]')!.click();
+    const [url, cuerpo] = abrirPost.calls.mostRecent().args;
+    expect(url).toBe('u');
+    expect(cuerpo.desde).toBe(desde);
+    expect(Object.keys(cuerpo.graficos).length).toBe(6);
+    await Promise.resolve();
+    expect(c.imprimiendo).toBeFalse();
   });
 });

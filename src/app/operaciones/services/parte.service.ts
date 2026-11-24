@@ -26,6 +26,11 @@ export class ParteService {
     return this.http.get<CatalogosParte>(`${this.url}/getCatalogosParte.php`);
   }
 
+  /** Informe estadístico imprimible (POST con los filtros y los gráficos en PNG) */
+  urlInformeEstadistico(): string {
+    return `${environment.API_URL}/reportes/operaciones/estadisticaPartes.php`;
+  }
+
   getEstadisticas(filtro: FiltroPartes) {
     return this.http.get<EstadisticasPartes>(`${this.url}/getEstadisticasPartes.php`, { params: parametros(filtro) });
   }

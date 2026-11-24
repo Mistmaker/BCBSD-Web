@@ -1,5 +1,5 @@
-import { FilaFlotaBitacora } from '../../models/bitacora.model';
-import { ordenarFlota } from './bitacora-flota.component';
+import { coloresGrafico, FilaFlotaBitacora, graficoGastoFlota } from '../../models/bitacora.model';
+import { graficosInformeFlota, ordenarFlota } from './bitacora-flota.component';
 
 const fila = (id: number, sigla: string, extra: Partial<FilaFlotaBitacora> = {}): FilaFlotaBitacora =>
   ({ vehiculo_id: id, vehiculo_sigla: sigla, vehiculo_placa: 'P' + id, alertas: [], costo_total_km: null, rendimiento_dif_pct: null,
@@ -26,5 +26,23 @@ describe('ordenarFlota', () => {
     expect(ordenarFlota(lista(), 'costo_total_km').map(f => f.vehiculo_id)).toEqual([3, 1, 2]);
     expect(ordenarFlota(lista(), 'rendimiento_dif_pct').map(f => f.vehiculo_id)).toEqual([2, 1, 3]);
     expect(ordenarFlota(lista(), 'gasto_mantenimiento')[0].vehiculo_id).toBe(2);
+  });
+});
+
+describe('informe de la flota', () => {
+  const filas = Array.from({ length: 20 }, (_, i) => fila(i + 1, 'V-' + (i + 1),
+    { gasto_combustible: i * 10, gasto_mantenimiento: i === 0 ? 0 : 5, costo_total: i === 0 ? 0 : i * 10 + 5 }));
+
+  it('gasto por vehículo: los 15 de mayor gasto, sin los que no gastaron', () => {
+    const g = graficoGastoFlota(filas, coloresGrafico(false));
+    expect(g.labels!.length).toBe(15);
+    expect(g.labels![0]).toBe('V-20 · P20');
+    expect(g.datasets.map(d => d.label)).toEqual(['Combustible', 'Mantenimiento']);
+    expect(g.datasets[0].data[0]).toBe(190);
+  });
+
+  it('dibuja el PNG del gráfico; sin gasto no hay gráfico', () => {
+    expect(graficosInformeFlota(filas)['gasto']).toMatch(/^data:image\/png;base64,/);
+    expect(graficosInformeFlota([filas[0]])['gasto']).toBeNull();
   });
 });

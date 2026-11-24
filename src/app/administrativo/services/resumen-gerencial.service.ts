@@ -7,6 +7,11 @@ import { ResumenGerencial } from '../models/resumen-gerencial.model';
 export class ResumenGerencialService {
   constructor(private http: HttpClient) { }
 
+  /** Informe imprimible (POST con el mes y el gráfico en PNG) */
+  urlInforme(): string {
+    return `${environment.API_URL}/reportes/administrativo/resumenGerencial.php`;
+  }
+
   getResumen(mes: string) {
     return this.http.get<ResumenGerencial>(`${environment.API_URL}/servicios/administrativo/getResumenGerencial.php`, { params: { mes } });
   }

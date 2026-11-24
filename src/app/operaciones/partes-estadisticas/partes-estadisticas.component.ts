@@ -13,6 +13,8 @@ import { DIAS_SEMANA, EstadisticasPartes, formatoMinutos, graficoPartesMes, graf
   TIPO_RECURSO } from '../models/partes-estadisticas.model';
 import { FiltroPartes, ParteService } from '../services/parte.service';
 import { AuthService } from '../../auth/auth.service';
+import { PdfService } from '../../core/pdf.service';
+import { altoBarrasImpresion, coloresImpresion, IMPRESION_ANCHO, imagenGrafico } from '../../core/grafico-impresion';
 
 type Vista = 'grafico' | 'tabla';
 
@@ -35,11 +37,15 @@ type Vista = 'grafico' | 'tabla';
 export class PartesEstadisticasComponent implements OnInit {
   private readonly servicio = inject(ParteService);
   private readonly auth = inject(AuthService);
+  private readonly pdf = inject(PdfService);
   private readonly colorMode = inject(ColorModeService).colorMode;
 
   filtro: FiltroPartes = { desde: `${new Date().getFullYear()}-01-01`, hasta: fechaISO(new Date()), estacion: null, tipo: '' };
   estaciones: CatalogosParte['estaciones'] = [];
   cargando = false;
+  imprimiendo = false;
+  /** Filtro de la última consulta: el informe se genera con este (aunque el formulario se haya cambiado después) */
+  private consultado: FiltroPartes = { ...this.filtro };
   /** Vista por sección: gráfico o tabla */
   vista: Record<string, Vista> = { mes: 'grafico', vehiculo: 'grafico', bombero: 'grafico', recurso: 'grafico', auxilio: 'grafico', hora: 'grafico' };
   tipoRecurso: '' | 'EQUIPO' | 'MATERIAL' | 'INSUMO' = 'EQUIPO';
@@ -82,7 +88,7 @@ export class PartesEstadisticasComponent implements OnInit {
   consultar(): void {
     this.cargando = true;
     this.servicio.getEstadisticas(this.filtro).subscribe({
-      next: (d) => { this.datos.set(d); this.cargando = false; },
+      next: (d) => { this.datos.set(d); this.consultado = { ...this.filtro }; this.cargando = false; },
       error: (e) => { this.cargando = false; Swal.fire('Error', 'No se pudo calcular la estadística. ' + (e.error?.msg ?? e.error?.error ?? e.message), 'error'); },
     });
   }
@@ -92,8 +98,39 @@ export class PartesEstadisticasComponent implements OnInit {
     this.tipoRecursoSel.set(t);
   }
 
+  /**
+   * Informe imprimible: los gráficos del tablero dibujados para papel (paleta clara, letra grande, valores sobre las barras);
+   * el API recalcula las cifras con el mismo filtro y arma el PDF.
+   */
+  imprimir(): void {
+    const d = this.datos();
+    if (!d) {
+      return;
+    }
+    this.imprimiendo = true;
+    const graficos = graficosInformePartes(d);
+    this.pdf.abrirPost(this.servicio.urlInformeEstadistico(), { ...this.consultado, graficos }).then(() => this.imprimiendo = false);
+  }
+
   /** Alto del gráfico horizontal según la cantidad de barras (máx. 10) */
   alto(n: number): number {
     return Math.max(120, Math.min(n, 10) * 30 + 40);
   }
+}
+
+/** Gráficos del informe impreso: mismas funciones que el tablero; recursos: solo equipos y herramientas */
+export function graficosInformePartes(d: EstadisticasPartes): Record<string, string | null> {
+  const c = coloresImpresion();
+  const top = (datos: ReturnType<typeof graficoTop>, n: number, unidad = 'partes') =>
+    imagenGrafico('bar', datos, opcionesConteo(c, { horizontal: true, unidad }), 1300, altoBarrasImpresion(n));
+  const equipos = d.por_recurso.filter(r => r.tipo === 'EQUIPO');
+  return {
+    mes: imagenGrafico('bar', graficoPartesMes(d.por_mes, c), opcionesConteo(c, { apilado: true }), IMPRESION_ANCHO, 600),
+    vehiculo: top(graficoTop(d.por_vehiculo, nombreVehiculoParte, v => v.salidas, c.series[0]), d.por_vehiculo.length, 'salidas'),
+    bombero: top(graficoTop(d.por_bombero, b => b.nombre, b => b.participaciones, c.series[0]), d.por_bombero.length),
+    recurso: top(graficoTop(equipos, r => r.descripcion, r => r.partes, c.series[0]), equipos.length),
+    auxilio: top(graficoTop(d.por_tipo_auxilio, t => [t.clasificacion, t.subclasificacion].filter(Boolean).join(' / '), t => t.partes, c.series[0]),
+      d.por_tipo_auxilio.length),
+    hora: imagenGrafico('bar', graficoPorHora(d.por_hora, c), opcionesConteo(c), IMPRESION_ANCHO, 520),
+  };
 }

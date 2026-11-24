@@ -13,6 +13,15 @@ export class BitacoraService {
     return this.http.get<RespuestaFlota>(`${this.url}/getBitacoraFlota.php`, { params: { desde, hasta } });
   }
 
+  /** Informes imprimibles (POST con filtros y gráficos en PNG) */
+  urlInformeFlota(): string {
+    return `${environment.API_URL}/reportes/administrativo/bitacoraFlota.php`;
+  }
+
+  urlInformeVehiculo(): string {
+    return `${environment.API_URL}/reportes/administrativo/bitacoraVehiculo.php`;
+  }
+
   getVehiculo(id: number, desde: string, hasta: string) {
     return this.http.get<RespuestaVehiculo>(`${this.url}/getBitacoraVehiculo.php`, { params: { id, desde, hasta } });
   }
